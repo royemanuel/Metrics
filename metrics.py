@@ -15,3 +15,7 @@ resolution = 0.01
 timeH = np.arange(0, timeH, resolution)
 chartArray = pd.DataFrame({'Time': timeH})
 
+
+# Build the performance curve and append to the time
+def buildPerf(resArray, pFunc, *args):
+    return resArray['Time'].apply(lambda x: pFunc(x, *args))
