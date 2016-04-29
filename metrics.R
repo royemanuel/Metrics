@@ -15,12 +15,29 @@ performance <- function(tt, FUN = 1, ...){
     pt <- mutate(tt, Performance = FUN(tt$Time, ...))
 }
 
-
+## This is an example of a step failure with a recovery
 stepFailRecover <- function(tt, failTime, recoverTime, preLevel,
                             failLevel, recLevel){
-    tt %>%
-        mutate(Performance = ifelse(Time < failTime, preLevel,
-                   ifelse(Time <= recoverTime, failLevel,
-                          ifelse(time > recoverTime, recLevel))))
-    tt
+    preFail <- tt %>%
+        filter(Time < failTime) %>%
+            mutate(Performance = preLevel)
+    postFail <- tt %>%
+        filter(Time >= failTime & Time < recoverTime) %>%
+            mutate(Performance = failLevel)
+    postRec <- tt %>%
+        filter(Time >= recoverTime) %>%
+            mutate(Performance = recLevel)
+    timeAndPerf <- rbind(preFail, postFail, postRec)
+    return(timeAndPerf)
+}
+
+## a quick build for a need column that has a constant value
+constantNeed <- function(tt, need){
+    tt <- tt %>%
+        mutate(Need = need)
+}
+
+## Calculate quotient resilience as the comparison
+quotRes <- function(tt, ){
+    
 }
