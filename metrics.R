@@ -92,13 +92,9 @@ sigmaApply <- function(tt, sigma, cn){
 ## We will use the minimum ratio value between phi(td) and phiN(td)
 extQuotRes <- function(tt, sigma){
     pd <- min(tt$Performance)
-    print(pd)
     p0 <- tt$Performance[1]
-    print(p0)
     n0 <- tt$Need[1]
-    print(n0)
-    rat0 <- ifelse(p0 > n0, 1 + sigma * (p0 - n0)/p0, p0/n0)
-    print(rat0)
+    rat0 <- ifelse(p0 > n0, 1 + sigma * (p0 - n0)/n0, p0/n0)
     ## firstFailedState is the row of the dataframe that has the lowest
     ## performance
     ## to need ratio at the minimum value.
@@ -112,11 +108,13 @@ extQuotRes <- function(tt, sigma){
                 filter(failRatio == min(failRatio))
     firstFailedState <- failedStates %>% filter(Time == min(Time))
     ffsPerformance <- firstFailedState$Performance
-    print(ffsPerformance)
     ffsNeed <- filter(tt, Time == firstFailedState$Time)
     ffsNeed <- ffsNeed$Need
-    print(ffsNeed)
     tt <- sigmaApply(tt, sigma, "npRatio")
     tt <- mutate(tt, EQR = (npRatio - ffsPerformance / ffsNeed) /
                      (rat0 - ffsPerformance / ffsNeed))
+    vars <- c(pd, p0, n0, rat0, ffsPerformance,ffsNeed)
+    names(vars) <- c("pd", "p0", "n0", "rat0", "ffsPerformance", "ffsNeed")
+    print(vars)
+    return(tt)
 }
