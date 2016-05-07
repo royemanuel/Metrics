@@ -157,4 +157,36 @@ resFac <- function(tt, disturbTime, initRecTime, finRecTime, tDelta, decay){
                          sf * phiD * tt$Performance /
                              (phi0 ^ 2)))
 }
-    
+
+extResFac <- function(tt,
+                      disturbTime,
+                      initRecTime,
+                      finRecTime,
+                      tDelta,
+                      decay,
+                      sigma){
+    phiD <- filter(tt, Time == disturbTime)$Performance
+    phiND <- filter(tt, Time == disturbTime)$Need
+    sf <- speedFactor(disturbTime, initRecTime, finRecTime, tDelta, decay)
+    phiR <- filter(tt, Time == finRecTime)$Performance
+    phiNR <- filter(tt, Time == finRecTime)$Performance
+    phi0 <- tt$Performance[1]
+    phiN0 <- tt$Need[1]
+    vars <- c(sf, phiD, phiND, phi0, phiN0, phiR, phiNR)
+    names(vars) <- c("SpeedFactor", "Phi_D", "phiND", "Phi_0","Phi_0",
+                     "phiR", "phiNR")
+    if(phi0 < phiN0){
+        rat0 <- phi0 / phiN0
+    } else {
+        rat0 <- 1 + sigma * ((phi0 - phiN0) / phiN0)
+    }
+    if(phiD < phiND){
+        ratD <- phiD / phiND
+    } else {
+        ratD <- 1 +sigma * ((phiD - phiND) / phiND)
+    }
+    print(vars)
+    tt <- mutate(tt, Rho = ifelse(Time < disturbTime, 1,
+                         sf * ratD * tt$npRatio /
+                             (rat0 ^ 2)))
+}
