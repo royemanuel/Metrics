@@ -43,7 +43,7 @@ performance <- function(tt, FUN = 1, ...){
 stepFailRecover <- function(tt, failTime, recoverTime, preLevel,
                             failLevel, recLevel){
     preFail <- tt %>%
-        filter(Time < failTimtr <- cone) %>%
+        filter(Time < failTime) %>%
             mutate(Performance = preLevel)
     postFail <- tt %>%
         filter(Time >= failTime & Time < recoverTime) %>%
@@ -158,6 +158,7 @@ resFac <- function(tt, disturbTime, initRecTime, finRecTime, tDelta, decay){
                              (phi0 ^ 2)))
 }
 
+
 extResFac <- function(tt,
                       disturbTime,
                       initRecTime,
@@ -186,7 +187,55 @@ extResFac <- function(tt,
         ratD <- 1 +sigma * ((phiD - phiND) / phiND)
     }
     print(vars)
-    tt <- mutate(tt, Rho = ifelse(Time < disturbTime, 1,
+    tt <- mutate(tt, extRho = ifelse(Time < disturbTime, 1,
                          sf * ratD * tt$npRatio /
                              (rat0 ^ 2)))
+}
+
+intRes <- function(tt, sigma){
+    ## Calculate the area under the performance curve
+    tt <- mutate(tt, perfLag = lag(Performance, 1))
+    tt$perfLag[1] <- tt$perfLag[2]
+    stepSize <- tt$Time[2] - tt$Time[1]
+    tt <- mutate(tt, perfHeight = ifelse(Performance > perfLag, perfLag,
+                         Performance),
+                 perfStepArea = stepSize *
+                     (perfHeight + abs(Performance - perfLag)/2),
+                 perfArea = cumsum(perfStepArea))
+    ## Calculate the area under the status quo Need curve
+    tt <- mutate(tt, statQuoStepArea = stepSize * tt$Performance[1])
+    tt$statQuoStepArea[1] <- 0
+    ## Calculate the resilience value
+    tt <- mutate(tt, statQuoArea = cumsum(statQuoStepArea),
+                 statQuoResilience = perfArea / statQuoArea)
+    tt$statQuoResilience[1] <- 1
+    ## Clean up the tt data.frame
+    ## Calculate the resilience with need
+    ## Calculate the area under the Need Curve
+    tt <- mutate(tt, needLag = lag(Need, 1))
+    tt$needLag[1] <- tt$needLag[2]
+    stepSize <- tt$Time[2] - tt$Time[1]
+    tt <- mutate(tt, needHeight = ifelse(Need > needLag, needLag,
+                         Need),
+                 needStepArea = stepSize *
+                     (needHeight + abs(Need - needLag)/2),
+                 needArea = cumsum(needStepArea),
+                 extResStep = ifelse(needStepArea > perfStepArea,
+                     stepSize * perfStepArea / needStepArea,
+                     stepSize *(1 + sigma *
+                                    (perfStepArea - needStepArea) /
+                                        needStepArea)))
+    tt$extResStep[1] <- 0
+                 tt <- mutate(tt, extResArea = cumsum(extResStep),
+                              extResilience = extResArea / Time)
+    tt$extResilience[1] <- tt$extResilience[2]
+    return(tt)
+}
+
+## Cleanup the data.frame after running all of the above
+tidyDF <- function(tt){
+    tt <- select(tt, -c(npRatio, perfLag, perfHeight, perfStepArea,
+                        perfArea, statQuoStepArea, statQuoArea,
+                        needLag, needHeight, needStepArea, needArea,
+                        extResStep, extResArea))
 }
