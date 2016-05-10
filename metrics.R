@@ -59,6 +59,22 @@ stepFailRecover <- function(tt, failTime, recoverTime, preLevel,
 constantNeed <- function(tt, Need){
     tt <- cbind(tt, Need)
 }
+## A function to pull the performance at t0, the performance at td,
+## and td
+paramPull <- function(tt){
+    pd <- min(tt$Performance)
+    p0 <- tt$Performance[1]
+    td <- filter(tt, Performance == pd)$Time[1]
+    nd <- filter(tt, Performance == pd)$Need[1]
+    rat <- tt %>% filter(npRatio == min(npRatio)) %>%
+        filter(Time == min(Time))
+    print(rat)
+    ratD <- rat$npRatio[1]
+    timeRatD <- rat$Time[1]
+    ttPull <- data.frame(Perf0 = p0, PerfD = pd,
+                         NeedD = nd, TimeD = td,
+                         RatD = ratD, timeRatD = timeRatD)
+}
 
 ## Calculate quotient resilience as the comparison
 ## quotient resilience is performance value (phi(t|e)) minus the
@@ -173,9 +189,6 @@ extResFac <- function(tt,
     phiNR <- filter(tt, Time == finRecTime)$Performance
     phi0 <- tt$Performance[1]
     phiN0 <- tt$Need[1]
-    vars <- c(sf, phiD, phiND, phi0, phiN0, phiR, phiNR)
-    names(vars) <- c("SpeedFactor", "Phi_D", "phiND", "Phi_0","Phi_0",
-                     "phiR", "phiNR")
     if(phi0 < phiN0){
         rat0 <- phi0 / phiN0
     } else {
@@ -186,6 +199,9 @@ extResFac <- function(tt,
     } else {
         ratD <- 1 +sigma * ((phiD - phiND) / phiND)
     }
+    vars <- c(sf, phiD, phiND, phi0, phiN0, phiR, phiNR, rat0, ratD)
+    names(vars) <- c("SpeedFactor", "Phi_D", "phiND", "Phi_0","Phi_N0",
+                     "phiR", "phiNR", "rat0", "ratD")
     print(vars)
     tt <- mutate(tt, extRho = ifelse(Time < disturbTime, 1,
                          sf * ratD * tt$npRatio /
@@ -200,8 +216,9 @@ intRes <- function(tt, sigma){
     tt <- mutate(tt, perfHeight = ifelse(Performance > perfLag, perfLag,
                          Performance),
                  perfStepArea = stepSize *
-                     (perfHeight + abs(Performance - perfLag)/2),
-                 perfArea = cumsum(perfStepArea))
+                     (perfHeight + abs(Performance - perfLag)/2))
+    tt$perfStepArea[1] <- 0
+    tt <- mutate(tt, perfArea = cumsum(perfStepArea))
     ## Calculate the area under the status quo Need curve
     tt <- mutate(tt, statQuoStepArea = stepSize * tt$Performance[1])
     tt$statQuoStepArea[1] <- 0
@@ -234,7 +251,7 @@ intRes <- function(tt, sigma){
 
 ## Cleanup the data.frame after running all of the above
 tidyDF <- function(tt){
-    tt <- select(tt, -c(npRatio, perfLag, perfHeight, perfStepArea,
+    tt <- select(tt, -c(perfLag, perfHeight, perfStepArea,
                         perfArea, statQuoStepArea, statQuoArea,
                         needLag, needHeight, needStepArea, needArea,
                         extResStep, extResArea))
