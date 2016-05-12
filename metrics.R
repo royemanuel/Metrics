@@ -174,13 +174,19 @@ speedFactor <- function(disturbTime, initRecTime, finRecTime, tDelta, decay){
 ##                              (phi0 ^ 2)))
 ## }
 ## resFac using only tt and tDelta
-resFac <- function(tt, tDelta, initRecTime, finRecTime, tDelta, decay){
-    phiD <- filter(tt, Performance == min(Performance))$Performance
-    timeD <- filter(tt, Performance == min(Performance))$Time
+resFac <- function(tt,
+                   tDelta,
+                   initRecTime,
+                   finRecTime,
+                   decay){
+    disturbRow <- tt %>% filter(Performance == min(Performance)) %>%
+        filter(Time == min(Time))
+    phiD <- disturbRow$Performance
+    timeD <- disturbRow$Time
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     phi0 <- tt$Performance[1]
     vars <- c(sf, phiD, timeD, phi0)
-    names(vars) <- c("SpeedFactor", "Phi_D", "Phi_0")
+    names(vars) <- c("SpeedFactor", "Phi_D", "timeD", "Phi_0")
     print(vars)
     tt <- mutate(tt, Rho = ifelse(Time < timeD, 1,
                          sf * phiD * tt$Performance /
@@ -189,20 +195,36 @@ resFac <- function(tt, tDelta, initRecTime, finRecTime, tDelta, decay){
 
 
 extResFac <- function(tt,
+                      tDelta,
                       initRecTime,
                       finRecTime,
-                      tDelta,
                       decay,
                       sigma){
-    disturbRow <- filter(tt, npRatio == min(npRatio))
-    disturbTime <- disturbRow$Time
+    disturbRow <- tt %>% filter(npRatio == min(npRatio)) %>%
+        filter(Time == min(Time))
+    print(disturbRow$Time)
+    dTime <- disturbRow$Time
+    print("This is dTime")
+    print(dTime)
     disturbRatio <- disturbRow$npRatio
-    sf <- speedFactor(disturbTime, initRecTime, finRecTime, tDelta, decay)
+    sf <- speedFactor(dTime, initRecTime, finRecTime, tDelta, decay)
     recovRatio <- filter(tt, Time == finRecTime)$npRatio
-    vars <- c(sf, disturbRatio, recovRatio)
-    names(vars) <- c("SpeedFactor", "disturbRatio", "recovRatio")
+    vars <- c(sf,
+              dTime,
+              disturbRow$Time,
+              initRecTime,
+              finRecTime,
+              disturbRatio,
+              recovRatio)
+    names(vars) <- c("SF",
+                     "dTime",
+                     "disturbRow$Time",
+                     "initRecTime",
+                     "finRecTime",
+                     "disturbRatio",
+                     "recovRatio")
     print(vars)
-    tt <- mutate(tt, extRho = ifelse(Time < disturbTime, 1,
+    tt <- mutate(tt, extRho = ifelse(Time < dTime, 1,
                          sf * (disturbRatio * tt$npRatio)))
 }
 
