@@ -59,6 +59,22 @@ stepFailRecover <- function(tt, failTime, recoverTime, preLevel,
 constantNeed <- function(tt, Need){
     tt <- cbind(tt, Need)
 }
+## A function to pull the performance at t0, the performance at td,
+## and td
+paramPull <- function(tt){
+    pd <- min(tt$Performance)
+    p0 <- tt$Performance[1]
+    td <- filter(tt, Performance == pd)$Time[1]
+    nd <- filter(tt, Performance == pd)$Need[1]
+    rat <- tt %>% filter(npRatio == min(npRatio)) %>%
+        filter(Time == min(Time))
+    print(rat)
+    ratD <- rat$npRatio[1]
+    timeRatD <- rat$Time[1]
+    ttPull <- data.frame(Perf0 = p0, PerfD = pd,
+                         NeedD = nd, TimeD = td,
+                         RatD = ratD, timeRatD = timeRatD)
+}
 
 ## Calculate quotient resilience as the comparison
 ## quotient resilience is performance value (phi(t|e)) minus the
@@ -145,51 +161,71 @@ speedFactor <- function(disturbTime, initRecTime, finRecTime, tDelta, decay){
 ## Due to failure profiles, the disturbance time and the fail time
 ## are not the same. ESDF calculates from the disturbance to the initial
 ## recovery
-resFac <- function(tt, disturbTime, initRecTime, finRecTime, tDelta, decay){
-    phiD <- filter(tt, Time == disturbTime)$Performance
-    sf <- speedFactor(disturbTime, initRecTime, finRecTime, tDelta, decay)
-    phiR <- filter(tt, Time == finRecTime)$Performance
+## resFac <- function(tt, disturbTime, initRecTime, finRecTime, tDelta, decay){
+##     phiD <- filter(tt, Time == disturbTime)$Performance
+##     sf <- speedFactor(disturbTime, initRecTime, finRecTime, tDelta, decay)
+##     phiR <- filter(tt, Time == finRecTime)$Performance
+##     phi0 <- tt$Performance[1]
+##     vars <- c(sf, phiD, phi0)
+##     names(vars) <- c("SpeedFactor", "Phi_D", "Phi_0")
+##     
+##     tt <- mutate(tt, Rho = ifelse(Time < disturbTime, 1,
+##                          sf * phiD * tt$Performance /
+##                              (phi0 ^ 2)))
+## }
+## resFac using only tt and tDelta
+resFac <- function(tt,
+                   tDelta,
+                   initRecTime,
+                   finRecTime,
+                   decay){
+    disturbRow <- tt %>% filter(Performance == min(Performance)) %>%
+        filter(Time == min(Time))
+    phiD <- disturbRow$Performance
+    timeD <- disturbRow$Time
+    sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     phi0 <- tt$Performance[1]
-    vars <- c(sf, phiD, phi0)
-    names(vars) <- c("SpeedFactor", "Phi_D", "Phi_0")
+    vars <- c(sf, phiD, timeD, phi0)
+    names(vars) <- c("SpeedFactor", "Phi_D", "timeD", "Phi_0")
     print(vars)
-    tt <- mutate(tt, Rho = ifelse(Time < disturbTime, 1,
+    tt <- mutate(tt, Rho = ifelse(Time < timeD, 1,
                          sf * phiD * tt$Performance /
                              (phi0 ^ 2)))
 }
 
 
 extResFac <- function(tt,
-                      disturbTime,
+                      tDelta,
                       initRecTime,
                       finRecTime,
-                      tDelta,
                       decay,
                       sigma){
-    phiD <- filter(tt, Time == disturbTime)$Performance
-    phiND <- filter(tt, Time == disturbTime)$Need
-    sf <- speedFactor(disturbTime, initRecTime, finRecTime, tDelta, decay)
-    phiR <- filter(tt, Time == finRecTime)$Performance
-    phiNR <- filter(tt, Time == finRecTime)$Performance
-    phi0 <- tt$Performance[1]
-    phiN0 <- tt$Need[1]
-    vars <- c(sf, phiD, phiND, phi0, phiN0, phiR, phiNR)
-    names(vars) <- c("SpeedFactor", "Phi_D", "phiND", "Phi_0","Phi_0",
-                     "phiR", "phiNR")
-    if(phi0 < phiN0){
-        rat0 <- phi0 / phiN0
-    } else {
-        rat0 <- 1 + sigma * ((phi0 - phiN0) / phiN0)
-    }
-    if(phiD < phiND){
-        ratD <- phiD / phiND
-    } else {
-        ratD <- 1 +sigma * ((phiD - phiND) / phiND)
-    }
+    disturbRow <- tt %>% filter(npRatio == min(npRatio)) %>%
+        filter(Time == min(Time))
+    print(disturbRow$Time)
+    dTime <- disturbRow$Time
+    print("This is dTime")
+    print(dTime)
+    disturbRatio <- disturbRow$npRatio
+    sf <- speedFactor(dTime, initRecTime, finRecTime, tDelta, decay)
+    recovRatio <- filter(tt, Time == finRecTime)$npRatio
+    vars <- c(sf,
+              dTime,
+              disturbRow$Time,
+              initRecTime,
+              finRecTime,
+              disturbRatio,
+              recovRatio)
+    names(vars) <- c("SF",
+                     "dTime",
+                     "disturbRow$Time",
+                     "initRecTime",
+                     "finRecTime",
+                     "disturbRatio",
+                     "recovRatio")
     print(vars)
-    tt <- mutate(tt, extRho = ifelse(Time < disturbTime, 1,
-                         sf * ratD * tt$npRatio /
-                             (rat0 ^ 2)))
+    tt <- mutate(tt, extRho = ifelse(Time < dTime, 1,
+                         sf * (disturbRatio * tt$npRatio)))
 }
 
 intRes <- function(tt, sigma){
@@ -200,8 +236,9 @@ intRes <- function(tt, sigma){
     tt <- mutate(tt, perfHeight = ifelse(Performance > perfLag, perfLag,
                          Performance),
                  perfStepArea = stepSize *
-                     (perfHeight + abs(Performance - perfLag)/2),
-                 perfArea = cumsum(perfStepArea))
+                     (perfHeight + abs(Performance - perfLag)/2))
+    tt$perfStepArea[1] <- 0
+    tt <- mutate(tt, perfArea = cumsum(perfStepArea))
     ## Calculate the area under the status quo Need curve
     tt <- mutate(tt, statQuoStepArea = stepSize * tt$Performance[1])
     tt$statQuoStepArea[1] <- 0
@@ -234,7 +271,7 @@ intRes <- function(tt, sigma){
 
 ## Cleanup the data.frame after running all of the above
 tidyDF <- function(tt){
-    tt <- select(tt, -c(npRatio, perfLag, perfHeight, perfStepArea,
+    tt <- select(tt, -c(perfLag, perfHeight, perfStepArea,
                         perfArea, statQuoStepArea, statQuoArea,
                         needLag, needHeight, needStepArea, needArea,
                         extResStep, extResArea))
