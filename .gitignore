@@ -1,0 +1,7 @@
+pyst.py
+pyst.py~
+*.R~
+*.py~
+dTest.obj
+dTest.exe
+dTest.c
