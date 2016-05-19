@@ -174,6 +174,13 @@ speedFactor <- function(disturbTime, initRecTime, finRecTime, tDelta, decay){
 ##                              (phi0 ^ 2)))
 ## }
 ## resFac using only tt and tDelta
+
+## The purpose of the recovery time in the metric per the documentation
+## is that the time horizon will equal the finRecTime. init Rect time
+## will be defined by tDelta. That is the time from failure until an
+## initial recovery must be made. This is defined in the literature
+## so I think it is appropriate that we take this to be a case where if
+## the time horizon... no that doesn't quite work. hmm....
 resFac <- function(tt,
                    tDelta,
                    initRecTime,
@@ -276,3 +283,18 @@ tidyDF <- function(tt){
                         needLag, needHeight, needStepArea, needArea,
                         extResStep, extResArea))
 }
+
+## Build a function that does the whole thing!
+## timeDF is the time data.frame with max time horizon and the resolution
+## failTime is the time of failure
+## recTime is the time of recovery
+## delTime is the t_delta input from the stakeholder for resilience factor
+## alpha is the decay factor for resilience factor
+## sigma is the time substitutability
+## allRes <- function(timeDF, failTime, recTime,
+##                    preLevel, failLevel, recLevel,
+##                    delTime, alpha, sigma,)
+## I think it is time to stop making functions and to start
+## building one-off type analysis that is pretty darn transparent.
+
+
