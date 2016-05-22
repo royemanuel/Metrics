@@ -295,6 +295,6 @@ tidyDF <- function(tt){
 ##                    preLevel, failLevel, recLevel,
 ##                    delTime, alpha, sigma,)
 ## I think it is time to stop making functions and to start
-## building one-off type analysis that is pretty darn transparent.
+## building one-off type analysis that is pretty darn transparent.r
 
 
