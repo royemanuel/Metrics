@@ -7,6 +7,7 @@
 ## changeNeed <- function()
 ## Build a data.frame with the need varying from 0 to 1.3 in increments
 ## of 0.1
+source('metrics.R')
 timeHorizon <- 100
 resolution <- 5
 timeTick <- data.frame(Time = seq(from = 0, to = timeHorizon, by = resolution))
@@ -44,3 +45,12 @@ pltMoveNeed <- function(df, time){
                               color = variable)) +
         geom_line()
 }
+threeDpltMoveNeed <- function(df){
+    workDF <- df %>%
+        select(-Run, -Performance, -npRatio)
+    workDF <- melt(data = workDF, id = c("Time", "Need"))
+    workDF <- group_by(workDF, variable)
+}
+
+tNT <- pltMoveNeed(tidyNtt, 100)
+

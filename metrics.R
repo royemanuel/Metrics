@@ -146,7 +146,11 @@ extQuotRes <- function(tt, sigma){
 ## given a disturbance, but that is modeled in the performance profile
 ## tDelta is defined by the stakeholder for an adequate allowable amount
 ## of time to get to recovery
-speedFactor <- function(disturbTime, initRecTime, finRecTime, tDelta, decay){
+speedFactor <- function(disturbTime,
+                        initRecTime,
+                        finRecTime,
+                        tDelta,
+                        decay){
     timeToInitRec <- initRecTime - disturbTime
     if(finRecTime >= initRecTime){
         sf <- (tDelta/timeToInitRec)*exp(-decay*(finRecTime - initRecTime))
