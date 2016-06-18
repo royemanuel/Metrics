@@ -40,6 +40,11 @@ performance <- function(tt, FUN = 1, ...){
 }
 
 ## This is an example of a step failure with a recovery
+## failTime = time the system degrades
+## recoverTime = time the system has recovered
+## preLevel = performance level of the system before failure
+## failLevel = level of the system after failure and before recovery
+## reclevel = level of the system after recovery
 stepFailRecover <- function(tt, failTime, recoverTime, preLevel,
                             failLevel, recLevel){
     preFail <- tt %>%
@@ -68,7 +73,7 @@ paramPull <- function(tt){
     nd <- filter(tt, Performance == pd)$Need[1]
     rat <- tt %>% filter(npRatio == min(npRatio)) %>%
         filter(Time == min(Time))
-    print(rat)
+    ## print(rat)
     ratD <- rat$npRatio[1]
     timeRatD <- rat$Time[1]
     ttPull <- data.frame(Perf0 = p0, PerfD = pd,
@@ -133,7 +138,7 @@ extQuotRes <- function(tt, sigma){
                      (rat0 - ffsPerformance / ffsNeed))
     vars <- c(pd, p0, n0, rat0, ffsPerformance,ffsNeed)
     names(vars) <- c("pd", "p0", "n0", "rat0", "ffsPerformance", "ffsNeed")
-    print(vars)
+    ## print(vars)
     return(tt)
 }
 
@@ -198,7 +203,7 @@ resFac <- function(tt,
     phi0 <- tt$Performance[1]
     vars <- c(sf, phiD, timeD, phi0)
     names(vars) <- c("SpeedFactor", "Phi_D", "timeD", "Phi_0")
-    print(vars)
+    ## print(vars)
     tt <- mutate(tt, Rho = ifelse(Time < timeD, 1,
                          sf * phiD * tt$Performance /
                              (phi0 ^ 2)))
@@ -213,10 +218,10 @@ extResFac <- function(tt,
                       sigma){
     disturbRow <- tt %>% filter(npRatio == min(npRatio)) %>%
         filter(Time == min(Time))
-    print(disturbRow$Time)
+    ## print(disturbRow$Time)
     dTime <- disturbRow$Time
-    print("This is dTime")
-    print(dTime)
+    ## print("This is dTime")
+    ## print(dTime)
     disturbRatio <- disturbRow$npRatio
     sf <- speedFactor(dTime, initRecTime, finRecTime, tDelta, decay)
     recovRatio <- filter(tt, Time == finRecTime)$npRatio
@@ -234,7 +239,7 @@ extResFac <- function(tt,
                      "finRecTime",
                      "disturbRatio",
                      "recovRatio")
-    print(vars)
+    ## print(vars)
     tt <- mutate(tt, extRho = ifelse(Time < dTime, 1,
                          sf * (disturbRatio * tt$npRatio)))
 }
