@@ -46,11 +46,20 @@ pltMoveNeed <- function(df, time){
         filter(Time == time) %>%
         select(-Run, -Performance, -npRatio)
     workDF <- melt(data = workDF, id = c("Time", "Need"))
+    workDF <- workDF %>%
+        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
+                   1,
+                   ifelse((variable == "Rho" | variable == "extRho"),
+                          2,
+                          ifelse((variable == "statQuoResilience" |
+                                      variable == "extResilience"),
+                                 3, 0))))
     ## print(colnames(workDF))
     plt <- ggplot(workDF, aes(Need, value,
                               group = variable,
                               color = variable)) +
-        geom_line()
+                                  geom_line() +
+                                      facet_grid(ResType ~ .)
 }
 threeDpltMoveNeed <- function(df){
     workDF <- df %>%
