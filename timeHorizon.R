@@ -48,7 +48,7 @@ pltMoveTimeH <- function(df){
                               group = variable,
                               color = variable)) +
                                   geom_line() +
-               facet_grid(. ~ ResType)
+               facet_grid(ResType ~ .)
 }
 
 tTH <- pltMoveTimeH(tidyNhr)
