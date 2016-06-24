@@ -35,6 +35,10 @@ timeHorizon <- 100
 resolution <- 5
 timeTick <- data.frame(Time = seq(from = 0, to = timeHorizon, by = resolution))
 
+timeColumn <- function(endTime, resolution){
+    data.frame(Time = seq(from = 0, to = timeHorizon, by = resolution))
+}
+
 performance <- function(tt, FUN = 1, ...){
     pt <- mutate(tt, Performance = FUN(tt$Time, ...))
 }
@@ -192,13 +196,21 @@ speedFactor <- function(disturbTime,
 ## the time horizon... no that doesn't quite work. hmm....
 resFac <- function(tt,
                    tDelta,
-                   initRecTime,
-                   finRecTime,
+                   ##initRecTime,
+                   ##finRecTime,
                    decay){
     disturbRow <- tt %>% filter(Performance == min(Performance)) %>%
         filter(Time == min(Time))
     phiD <- disturbRow$Performance
+    print(phiD)
     timeD <- disturbRow$Time
+    recoveryID <- tt %>%
+        filter(Time > timeD) %>%
+            filter(Performance > phiD)
+    initRecTime <- recoveryID$Time[1]
+    print(recoveryID)
+    finRecTime <- recoveryID[which.max(recoveryID$Performance), "Time"]
+    print(list(initRecTime = initRecTime, finRecTime = finRecTime))
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     phi0 <- tt$Performance[1]
     vars <- c(sf, phiD, timeD, phi0)
