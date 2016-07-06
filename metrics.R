@@ -35,11 +35,20 @@ timeHorizon <- 100
 resolution <- 5
 timeTick <- data.frame(Time = seq(from = 0, to = timeHorizon, by = resolution))
 
+timeColumn <- function(endTime, resolution){
+    data.frame(Time = seq(from = 0, to = timeHorizon, by = resolution))
+}
+
 performance <- function(tt, FUN = 1, ...){
     pt <- mutate(tt, Performance = FUN(tt$Time, ...))
 }
 
 ## This is an example of a step failure with a recovery
+## failTime = time the system degrades
+## recoverTime = time the system has recovered
+## preLevel = performance level of the system before failure
+## failLevel = level of the system after failure and before recovery
+## reclevel = level of the system after recovery
 stepFailRecover <- function(tt, failTime, recoverTime, preLevel,
                             failLevel, recLevel){
     preFail <- tt %>%
@@ -68,7 +77,7 @@ paramPull <- function(tt){
     nd <- filter(tt, Performance == pd)$Need[1]
     rat <- tt %>% filter(npRatio == min(npRatio)) %>%
         filter(Time == min(Time))
-    print(rat)
+    ## print(rat)
     ratD <- rat$npRatio[1]
     timeRatD <- rat$Time[1]
     ttPull <- data.frame(Perf0 = p0, PerfD = pd,
@@ -133,7 +142,7 @@ extQuotRes <- function(tt, sigma){
                      (rat0 - ffsPerformance / ffsNeed))
     vars <- c(pd, p0, n0, rat0, ffsPerformance,ffsNeed)
     names(vars) <- c("pd", "p0", "n0", "rat0", "ffsPerformance", "ffsNeed")
-    print(vars)
+    ## print(vars)
     return(tt)
 }
 
@@ -146,7 +155,11 @@ extQuotRes <- function(tt, sigma){
 ## given a disturbance, but that is modeled in the performance profile
 ## tDelta is defined by the stakeholder for an adequate allowable amount
 ## of time to get to recovery
-speedFactor <- function(disturbTime, initRecTime, finRecTime, tDelta, decay){
+speedFactor <- function(disturbTime,
+                        initRecTime,
+                        finRecTime,
+                        tDelta,
+                        decay){
     timeToInitRec <- initRecTime - disturbTime
     if(finRecTime >= initRecTime){
         sf <- (tDelta/timeToInitRec)*exp(-decay*(finRecTime - initRecTime))
@@ -174,20 +187,35 @@ speedFactor <- function(disturbTime, initRecTime, finRecTime, tDelta, decay){
 ##                              (phi0 ^ 2)))
 ## }
 ## resFac using only tt and tDelta
+
+## The purpose of the recovery time in the metric per the documentation
+## is that the time horizon will equal the finRecTime. init Rect time
+## will be defined by tDelta. That is the time from failure until an
+## initial recovery must be made. This is defined in the literature
+## so I think it is appropriate that we take this to be a case where if
+## the time horizon... no that doesn't quite work. hmm....
 resFac <- function(tt,
                    tDelta,
-                   initRecTime,
-                   finRecTime,
+                   ##initRecTime,
+                   ##finRecTime,
                    decay){
     disturbRow <- tt %>% filter(Performance == min(Performance)) %>%
         filter(Time == min(Time))
     phiD <- disturbRow$Performance
+    print(phiD)
     timeD <- disturbRow$Time
+    recoveryID <- tt %>%
+        filter(Time > timeD) %>%
+            filter(Performance > phiD)
+    initRecTime <- recoveryID$Time[1]
+    print(recoveryID)
+    finRecTime <- recoveryID[which.max(recoveryID$Performance), "Time"]
+    print(list(initRecTime = initRecTime, finRecTime = finRecTime))
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     phi0 <- tt$Performance[1]
     vars <- c(sf, phiD, timeD, phi0)
     names(vars) <- c("SpeedFactor", "Phi_D", "timeD", "Phi_0")
-    print(vars)
+    ## print(vars)
     tt <- mutate(tt, Rho = ifelse(Time < timeD, 1,
                          sf * phiD * tt$Performance /
                              (phi0 ^ 2)))
@@ -196,35 +224,42 @@ resFac <- function(tt,
 
 extResFac <- function(tt,
                       tDelta,
-                      initRecTime,
-                      finRecTime,
+                      ## initRecTime,
+                      ## finRecTime,
                       decay,
                       sigma){
     disturbRow <- tt %>% filter(npRatio == min(npRatio)) %>%
         filter(Time == min(Time))
-    print(disturbRow$Time)
-    dTime <- disturbRow$Time
-    print("This is dTime")
-    print(dTime)
+    ## print(disturbRow$Time)
+    phiD <- disturbRow$Performance
+    print(phiD)
+    timeD <- disturbRow$Time
+    ## print("This is timeD")
+    ## print(timeD)
     disturbRatio <- disturbRow$npRatio
-    sf <- speedFactor(dTime, initRecTime, finRecTime, tDelta, decay)
+    recoveryID <- tt %>%
+        filter(Time > timeD) %>%
+            filter(Performance > phiD)
+    initRecTime <- recoveryID$Time[1]
+    ## Need to identify the final recovery time
+    sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     recovRatio <- filter(tt, Time == finRecTime)$npRatio
     vars <- c(sf,
-              dTime,
+              timeD,
               disturbRow$Time,
               initRecTime,
               finRecTime,
               disturbRatio,
               recovRatio)
     names(vars) <- c("SF",
-                     "dTime",
+                     "timeD",
                      "disturbRow$Time",
                      "initRecTime",
                      "finRecTime",
                      "disturbRatio",
                      "recovRatio")
-    print(vars)
-    tt <- mutate(tt, extRho = ifelse(Time < dTime, 1,
+    ## print(vars)
+    tt <- mutate(tt, extRho = ifelse(Time < timeD, 1,
                          sf * (disturbRatio * tt$npRatio)))
 }
 
@@ -276,3 +311,57 @@ tidyDF <- function(tt){
                         needLag, needHeight, needStepArea, needArea,
                         extResStep, extResArea))
 }
+
+
+
+## Build the entire resilience matrix. This needs to include all of the
+## inputs for every resilience function as well as for the need and
+## performance functions. These will be included by making a vector for
+## each one of them that is unpacked in the function itself. Then I will
+## run through an if-else or a switch type function to make it happen.
+buildResMatrix <- function(timeList, needList, perfList, resList){
+    ## a time vector uses an endTime and a resolution
+    resMat <- timeColumn(timeList$endTime, timeList$resolution)
+    print("time done")
+    print( head(resMat))
+    resMat <- switch(needList$func,
+                     constantNeed = constantNeed(resMat, needList$cLevel))
+    print("need done")
+    print( head(resMat))
+    resMat <- switch(perfList$func,
+                     step = stepFailRecover(resMat,
+                         perfList$failTime,
+                         perfList$recTime,
+                         perfList$preLevel,
+                         perfList$failLevel,
+                         perfList$recLevel),
+                     resTriangle = resTriangle(resMat,
+                         perfList$failTime,
+                         perfList$recTime,
+                         perfList$preLevel,
+                         perfList$failLevel,
+                         perfList$recLevel))
+    print("performance done")
+    print(head(resMat))
+    resMat <- quotRes(resMat)
+    print("QR done")    
+    resMat <- extQuotRes(resMat, 0)
+    print("EQR done")
+    resMat <- resFac(tt = resMat,
+                     tDelta = resList$tDelta,
+                     ## initRecTime = resList$initRecTime,
+                     ## finRecTime = resList$finRecTime,
+                     decay = resList$decay)
+    print("RF done")
+    resMat <- extResFac(tt = resMat,
+                        tDelta = resList$tDelta,
+                        ## initRecTime = resList$initRecTime,
+                        ## finRecTime = resList$finRecTime,
+                        decay = resList$decay,
+                        sigma = resList$sigma)
+    print("ERF done")
+    resMat <- intRes(resMat,
+                     sigma = resList$sigma)
+    print("IntRes done")
+}
+
