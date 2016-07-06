@@ -224,35 +224,42 @@ resFac <- function(tt,
 
 extResFac <- function(tt,
                       tDelta,
-                      initRecTime,
-                      finRecTime,
+                      ## initRecTime,
+                      ## finRecTime,
                       decay,
                       sigma){
     disturbRow <- tt %>% filter(npRatio == min(npRatio)) %>%
         filter(Time == min(Time))
     ## print(disturbRow$Time)
-    dTime <- disturbRow$Time
-    ## print("This is dTime")
-    ## print(dTime)
+    phiD <- disturbRow$Performance
+    print(phiD)
+    timeD <- disturbRow$Time
+    ## print("This is timeD")
+    ## print(timeD)
     disturbRatio <- disturbRow$npRatio
-    sf <- speedFactor(dTime, initRecTime, finRecTime, tDelta, decay)
+    recoveryID <- tt %>%
+        filter(Time > timeD) %>%
+            filter(Performance > phiD)
+    initRecTime <- recoveryID$Time[1]
+    ## Need to identify the final recovery time
+    sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     recovRatio <- filter(tt, Time == finRecTime)$npRatio
     vars <- c(sf,
-              dTime,
+              timeD,
               disturbRow$Time,
               initRecTime,
               finRecTime,
               disturbRatio,
               recovRatio)
     names(vars) <- c("SF",
-                     "dTime",
+                     "timeD",
                      "disturbRow$Time",
                      "initRecTime",
                      "finRecTime",
                      "disturbRatio",
                      "recovRatio")
     ## print(vars)
-    tt <- mutate(tt, extRho = ifelse(Time < dTime, 1,
+    tt <- mutate(tt, extRho = ifelse(Time < timeD, 1,
                          sf * (disturbRatio * tt$npRatio)))
 }
 
