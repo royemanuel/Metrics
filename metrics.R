@@ -64,9 +64,39 @@ stepFailRecover <- function(tt, failTime, recoverTime, preLevel,
     return(timeAndPerf)
 }
 
+resTriangle <- function(tt,
+                        failTime,
+                        recoverTime,
+                        preLevel,
+                        failLevel,
+                        recLevel){
+    slope <- (recLevel -failLevel)/(recoverTime - failTime)
+    preFail <- tt %>%
+        filter(Time < failTime) %>%
+            mutate(Performance = preLevel)
+    postFail <- tt %>%
+        filter(Time >= failTime & Time < recoverTime) %>%
+            mutate(Performance = failLevel + slope *(Time - failTime))
+    postRec <- tt %>%
+        filter(Time >= recoverTime) %>%
+            mutate(Performance = recLevel)
+    timeAndPerf <- rbind(preFail, postFail, postRec)
+    return(timeAndPerf)
+}
+
+
 ## a quick build for a need column that has a constant value
 constantNeed <- function(tt, Need){
     tt <- cbind(tt, Need)
+}
+## A need that changes linearly at a defined start time. Inputs are
+## initial need level (need0), startTime, and slope of the need.
+## For decreasing need put in a negative value
+linearNeed <- function(tt, need0, startTime, slope){
+    tt <- tt %>%
+        mutate(Need = ifelse(Time < startTime,
+               need0,
+               need0 + (Time - startTime) * slope))
 }
 ## A function to pull the performance at t0, the performance at td,
 ## and td
@@ -124,7 +154,7 @@ extQuotRes <- function(tt, sigma){
     rat0 <- ifelse(p0 > n0, 1 + sigma * (p0 - n0)/n0, p0/n0)
     ## firstFailedState is the row of the dataframe that has the lowest
     ## performance
-    ## to need ratio at the minimum value. Not sure if this is 
+    ## to need ratio at the minimum value. Not sure if this is
     ##
     ## What should I do if need
     ## increases faster than the performance recovers (ratio is worse)
@@ -168,25 +198,7 @@ speedFactor <- function(disturbTime,
     }
     return(sf)
 }
-## Resilience Factor rho(s_p, phi_r, phi_d,phi_0)
-## Do I take times as the input? I am defining these, correct?
-## Takes as its inputs the initial recovery time, the
-## Due to failure profiles, the disturbance time and the fail time
-## are not the same. ESDF calculates from the disturbance to the initial
-## recovery
-## resFac <- function(tt, disturbTime, initRecTime, finRecTime, tDelta, decay){
-##     phiD <- filter(tt, Time == disturbTime)$Performance
-##     sf <- speedFactor(disturbTime, initRecTime, finRecTime, tDelta, decay)
-##     phiR <- filter(tt, Time == finRecTime)$Performance
-##     phi0 <- tt$Performance[1]
-##     vars <- c(sf, phiD, phi0)
-##     names(vars) <- c("SpeedFactor", "Phi_D", "Phi_0")
-##     
-##     tt <- mutate(tt, Rho = ifelse(Time < disturbTime, 1,
-##                          sf * phiD * tt$Performance /
-##                              (phi0 ^ 2)))
-## }
-## resFac using only tt and tDelta
+
 
 ## The purpose of the recovery time in the metric per the documentation
 ## is that the time horizon will equal the finRecTime. init Rect time
@@ -241,7 +253,13 @@ extResFac <- function(tt,
         filter(Time > timeD) %>%
             filter(Performance > phiD)
     initRecTime <- recoveryID$Time[1]
-    ## Need to identify the final recovery time
+    ## Simplistic recovery defined as the first time step that has no
+    ## increasing value after the recovery initiation
+    perfDiff <- tt %>%
+        filter(Time > initRecTime) %>%
+            mutate(Diff = Performance - lag(Performance, 1)) %>%
+                filter(Diff <= 0)
+    finRecTime <- perfDiff$Time[1]
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     recovRatio <- filter(tt, Time == finRecTime)$npRatio
     vars <- c(sf,
@@ -325,7 +343,12 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
     print("time done")
     print( head(resMat))
     resMat <- switch(needList$func,
-                     constantNeed = constantNeed(resMat, needList$cLevel))
+                     constantNeed = constantNeed(resMat, needList$cLevel),
+                     linearNeed = linearNeed(
+                         resMat,
+                         needList$cLevel,
+                         needList$startTime,
+                         needList$slope))
     print("need done")
     print( head(resMat))
     resMat <- switch(perfList$func,
@@ -344,7 +367,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
     print("performance done")
     print(head(resMat))
     resMat <- quotRes(resMat)
-    print("QR done")    
+    print("QR done")
     resMat <- extQuotRes(resMat, 0)
     print("EQR done")
     resMat <- resFac(tt = resMat,
@@ -363,5 +386,86 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
     resMat <- intRes(resMat,
                      sigma = resList$sigma)
     print("IntRes done")
+    resMat <- tidyDF(resMat)
+    return(resMat)
 }
 
+######################################################################
+######################################################################
+## PLOTTING FUNCTIONS
+######################################################################
+######################################################################
+
+
+## Plot Need for each metric
+pltMoveNeed <- function(df, time){
+    workDF <- df %>%
+        filter(Time == time) %>%
+        select(-Run, -Performance, -npRatio)
+    workDF <- melt(data = workDF, id = c("Time", "Need"))
+    workDF <- workDF %>%
+        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
+                   1,
+                   ifelse((variable == "Rho" | variable == "extRho"),
+                          2,
+                          ifelse((variable == "statQuoResilience" |
+                                      variable == "extResilience"),
+                                 3, 0))))
+    ## print(colnames(workDF))
+    plt <- ggplot(workDF, aes(Need, value,
+                              group = variable,
+                              color = variable)) +
+                                  geom_line() +
+                                      facet_grid(ResType ~ .)
+}
+
+## Plot Substitution (sigma) for each metric
+pltSubNeed <- function(df, time){
+    workDF <- df %>%
+        filter(Time == time) %>%
+        select(-Need, -Performance, -npRatio)
+    workDF <- melt(data = workDF, id = c("Time", "Sigma"))
+    workDF <- workDF %>%
+        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
+                   1,
+                   ifelse((variable == "Rho" | variable == "extRho"),
+                          2,
+                          ifelse((variable == "statQuoResilience" |
+                                      variable == "extResilience"),
+                                 3, 0))))
+    ## print(colnames(workDF))
+    plt <- ggplot(workDF, aes(Sigma, value,
+                              group = variable,
+                              color = variable)) +
+                                  geom_line()  +
+                                      ## May or may not want to facet
+                                      ## this one. Looked pretty good
+                                      ## on one plot, but for consistency
+                                      ## probably fact it.
+                                      facet_grid(ResType ~ .)
+}
+## Plot resilience as the time horizon changes
+pltMoveTimeH <- function(df){
+    workDF <- df %>%
+         select(-npRatio, -Need)
+    workDF <- melt(data = workDF, id = c("Time"))
+    ## Assign a value to the pairings of extended and unextended values
+    ## there might be a better way to do this that you might want to
+    ## clear up, but for now, get it on the paper
+    workDF <- workDF %>%
+        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
+                   1,
+                   ifelse((variable == "Rho" | variable == "extRho"),
+                          2,
+                          ifelse((variable == "statQuoResilience" |
+                                      variable == "extResilience"),
+                                 3, 0))))
+    print(head(workDF))
+    print(tail(workDF))
+    ## print(colnames(workDF))
+    plt <- ggplot(workDF, aes(Time, value,
+                              group = variable,
+                              color = variable)) +
+                                  geom_line() +
+               facet_grid(ResType ~ .)
+}
