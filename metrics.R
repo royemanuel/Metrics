@@ -36,7 +36,7 @@ resolution <- 5
 timeTick <- data.frame(Time = seq(from = 0, to = timeHorizon, by = resolution))
 
 timeColumn <- function(endTime, resolution){
-    data.frame(Time = seq(from = 0, to = timeHorizon, by = resolution))
+    data.frame(Time = seq(from = 0, to = endTime, by = resolution))
 }
 
 performance <- function(tt, FUN = 1, ...){
@@ -220,7 +220,7 @@ resFac <- function(tt,
         filter(Time > timeD) %>%
             filter(Performance > phiD)
     initRecTime <- recoveryID$Time[1]
-    print(recoveryID)
+    # print(recoveryID)
     finRecTime <- recoveryID[which.max(recoveryID$Performance), "Time"]
     print(list(initRecTime = initRecTime, finRecTime = finRecTime))
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
@@ -230,7 +230,8 @@ resFac <- function(tt,
     ## print(vars)
     tt <- mutate(tt, Rho = ifelse(Time < timeD, 1,
                          sf * phiD * tt$Performance /
-                             (phi0 ^ 2)))
+                             (phi0 ^ 2)),
+                 )
 }
 
 
@@ -249,17 +250,28 @@ extResFac <- function(tt,
     ## print("This is timeD")
     ## print(timeD)
     disturbRatio <- disturbRow$npRatio
+    ## Identify when recovery occurs. Simply defined as the first time
+    ## increasing performance
     recoveryID <- tt %>%
         filter(Time > timeD) %>%
             filter(Performance > phiD)
     initRecTime <- recoveryID$Time[1]
+    print(initRecTime)
     ## Simplistic recovery defined as the first time step that has no
     ## increasing value after the recovery initiation
+    print(tail(tt))
     perfDiff <- tt %>%
         filter(Time > initRecTime) %>%
             mutate(Diff = Performance - lag(Performance, 1)) %>%
                 filter(Diff <= 0)
-    finRecTime <- perfDiff$Time[1]
+    print(perfDiff)
+    print(dim(perfDiff))
+    finRecTime <- ifelse(!dim(perfDiff)[1],
+                         max(tt$Time),
+                         perfDiff$Time)
+    print(max(tt$Time))
+    print("finRecTime")
+    print(finRecTime)
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     recovRatio <- filter(tt, Time == finRecTime)$npRatio
     vars <- c(sf,
@@ -342,7 +354,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
     resMat <- timeColumn(timeList$endTime, timeList$resolution)
     print("time done")
     print( head(resMat))
-    resMat <- switch(needList$func,
+    resMat <- switch(as.character(needList$func),
                      constantNeed = constantNeed(resMat, needList$cLevel),
                      linearNeed = linearNeed(
                          resMat,
@@ -351,7 +363,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                          needList$slope))
     print("need done")
     print( head(resMat))
-    resMat <- switch(perfList$func,
+    resMat <- switch(as.character(perfList$func),
                      step = stepFailRecover(resMat,
                          perfList$failTime,
                          perfList$recTime,
@@ -395,18 +407,30 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
 resLoop <- function(time, need, performance, resFactors){
     rm <- data.frame()
     needStep <- dim(need)[1]
-    for (needRun in needStep){
-        perfStep <- dim(performance)[1]
-        for (perfRun in perfStep){
-            resStep <- dim(resFactors)[1]
-            for (resRun in resStep){
-                timeStep <- dim(time)[1]
-                for (timeRun in timeStep){
-                    k <- buildResMatrix(time[timeRun, :], )
+    perfStep <- dim(performance)[1]
+    resStep <- dim(resFactors)[1]
+    timeStep <- dim(time)[1]
+    for (needRun in 1:needStep){
+        for (perfRun in 1:perfStep){
+            for (resRun in 1:resStep){
+                for (timeRun in 1:timeStep){
+                    k <- buildResMatrix(time[timeRun,],
+                                        need[needRun,],
+                                        performance[perfRun,],
+                                        resFactors[resRun,]
+                                        )
+                    k <- cbind(k,
+                               tRun = timeRun,
+                               nRun = needRun,
+                               pRun = perfRun,
+                               rRun = resRun
+                               )
+                    rm <- rbind(rm, k)
                 }
             }
         }
     }
+    rm
 }
 
 ######################################################################
