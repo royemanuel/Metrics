@@ -390,6 +390,25 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
     return(resMat)
 }
 
+## Call the function multiple time for variable inputs. All inputs
+## are data.frame
+resLoop <- function(time, need, performance, resFactors){
+    rm <- data.frame()
+    needStep <- dim(need)[1]
+    for (needRun in needStep){
+        perfStep <- dim(performance)[1]
+        for (perfRun in perfStep){
+            resStep <- dim(resFactors)[1]
+            for (resRun in resStep){
+                timeStep <- dim(time)[1]
+                for (timeRun in timeStep){
+                    k <- buildResMatrix(time[timeRun, :], )
+                }
+            }
+        }
+    }
+}
+
 ######################################################################
 ######################################################################
 ## PLOTTING FUNCTIONS
@@ -469,3 +488,4 @@ pltMoveTimeH <- function(df){
                                   geom_line() +
                facet_grid(ResType ~ .)
 }
+
