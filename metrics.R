@@ -124,11 +124,13 @@ paramPull <- function(tt){
 quotRes <- function(tt){
     pd <- min(tt$Performance)
     p0 <- tt$Performance[1]
+    Td <- filter(Performance == min(Performance))[1,]
     qr <- tt %>%
         ## Will want to change all to transmute so we aren't carrying
         ## around everything I think?
         ## transmute(QR = (Performance - pd)/(p0 - pd))
-        mutate(QR = (Performance - pd)/(p0 - pd))
+        mutate(QR = (Performance - pd)/(p0 - pd),
+               QR_Td = Td)
     return(qr)
 }
 
@@ -165,13 +167,17 @@ extQuotRes <- function(tt, sigma){
                 filter(failRatio == min(failRatio))
     firstFailedState <- failedStates %>% filter(Time == min(Time))
     ffsPerformance <- firstFailedState$Performance
+    ffsTime <- firstFaildState$Time
     ffsNeed <- filter(tt, Time == firstFailedState$Time)
     ffsNeed <- ffsNeed$Need
     tt <- sigmaApply(tt, sigma, "npRatio")
-    tt <- mutate(tt, EQR = (npRatio - ffsPerformance / ffsNeed) /
-                     (rat0 - ffsPerformance / ffsNeed))
-    vars <- c(pd, p0, n0, rat0, ffsPerformance,ffsNeed)
-    names(vars) <- c("pd", "p0", "n0", "rat0", "ffsPerformance", "ffsNeed")
+    tt <- mutate(tt,
+                 ## The actual value for the EQR
+                 EQR = (npRatio - ffsPerformance / ffsNeed) /
+                     (rat0 - ffsPerformance / ffsNeed),
+                 EQR_FailTime = ffsTime)
+    ## vars <- c(pd, p0, n0, rat0, ffsPerformance,ffsNeed)
+    ## names(vars) <- c("pd", "p0", "n0", "rat0", "ffsPerformance", "ffsNeed")
     ## print(vars)
     return(tt)
 }
@@ -230,8 +236,11 @@ resFac <- function(tt,
     ## print(vars)
     tt <- mutate(tt, Rho = ifelse(Time < timeD, 1,
                          sf * phiD * tt$Performance /
-                             (phi0 ^ 2)),
-                 )
+                             (phi0 ^ 2)))
+    tt$RF_FailTime <- timeD
+    tt$RF_TDelta <- timeD + tDelta
+    tt$RF_RecTime <- finRecTime
+    return(tt)
 }
 
 
@@ -274,23 +283,27 @@ extResFac <- function(tt,
     print(finRecTime)
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     recovRatio <- filter(tt, Time == finRecTime)$npRatio
-    vars <- c(sf,
-              timeD,
-              disturbRow$Time,
-              initRecTime,
-              finRecTime,
-              disturbRatio,
-              recovRatio)
-    names(vars) <- c("SF",
-                     "timeD",
-                     "disturbRow$Time",
-                     "initRecTime",
-                     "finRecTime",
-                     "disturbRatio",
-                     "recovRatio")
+    ## vars <- c(sf,
+    ##           timeD,
+    ##           disturbRow$Time,
+    ##           initRecTime,
+    ##           finRecTime,
+    ##           disturbRatio,
+    ##           recovRatio)
+    ## names(vars) <- c("SF",
+    ##                  "timeD",
+    ##                  "disturbRow$Time",
+    ##                  "initRecTime",
+    ##                  "finRecTime",
+    ##                  "disturbRatio",
+    ##                  "recovRatio")
     ## print(vars)
     tt <- mutate(tt, extRho = ifelse(Time < timeD, 1,
-                         sf * (disturbRatio * tt$npRatio)))
+                         sf * (disturbRatio * tt$npRatio)),
+                 ERF_FailTime = timeD,
+                 ERF_TDelta = timeD + tDelta,
+                 ERF_FinalRecTime = finRecTime
+                 )
 }
 
 intRes <- function(tt, sigma){
@@ -432,6 +445,7 @@ resLoop <- function(time, need, performance, resFactors){
     }
     rm
 }
+
 
 ######################################################################
 ######################################################################
