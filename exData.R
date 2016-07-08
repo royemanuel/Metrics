@@ -16,3 +16,51 @@ rL <- data.frame(tDelta = c(20, 30, 20),
 
 mnop <- resLoop(tL, nL, pL, rL)
 qwer <- buildResMatrix(tL[2,], nL[2,], pL[2,], rL[2,])
+
+######################################################################
+## Standard values for the inputs to building resilience matrix
+######################################################################
+
+t <- data.frame(endTime = 100,
+                resolution = 5)
+n <- data.frame(func = "constantNeed",
+                cLevel = 0.9,
+                startTime = NA,
+                slope = NA)
+p <- data.frame(func = "step",
+                failTime = 10,
+                recTime = 60,
+                preLevel = 1.1,
+                failLevel = .1,
+                recLevel = 0.9)
+r <- data.frame(tDelta = 30,
+                decay = 0,
+                sigma = 0)
+
+## Data frame with a variable level of performance during failure
+## from zero to one with a step failure
+#######
+
+pVaryFailStep <- data.frame(failLevel = seq(from = 0,
+                                            to = .99,
+                                            by = .01),
+                            func = "step",
+                            failTime = 10,
+                            recTime = 60,
+                            preLevel = 1,
+                            recLevel = 1)
+
+## Data frame with a variable level of performance during failure
+## from zero to one with a linear recovery
+#######
+
+pVaryFailTri <- data.frame(failLevel = seq(from = 0,
+                                            to = .99,
+                                            by = .01),
+                            func = "resTriangle",
+                            failTime = 10,
+                            recTime = 60,
+                            preLevel = 1,
+                            recLevel = 1)
+
+pVFS <- resLoop(t, n, pVaryFailStep, r)
