@@ -124,11 +124,14 @@ paramPull <- function(tt){
 quotRes <- function(tt){
     pd <- min(tt$Performance)
     p0 <- tt$Performance[1]
+    Td <- filter(tt, Performance == min(Performance))$Time[1]
+    ## print(Td)
     qr <- tt %>%
         ## Will want to change all to transmute so we aren't carrying
         ## around everything I think?
         ## transmute(QR = (Performance - pd)/(p0 - pd))
-        mutate(QR = (Performance - pd)/(p0 - pd))
+        mutate(QR = (Performance - pd)/(p0 - pd),
+               QR_Td = Td)
     return(qr)
 }
 
@@ -164,14 +167,19 @@ extQuotRes <- function(tt, sigma){
             mutate(failRatio = Performance / Need) %>%
                 filter(failRatio == min(failRatio))
     firstFailedState <- failedStates %>% filter(Time == min(Time))
+    ## print(firstFailedState)
     ffsPerformance <- firstFailedState$Performance
+    ffsTime <- firstFailedState$Time
     ffsNeed <- filter(tt, Time == firstFailedState$Time)
     ffsNeed <- ffsNeed$Need
     tt <- sigmaApply(tt, sigma, "npRatio")
-    tt <- mutate(tt, EQR = (npRatio - ffsPerformance / ffsNeed) /
-                     (rat0 - ffsPerformance / ffsNeed))
-    vars <- c(pd, p0, n0, rat0, ffsPerformance,ffsNeed)
-    names(vars) <- c("pd", "p0", "n0", "rat0", "ffsPerformance", "ffsNeed")
+    tt <- mutate(tt,
+                 ## The actual value for the EQR
+                 EQR = (npRatio - ffsPerformance / ffsNeed) /
+                     (rat0 - ffsPerformance / ffsNeed),
+                 EQR_FailTime = ffsTime)
+    ## vars <- c(pd, p0, n0, rat0, ffsPerformance,ffsNeed)
+    ## names(vars) <- c("pd", "p0", "n0", "rat0", "ffsPerformance", "ffsNeed")
     ## print(vars)
     return(tt)
 }
@@ -214,7 +222,7 @@ resFac <- function(tt,
     disturbRow <- tt %>% filter(Performance == min(Performance)) %>%
         filter(Time == min(Time))
     phiD <- disturbRow$Performance
-    print(phiD)
+    ## print(phiD)
     timeD <- disturbRow$Time
     recoveryID <- tt %>%
         filter(Time > timeD) %>%
@@ -222,7 +230,7 @@ resFac <- function(tt,
     initRecTime <- recoveryID$Time[1]
     # print(recoveryID)
     finRecTime <- recoveryID[which.max(recoveryID$Performance), "Time"]
-    print(list(initRecTime = initRecTime, finRecTime = finRecTime))
+    ## print(list(initRecTime = initRecTime, finRecTime = finRecTime))
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     phi0 <- tt$Performance[1]
     vars <- c(sf, phiD, timeD, phi0)
@@ -230,8 +238,11 @@ resFac <- function(tt,
     ## print(vars)
     tt <- mutate(tt, Rho = ifelse(Time < timeD, 1,
                          sf * phiD * tt$Performance /
-                             (phi0 ^ 2)),
-                 )
+                             (phi0 ^ 2)))
+    tt$RF_FailTime <- timeD
+    tt$RF_TDelta <- timeD + tDelta
+    tt$RF_RecTime <- finRecTime
+    return(tt)
 }
 
 
@@ -245,7 +256,7 @@ extResFac <- function(tt,
         filter(Time == min(Time))
     ## print(disturbRow$Time)
     phiD <- disturbRow$Performance
-    print(phiD)
+    ## print(phiD)
     timeD <- disturbRow$Time
     ## print("This is timeD")
     ## print(timeD)
@@ -256,41 +267,45 @@ extResFac <- function(tt,
         filter(Time > timeD) %>%
             filter(Performance > phiD)
     initRecTime <- recoveryID$Time[1]
-    print(initRecTime)
+    ## print(initRecTime)
     ## Simplistic recovery defined as the first time step that has no
     ## increasing value after the recovery initiation
-    print(tail(tt))
+    ## print(tail(tt))
     perfDiff <- tt %>%
         filter(Time > initRecTime) %>%
             mutate(Diff = Performance - lag(Performance, 1)) %>%
                 filter(Diff <= 0)
-    print(perfDiff)
-    print(dim(perfDiff))
+    ## print(perfDiff)
+    ## print(dim(perfDiff))
     finRecTime <- ifelse(!dim(perfDiff)[1],
                          max(tt$Time),
                          perfDiff$Time)
-    print(max(tt$Time))
-    print("finRecTime")
-    print(finRecTime)
+    ## print(max(tt$Time))
+    ## print("finRecTime")
+    ## print(finRecTime)
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     recovRatio <- filter(tt, Time == finRecTime)$npRatio
-    vars <- c(sf,
-              timeD,
-              disturbRow$Time,
-              initRecTime,
-              finRecTime,
-              disturbRatio,
-              recovRatio)
-    names(vars) <- c("SF",
-                     "timeD",
-                     "disturbRow$Time",
-                     "initRecTime",
-                     "finRecTime",
-                     "disturbRatio",
-                     "recovRatio")
+    ## vars <- c(sf,
+    ##           timeD,
+    ##           disturbRow$Time,
+    ##           initRecTime,
+    ##           finRecTime,
+    ##           disturbRatio,
+    ##           recovRatio)
+    ## names(vars) <- c("SF",
+    ##                  "timeD",
+    ##                  "disturbRow$Time",
+    ##                  "initRecTime",
+    ##                  "finRecTime",
+    ##                  "disturbRatio",
+    ##                  "recovRatio")
     ## print(vars)
     tt <- mutate(tt, extRho = ifelse(Time < timeD, 1,
-                         sf * (disturbRatio * tt$npRatio)))
+                         sf * (disturbRatio * tt$npRatio)),
+                 ERF_FailTime = timeD,
+                 ERF_TDelta = timeD + tDelta,
+                 ERF_FinalRecTime = finRecTime
+                 )
 }
 
 intRes <- function(tt, sigma){
@@ -353,7 +368,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
     ## a time vector uses an endTime and a resolution
     resMat <- timeColumn(timeList$endTime, timeList$resolution)
     print("time done")
-    print( head(resMat))
+    # print( head(resMat))
     resMat <- switch(as.character(needList$func),
                      constantNeed = constantNeed(resMat, needList$cLevel),
                      linearNeed = linearNeed(
@@ -362,7 +377,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                          needList$startTime,
                          needList$slope))
     print("need done")
-    print( head(resMat))
+    # print( head(resMat))
     resMat <- switch(as.character(perfList$func),
                      step = stepFailRecover(resMat,
                          perfList$failTime,
@@ -377,7 +392,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                          perfList$failLevel,
                          perfList$recLevel))
     print("performance done")
-    print(head(resMat))
+    ## print(head(resMat))
     resMat <- quotRes(resMat)
     print("QR done")
     resMat <- extQuotRes(resMat, 0)
@@ -411,9 +426,17 @@ resLoop <- function(time, need, performance, resFactors){
     resStep <- dim(resFactors)[1]
     timeStep <- dim(time)[1]
     for (needRun in 1:needStep){
+        print("NR")
+        print(needRun)
         for (perfRun in 1:perfStep){
+            print("PR")
+            print(perfRun)
             for (resRun in 1:resStep){
+                print("RR")
+                print(resRun)
                 for (timeRun in 1:timeStep){
+                    print("TR")
+                    print(timeRun)
                     k <- buildResMatrix(time[timeRun,],
                                         need[needRun,],
                                         performance[perfRun,],
@@ -432,6 +455,7 @@ resLoop <- function(time, need, performance, resFactors){
     }
     rm
 }
+
 
 ######################################################################
 ######################################################################
@@ -503,8 +527,8 @@ pltMoveTimeH <- function(df){
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
                                  3, 0))))
-    print(head(workDF))
-    print(tail(workDF))
+    ## print(head(workDF))
+    ## print(tail(workDF))
     ## print(colnames(workDF))
     plt <- ggplot(workDF, aes(Time, value,
                               group = variable,

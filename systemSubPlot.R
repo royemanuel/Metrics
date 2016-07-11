@@ -40,8 +40,8 @@ for (sigma in 1:length(subStep)){
 ## clear out the unnecessary columns
 tidySub <- tidyDF(fullSub)
 
-## Plot Need for each metric
-pltMoveNeed <- function(df, time){
+## Plot Substitution (sigma) for each metric
+pltSubNeed <- function(df, time){
     workDF <- df %>%
         filter(Time == time) %>%
         select(-Need, -Performance, -npRatio)
