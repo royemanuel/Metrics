@@ -125,7 +125,7 @@ quotRes <- function(tt){
     pd <- min(tt$Performance)
     p0 <- tt$Performance[1]
     Td <- filter(tt, Performance == min(Performance))$Time[1]
-    print(Td)
+    ## print(Td)
     qr <- tt %>%
         ## Will want to change all to transmute so we aren't carrying
         ## around everything I think?
@@ -167,9 +167,9 @@ extQuotRes <- function(tt, sigma){
             mutate(failRatio = Performance / Need) %>%
                 filter(failRatio == min(failRatio))
     firstFailedState <- failedStates %>% filter(Time == min(Time))
-    print(firstFailedState)
+    ## print(firstFailedState)
     ffsPerformance <- firstFailedState$Performance
-    dimffsTime <- firstFailedState$Time
+    ffsTime <- firstFailedState$Time
     ffsNeed <- filter(tt, Time == firstFailedState$Time)
     ffsNeed <- ffsNeed$Need
     tt <- sigmaApply(tt, sigma, "npRatio")
@@ -392,7 +392,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                          perfList$failLevel,
                          perfList$recLevel))
     print("performance done")
-    print(head(resMat))
+    ## print(head(resMat))
     resMat <- quotRes(resMat)
     print("QR done")
     resMat <- extQuotRes(resMat, 0)
@@ -426,9 +426,17 @@ resLoop <- function(time, need, performance, resFactors){
     resStep <- dim(resFactors)[1]
     timeStep <- dim(time)[1]
     for (needRun in 1:needStep){
+        print("NR")
+        print(needRun)
         for (perfRun in 1:perfStep){
+            print("PR")
+            print(perfRun)
             for (resRun in 1:resStep){
+                print("RR")
+                print(resRun)
                 for (timeRun in 1:timeStep){
+                    print("TR")
+                    print(timeRun)
                     k <- buildResMatrix(time[timeRun,],
                                         need[needRun,],
                                         performance[perfRun,],
