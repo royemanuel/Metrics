@@ -199,6 +199,10 @@ speedFactor <- function(disturbTime,
                         tDelta,
                         decay){
     timeToInitRec <- initRecTime - disturbTime
+    print("FinRec")
+    print(finRecTime)
+    print("initRec")
+    print(initRecTime)
     if(finRecTime >= initRecTime){
         sf <- (tDelta/timeToInitRec)*exp(-decay*(finRecTime - initRecTime))
     } else {
@@ -252,9 +256,15 @@ extResFac <- function(tt,
                       ## finRecTime,
                       decay,
                       sigma){
+    ## print(head(tt))
+    ## There is a problem here with some of the plots I want to make.
+    ## if the need remains below the performance failure the entire time,
+    ## it throws an error because there is no initial recovery time.
+    ## it is looking at ratios, and the ratio never changes. Especially
+    ## with sigma set to zero. 
     disturbRow <- tt %>% filter(npRatio == min(npRatio)) %>%
         filter(Time == min(Time))
-    ## print(disturbRow$Time)
+    print(disturbRow$Time)
     phiD <- disturbRow$Performance
     ## print(phiD)
     timeD <- disturbRow$Time
@@ -265,7 +275,8 @@ extResFac <- function(tt,
     ## increasing performance
     recoveryID <- tt %>%
         filter(Time > timeD) %>%
-            filter(Performance > phiD)
+        filter(Performance > phiD)
+    print(head(recoveryID))
     initRecTime <- recoveryID$Time[1]
     ## print(initRecTime)
     ## Simplistic recovery defined as the first time step that has no
@@ -280,9 +291,11 @@ extResFac <- function(tt,
     finRecTime <- ifelse(!dim(perfDiff)[1],
                          max(tt$Time),
                          perfDiff$Time)
+    if is.na(initRecTime)
     ## print(max(tt$Time))
     ## print("finRecTime")
     ## print(finRecTime)
+    ## I am changing something to see if anything happens
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     recovRatio <- filter(tt, Time == finRecTime)$npRatio
     ## vars <- c(sf,

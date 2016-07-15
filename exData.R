@@ -62,5 +62,16 @@ pVaryFailTri <- data.frame(failLevel = seq(from = 0,
                             recTime = 60,
                             preLevel = 1,
                             recLevel = 1)
-
+## Vary the failure level from 0 to .99
 pVFS <- resLoop(t, n, pVaryFailStep, r)
+
+nLinearVary <- data.frame(func = "constantNeed",
+                          cLevel = seq(from = 0,
+                                       to = 1.0,
+                                       by = .01),
+                          cLevel = 1.0,
+                          startTime = NA,
+                          slope = NA)
+
+## Vary the constant need from 0 to 1.0
+nVFS <- 
