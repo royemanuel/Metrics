@@ -199,10 +199,10 @@ speedFactor <- function(disturbTime,
                         tDelta,
                         decay){
     timeToInitRec <- initRecTime - disturbTime
-    print("FinRec")
-    print(finRecTime)
-    print("initRec")
-    print(initRecTime)
+    ## print("FinRec")
+    ## print(finRecTime)
+    ## print("initRec")
+    ## print(initRecTime)
     if(finRecTime >= initRecTime){
         sf <- (tDelta/timeToInitRec)*exp(-decay*(finRecTime - initRecTime))
     } else {
@@ -261,10 +261,11 @@ extResFac <- function(tt,
     ## if the need remains below the performance failure the entire time,
     ## it throws an error because there is no initial recovery time.
     ## it is looking at ratios, and the ratio never changes. Especially
-    ## with sigma set to zero. 
+    ## with sigma set to zero.
+    ## print(head(tt$npRatio))
     disturbRow <- tt %>% filter(npRatio == min(npRatio)) %>%
         filter(Time == min(Time))
-    print(disturbRow$Time)
+    ## print(disturbRow$Time)
     phiD <- disturbRow$Performance
     ## print(phiD)
     timeD <- disturbRow$Time
@@ -276,8 +277,9 @@ extResFac <- function(tt,
     recoveryID <- tt %>%
         filter(Time > timeD) %>%
         filter(Performance > phiD)
-    print(head(recoveryID))
+    ## print(head(recoveryID))
     initRecTime <- recoveryID$Time[1]
+    ## print("initRecTime ERF")
     ## print(initRecTime)
     ## Simplistic recovery defined as the first time step that has no
     ## increasing value after the recovery initiation
@@ -291,9 +293,11 @@ extResFac <- function(tt,
     finRecTime <- ifelse(!dim(perfDiff)[1],
                          max(tt$Time),
                          perfDiff$Time)
-    if is.na(initRecTime)
+    if (is.na(initRecTime)){
+        initRecTime <- timeD
+    }
     ## print(max(tt$Time))
-    ## print("finRecTime")
+    ## print("finRecTime ERF")
     ## print(finRecTime)
     ## I am changing something to see if anything happens
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
@@ -380,7 +384,7 @@ tidyDF <- function(tt){
 buildResMatrix <- function(timeList, needList, perfList, resList){
     ## a time vector uses an endTime and a resolution
     resMat <- timeColumn(timeList$endTime, timeList$resolution)
-    print("time done")
+    ## print("time done")
     # print( head(resMat))
     resMat <- switch(as.character(needList$func),
                      constantNeed = constantNeed(resMat, needList$cLevel),
@@ -389,7 +393,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                          needList$cLevel,
                          needList$startTime,
                          needList$slope))
-    print("need done")
+    ## print("need done")
     # print( head(resMat))
     resMat <- switch(as.character(perfList$func),
                      step = stepFailRecover(resMat,
@@ -404,28 +408,28 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                          perfList$preLevel,
                          perfList$failLevel,
                          perfList$recLevel))
-    print("performance done")
+    ## print("performance done")
     ## print(head(resMat))
     resMat <- quotRes(resMat)
-    print("QR done")
+    ## print("QR done")
     resMat <- extQuotRes(resMat, 0)
-    print("EQR done")
+    ## print("EQR done")
     resMat <- resFac(tt = resMat,
                      tDelta = resList$tDelta,
                      ## initRecTime = resList$initRecTime,
                      ## finRecTime = resList$finRecTime,
                      decay = resList$decay)
-    print("RF done")
+    ## print("RF done")
     resMat <- extResFac(tt = resMat,
                         tDelta = resList$tDelta,
                         ## initRecTime = resList$initRecTime,
                         ## finRecTime = resList$finRecTime,
                         decay = resList$decay,
                         sigma = resList$sigma)
-    print("ERF done")
+    ## print("ERF done")
     resMat <- intRes(resMat,
                      sigma = resList$sigma)
-    print("IntRes done")
+    ## print("IntRes done")
     resMat <- tidyDF(resMat)
     return(resMat)
 }
@@ -439,17 +443,13 @@ resLoop <- function(time, need, performance, resFactors){
     resStep <- dim(resFactors)[1]
     timeStep <- dim(time)[1]
     for (needRun in 1:needStep){
-        print("NR")
-        print(needRun)
         for (perfRun in 1:perfStep){
-            print("PR")
-            print(perfRun)
             for (resRun in 1:resStep){
-                print("RR")
-                print(resRun)
                 for (timeRun in 1:timeStep){
-                    print("TR")
-                    print(timeRun)
+                    print(paste0("NR = ", needRun, ", ",
+                                 "PR = ", perfRun, ", ",
+                                 "RR = ", resRun, ", ",
+                                 "TR = ", timeRun))
                     k <- buildResMatrix(time[timeRun,],
                                         need[needRun,],
                                         performance[perfRun,],
@@ -459,7 +459,9 @@ resLoop <- function(time, need, performance, resFactors){
                                tRun = timeRun,
                                nRun = needRun,
                                pRun = perfRun,
-                               rRun = resRun
+                               rRun = resRun,
+                               Decay = resFactors$decay[resRun],
+                               Sigma = resFactors$sigma[resRun]
                                )
                     rm <- rbind(rm, k)
                 }
@@ -481,7 +483,8 @@ resLoop <- function(time, need, performance, resFactors){
 pltMoveNeed <- function(df, time){
     workDF <- df %>%
         filter(Time == time) %>%
-        select(-Run, -Performance, -npRatio)
+            select(Time, Need, QR, EQR, Rho,
+                   extRho, statQuoResilience, extResilience)
     workDF <- melt(data = workDF, id = c("Time", "Need"))
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
@@ -503,7 +506,8 @@ pltMoveNeed <- function(df, time){
 pltSubNeed <- function(df, time){
     workDF <- df %>%
         filter(Time == time) %>%
-        select(-Need, -Performance, -npRatio)
+        select(Time, QR, EQR, Rho,
+                   extRho, statQuoResilience, extResilience, Sigma)
     workDF <- melt(data = workDF, id = c("Time", "Sigma"))
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),

@@ -65,8 +65,9 @@ pVaryFailTri <- data.frame(failLevel = seq(from = 0,
 ## Vary the failure level from 0 to .99
 pVFS <- resLoop(t, n, pVaryFailStep, r)
 
+## Vary to
 nLinearVary <- data.frame(func = "constantNeed",
-                          cLevel = seq(from = 0,
+                          cLevel = seq(from = 0.01,
                                        to = 1.0,
                                        by = .01),
                           cLevel = 1.0,
@@ -74,4 +75,27 @@ nLinearVary <- data.frame(func = "constantNeed",
                           slope = NA)
 
 ## Vary the constant need from 0 to 1.0
-nVFS <- 
+nVFS <- resLoop(t, nLinearVary, p, r)
+nVFSplotRec <- pltMoveNeed(nVFS, 80)
+nVFSplotFail <- pltMoveNeed(nVFS, 30)
+
+## Data frame with variable level of sigma
+##########################################
+n2 <- data.frame(func = "constantNeed",
+                cLevel = 0.9,
+                startTime = NA,
+                slope = NA)
+p2 <- data.frame(func = "step",
+                failTime = 20,
+                recTime = 60,
+                preLevel = 1.2,
+                failLevel = .1,
+                recLevel = 1.0)
+r2 <- data.frame(tDelta = 30,
+                decay = 0,
+                 sigma = seq(from = 0,
+                     to = 1.0,
+                     by = .01))
+sVFS <- resLoop(t, n2, p2, r2)
+sVFSplotRec <- pltSubNeed(sVFS, 80)
+sVFSplotFail <- pltSubNeed(sVFS, 30)
