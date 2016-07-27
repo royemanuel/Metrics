@@ -99,3 +99,9 @@ r2 <- data.frame(tDelta = 30,
 sVFS <- resLoop(t, n2, p2, r2)
 sVFSplotRec <- pltSubNeed(sVFS, 80)
 sVFSplotFail <- pltSubNeed(sVFS, 30)
+
+## Data frame with variable time horizon
+######################################################################
+tVFS <- resLoop(t, n2, p2, r)
+tVFSplot <- pltMoveTimeH(tVFS)
+tVFSplot

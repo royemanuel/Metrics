@@ -100,20 +100,20 @@ linearNeed <- function(tt, need0, startTime, slope){
 }
 ## A function to pull the performance at t0, the performance at td,
 ## and td
-paramPull <- function(tt){
-    pd <- min(tt$Performance)
-    p0 <- tt$Performance[1]
-    td <- filter(tt, Performance == pd)$Time[1]
-    nd <- filter(tt, Performance == pd)$Need[1]
-    rat <- tt %>% filter(npRatio == min(npRatio)) %>%
-        filter(Time == min(Time))
-    ## print(rat)
-    ratD <- rat$npRatio[1]
-    timeRatD <- rat$Time[1]
-    ttPull <- data.frame(Perf0 = p0, PerfD = pd,
-                         NeedD = nd, TimeD = td,
-                         RatD = ratD, timeRatD = timeRatD)
-}
+## paramPull <- function(tt){
+##     pd <- min(tt$Performance)
+##     p0 <- tt$Performance[1]
+##     td <- filter(tt, Performance == pd)$Time[1]
+##     nd <- filter(tt, Performance == pd)$Need[1]
+##     rat <- tt %>% filter(npRatio == min(npRatio)) %>%
+##         filter(Time == min(Time))
+##     ## print(rat)
+##     ratD <- rat$npRatio[1]
+##     timeRatD <- rat$Time[1]
+##     ttPull <- data.frame(Perf0 = p0, PerfD = pd,
+##                          NeedD = nd, TimeD = td,
+##                          RatD = ratD, timeRatD = timeRatD)
+## }
 
 ## Calculate quotient resilience as the comparison
 ## quotient resilience is performance value (phi(t|e)) minus the
@@ -151,7 +151,9 @@ sigmaApply <- function(tt, sigma, cn){
 ## Requires a data frame with a performance function and a need function
 ## We will use the minimum ratio value between phi(td) and phiN(td)
 extQuotRes <- function(tt, sigma){
+    ## Identify the lowest level of performance
     pd <- min(tt$Performance)
+    ## Set the level of performance at the start of the time series
     p0 <- tt$Performance[1]
     n0 <- tt$Need[1]
     rat0 <- ifelse(p0 > n0, 1 + sigma * (p0 - n0)/n0, p0/n0)
@@ -175,9 +177,13 @@ extQuotRes <- function(tt, sigma){
     tt <- sigmaApply(tt, sigma, "npRatio")
     tt <- mutate(tt,
                  ## The actual value for the EQR
+                 ## I need to recalculate this. I am almost there though!
+                 ## The problem is the rat0 value is... maybe it isn't a problem
+                 ## I need to make it trace the verbiage closer
                  EQR = (npRatio - ffsPerformance / ffsNeed) /
                      (rat0 - ffsPerformance / ffsNeed),
-                 EQR_FailTime = ffsTime)
+                 EQR_FailTime = ffsTime,
+                 Rat0 = rat0)
     ## vars <- c(pd, p0, n0, rat0, ffsPerformance,ffsNeed)
     ## names(vars) <- c("pd", "p0", "n0", "rat0", "ffsPerformance", "ffsNeed")
     ## print(vars)
@@ -412,7 +418,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
     ## print(head(resMat))
     resMat <- quotRes(resMat)
     ## print("QR done")
-    resMat <- extQuotRes(resMat, 0)
+    resMat <- extQuotRes(resMat, resList$sigma)
     ## print("EQR done")
     resMat <- resFac(tt = resMat,
                      tDelta = resList$tDelta,
@@ -531,7 +537,8 @@ pltSubNeed <- function(df, time){
 ## Plot resilience as the time horizon changes
 pltMoveTimeH <- function(df){
     workDF <- df %>%
-         select(-npRatio, -Need)
+         select(Time, QR, EQR, Rho,
+                   extRho, statQuoResilience, extResilience)
     workDF <- melt(data = workDF, id = c("Time"))
     ## Assign a value to the pairings of extended and unextended values
     ## there might be a better way to do this that you might want to
@@ -552,5 +559,17 @@ pltMoveTimeH <- function(df){
                               color = variable)) +
                                   geom_line() +
                facet_grid(ResType ~ .)
+}
+
+## Plot the need and performance of a resilience matrix when they are
+## held constant. This allows you to look at what the performance profile
+## looks like when analyzing the results.
+pltNeedPerf <- function(df){
+    wdf <- df %>%
+        filter(tRun == 1, nRun == 1, pRun == 1, rRun == 1) %>%
+            select(Need, Time, Performance)
+    wdf <- melt(data = wdf, id = c("Time"))
+    plt <- ggplot(wdf, aes(Time, value, group = variable,
+                           color = variable)) + geom_line()
 }
 
