@@ -514,7 +514,7 @@ pltMoveNeed <- function(df, time){
     plt <- plt +
         scale_linetype_discrete(name = "Metrics") +
             theme_bw(base_size = 8, base_family = "serif") +
-                theme(legend.position = "bottom")
+                theme(legend.position = c(.85, .15))
 }
 
 ## Plot Substitution (sigma) for each metric
@@ -607,5 +607,5 @@ pltMoveTDelta <- function(df, time){
 }
 
 myPlotSave <- function(name){
-    ggsave(filename = name, plot = last_plot(), scale = .5)
+    ggsave(filename = name, plot = last_plot(), width = 3.5, height = 4)
 }
