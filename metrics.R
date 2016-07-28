@@ -177,9 +177,6 @@ extQuotRes <- function(tt, sigma){
     tt <- sigmaApply(tt, sigma, "npRatio")
     tt <- mutate(tt,
                  ## The actual value for the EQR
-                 ## I need to recalculate this. I am almost there though!
-                 ## The problem is the rat0 value is... maybe it isn't a problem
-                 ## I need to make it trace the verbiage closer
                  EQR = (npRatio - ffsPerformance / ffsNeed) /
                      (rat0 - ffsPerformance / ffsNeed),
                  EQR_FailTime = ffsTime,
@@ -250,12 +247,14 @@ resFac <- function(tt,
                          sf * phiD * tt$Performance /
                              (phi0 ^ 2)))
     tt$RF_FailTime <- timeD
-    tt$RF_TDelta <- timeD + tDelta
+    tt$RF_TDelta <- tDelta
     tt$RF_RecTime <- finRecTime
+    tt$RF_DwellTime <- tt$RF_RecTime - tt$RF_FailTime
     return(tt)
 }
 
-
+## The final recovery times are different between extended and regular
+## resilience factors  Think about this.
 extResFac <- function(tt,
                       tDelta,
                       ## initRecTime,
@@ -287,18 +286,17 @@ extResFac <- function(tt,
     initRecTime <- recoveryID$Time[1]
     ## print("initRecTime ERF")
     ## print(initRecTime)
-    ## Simplistic recovery defined as the first time step that has no
-    ## increasing value after the recovery initiation
+    ## Simplistic recovery defined as the first time step that has
+    ## performance greater than need.
     ## print(tail(tt))
     perfDiff <- tt %>%
-        filter(Time > initRecTime) %>%
-            mutate(Diff = Performance - lag(Performance, 1)) %>%
-                filter(Diff <= 0)
+        mutate(Diff = Performance - Need) %>%
+            filter(Time > timeD & Diff >= 0)
     ## print(perfDiff)
     ## print(dim(perfDiff))
     finRecTime <- ifelse(!dim(perfDiff)[1],
                          max(tt$Time),
-                         perfDiff$Time)
+                         perfDiff$Time[1])
     if (is.na(initRecTime)){
         initRecTime <- timeD
     }
@@ -326,8 +324,9 @@ extResFac <- function(tt,
     tt <- mutate(tt, extRho = ifelse(Time < timeD, 1,
                          sf * (disturbRatio * tt$npRatio)),
                  ERF_FailTime = timeD,
-                 ERF_TDelta = timeD + tDelta,
-                 ERF_FinalRecTime = finRecTime
+                 ERF_TDelta = tDelta,
+                 ERF_FinalRecTime = finRecTime,
+                 ERF_DwellTime = ERF_FinalRecTime - ERF_FailTime
                  )
 }
 
@@ -573,3 +572,20 @@ pltNeedPerf <- function(df){
                            color = variable)) + geom_line()
 }
 
+## Plot the effect of tDelta changes on rho and extRho when decay is
+## zero. Need to finish this
+pltMoveTDelta <- function(df, time){
+    workDF <- df %>%
+        filter(Time == time) %>%
+            select(Rho,
+                   extRho,
+                   RF_DwellTime,
+                   ERF_DwellTime,
+                   RF_TDelta,
+                   ERF_TDelta) %>%
+                       mutate(SF = RF_TDelta / RF_DwellTime,
+                              ESF = ERF_TDelta / ERF_DwellTime)
+    ## Everything after this is wrong
+    workDF <- melt(data = workDF, id = c("SF", "ESF"))
+    plt <- ggplot(data = workDF, aes()
+}

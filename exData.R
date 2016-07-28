@@ -105,3 +105,12 @@ sVFSplotFail <- pltSubNeed(sVFS, 30)
 tVFS <- resLoop(t, n2, p2, r)
 tVFSplot <- pltMoveTimeH(tVFS)
 tVFSplot
+
+## Data frame with variable tdelta to show its effect on Rho
+######################################################################
+r3 <- data.frame(tDelta = seq(from = 0,
+                     to = 200,
+                     by = 1),
+                 decay = 0,
+                 sigma = 0)
+tdVFS <- resLoop(t, n2, p2, r)
