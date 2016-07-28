@@ -113,4 +113,9 @@ r3 <- data.frame(tDelta = seq(from = 0,
                      by = 1),
                  decay = 0,
                  sigma = 0)
-tdVFS <- resLoop(t, n2, p2, r)
+tdVFS <- resLoop(t, n2, p2, r3)
+######################################################################
+##  This is a nice small data set to play around with if necessary
+######################################################################
+smallSet <- resLoop(t, n2, p2, r)
+

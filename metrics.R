@@ -4,6 +4,7 @@ library('plyr')
 library('dplyr')
 library('reshape2')
 library('ggplot2')
+library('extrafont')
 
 ## Instead of doing this step by step, should I build a single function
 ## that builds everything at once? No. but you should define the
@@ -493,18 +494,27 @@ pltMoveNeed <- function(df, time){
     workDF <- melt(data = workDF, id = c("Time", "Need"))
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   1,
+                   "Quotient Resilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          2,
+                          "ESDF",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 3, 0))))
+                                 "Integral Resilience", 0))))
     ## print(colnames(workDF))
-    plt <- ggplot(workDF, aes(Need, value,
-                              group = variable,
-                              color = variable)) +
-                                  geom_line() +
+    workDF <- workDF %>%
+        mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
+                   "Extended",
+                   "Original"))
+    print(names(workDF))
+    workDF <- rename(workDF, Resilience = value)
+    plt <- ggplot(workDF, aes(Need, Resilience,
+                              group = variable)) +
+                                  geom_line(aes(linetype = variable)) +
                                       facet_grid(ResType ~ .)
+    plt <- plt +
+        scale_linetype_discrete(name = "Metrics") +
+            theme_bw(base_size = 8, base_family = "serif") +
+                theme(legend.position = "bottom")
 }
 
 ## Plot Substitution (sigma) for each metric
@@ -523,7 +533,8 @@ pltSubNeed <- function(df, time){
                                       variable == "extResilience"),
                                  3, 0))))
     ## print(colnames(workDF))
-    plt <- ggplot(workDF, aes(Sigma, value,
+    workDF <- rename(workDF, replace = c("value" = "Resilience"))
+    plt <- ggplot(workDF, aes(Sigma, Resilience,
                               group = variable,
                               color = variable)) +
                                   geom_line()  +
@@ -583,9 +594,18 @@ pltMoveTDelta <- function(df, time){
                    ERF_DwellTime,
                    RF_TDelta,
                    ERF_TDelta) %>%
-                       mutate(SF = RF_TDelta / RF_DwellTime,
-                              ESF = ERF_TDelta / ERF_DwellTime)
+                       mutate(SF = RF_TDelta / RF_DwellTime) %>%
+                           select(-RF_DwellTime,
+                                  -RF_TDelta,
+                                  -ERF_DwellTime,
+                                  -ERF_TDelta)
     ## Everything after this is wrong
-    workDF <- melt(data = workDF, id = c("SF", "ESF"))
-    plt <- ggplot(data = workDF, aes()
+    workDF <- melt(data = workDF, id = c("SF"))
+    print(head(workDF))
+    plt <- ggplot(data = workDF, aes(SF, value, group = variable,
+                                     color = variable)) + geom_line()
+}
+
+myPlotSave <- function(name){
+    ggsave(filename = name, plot = last_plot(), scale = .5)
 }
