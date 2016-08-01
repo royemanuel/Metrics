@@ -262,12 +262,9 @@ extResFac <- function(tt,
                       ## finRecTime,
                       decay,
                       sigma){
+    ## I need to figure out the best way to prevent infinity from
+    ## occurring with very short recovery times and a finite tDelta
     ## print(head(tt))
-    ## There is a problem here with some of the plots I want to make.
-    ## if the need remains below the performance failure the entire time,
-    ## it throws an error because there is no initial recovery time.
-    ## it is looking at ratios, and the ratio never changes. Especially
-    ## with sigma set to zero.
     ## print(head(tt$npRatio))
     disturbRow <- tt %>% filter(npRatio == min(npRatio)) %>%
         filter(Time == min(Time))
@@ -280,6 +277,7 @@ extResFac <- function(tt,
     disturbRatio <- disturbRow$npRatio
     ## Identify when recovery occurs. Simply defined as the first time
     ## increasing performance
+    
     recoveryID <- tt %>%
         filter(Time > timeD) %>%
         filter(Performance > phiD)
