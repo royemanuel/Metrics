@@ -505,7 +505,6 @@ pltMoveNeed <- function(df, time){
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
                    "Extended",
                    "Original"))
-    print(names(workDF))
     workDF <- rename(workDF, Resilience = value)
     plt <- ggplot(workDF, aes(Need, Resilience,
                               group = variable)) +
@@ -526,23 +525,30 @@ pltSubNeed <- function(df, time){
     workDF <- melt(data = workDF, id = c("Time", "Sigma"))
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   1,
+                   "Quotient Resilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          2,
+                          "ESDF",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 3, 0))))
+                                 "Integral Resilience", 0))))
     ## print(colnames(workDF))
-    workDF <- rename(workDF, replace = c("value" = "Resilience"))
+    workDF <- workDF %>%
+        mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
+                   "Extended",
+                   "Original"))
+    workDF <- rename(workDF, Resilience = value)
     plt <- ggplot(workDF, aes(Sigma, Resilience,
-                              group = variable,
-                              color = variable)) +
-                                  geom_line()  +
+                              group = variable)) +
+                                  geom_line(aes(linetype = variable))  +
                                       ## May or may not want to facet
                                       ## this one. Looked pretty good
                                       ## on one plot, but for consistency
                                       ## probably fact it.
                                       facet_grid(ResType ~ .)
+    plt <- plt +
+        scale_linetype_discrete(name = "Metrics") +
+            theme_bw(base_size = 8, base_family = "serif") +
+                theme(legend.position = c(.85, .15))
 }
 ## Plot resilience as the time horizon changes
 pltMoveTimeH <- function(df){
@@ -555,20 +561,28 @@ pltMoveTimeH <- function(df){
     ## clear up, but for now, get it on the paper
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   1,
+                   "Quotient Resilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          2,
+                          "ESDF",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 3, 0))))
+                                 "Integral Resilience", 0))))
+    workDF <- workDF %>%
+        mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
+                   "Extended",
+                   "Original"))
+    workDF <- rename(workDF, Resilience = value)
     ## print(head(workDF))
     ## print(tail(workDF))
     ## print(colnames(workDF))
-    plt <- ggplot(workDF, aes(Time, value,
-                              group = variable,
-                              color = variable)) +
-                                  geom_line() +
-               facet_grid(ResType ~ .)
+    plt <- ggplot(workDF, aes(Time, Resilience,
+                              group = variable)) +
+                                  geom_line(aes(linetype = variable)) +
+                                      facet_grid(ResType ~ .)
+    plt <- plt +
+    scale_linetype_discrete(name = "Metrics") +
+        theme_bw(base_size = 8, base_family = "serif") +
+            theme(legend.position = c(.85, .15))
 }
 
 ## Plot the need and performance of a resilience matrix when they are
@@ -579,8 +593,12 @@ pltNeedPerf <- function(df){
         filter(tRun == 1, nRun == 1, pRun == 1, rRun == 1) %>%
             select(Need, Time, Performance)
     wdf <- melt(data = wdf, id = c("Time"))
-    plt <- ggplot(wdf, aes(Time, value, group = variable,
-                           color = variable)) + geom_line()
+    wdf <- rename(wdf, Performance = value)
+    plt <- ggplot(wdf, aes(Time, Performance, group = variable)) +
+                               geom_line(aes(linetype = variable)) +
+                               theme_bw(base_size = 8, base_family = "serif") +
+                               theme(legend.position = c(.85, .15)) +
+                               scale_linetype_discrete(name = "")
 }
 
 ## Plot the effect of tDelta changes on rho and extRho when decay is
@@ -603,7 +621,7 @@ pltMoveTDelta <- function(df, time){
     workDF <- melt(data = workDF, id = c("SF"))
     print(head(workDF))
     plt <- ggplot(data = workDF, aes(SF, value, group = variable,
-                                     color = variable)) + geom_line()
+                      color = variable)) + geom_line()
 }
 
 myPlotSave <- function(name){

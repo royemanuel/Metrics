@@ -22,7 +22,7 @@ qwer <- buildResMatrix(tL[2,], nL[2,], pL[2,], rL[2,])
 ######################################################################
 
 t <- data.frame(endTime = 100,
-                resolution = 5)
+                resolution = .1)
 n <- data.frame(func = "constantNeed",
                 cLevel = 1.0,
                 startTime = NA,
@@ -75,7 +75,7 @@ nLinearVary <- data.frame(func = "constantNeed",
                           slope = NA)
 
 ## Vary the constant need from 0 to 1.0
-nVFS <- resLoop(t, nLinearVary, p, r)
+nVFS <- resLoop(t, nLinearVary, p2, r)
 nVFSplotRec <- pltMoveNeed(nVFS, 80)
 nVFSplotFail <- pltMoveNeed(nVFS, 30)
 
@@ -118,4 +118,32 @@ tdVFS <- resLoop(t, n2, p2, r3)
 ##  This is a nice small data set to play around with if necessary
 ######################################################################
 smallSet <- resLoop(t, n2, p2, r)
+
+pNP <- pltNeedPerf(smallSet)
+pNP
+
+######################################################################
+## Using Linear Recovery
+######################################################################
+pLin <- data.frame(func = "resTriangle",
+                failTime = 20,
+                recTime = 60,
+                preLevel = 1.2,
+                failLevel = .1,
+                recLevel = 1.0)
+
+## Time Horizon with Linear Recovery
+THLR <- resLoop(t, n2, pLin, r)
+THLRplot <- pltMoveTimeH(THLR)
+THLRplot
+
+## Vary sigma with Linear recovery
+SHLR <- resLoop(t, n2, pLin, r2)
+SHLRplotRec <- pltSubNeed(SHLR, 80)
+SHLRplotFail <- pltSubNeed(SHLR, 30)
+
+## Vary need with linear recovery
+NHLR <- resLoop(t, nLinearVary, pLin, r)
+NHLRplotRec <- pltMoveNeed(NHLR, 80)
+NHLRplotFail <- pltMoveNeed(NHLR, 30)
 
