@@ -20,9 +20,10 @@ qwer <- buildResMatrix(tL[2,], nL[2,], pL[2,], rL[2,])
 ######################################################################
 ## Standard values for the inputs to building resilience matrix
 ######################################################################
-
 t <- data.frame(endTime = 100,
                 resolution = .1)
+t2 <- data.frame(endTime = 100,
+                resolution = 5)
 n <- data.frame(func = "constantNeed",
                 cLevel = 1.0,
                 startTime = NA,
@@ -74,10 +75,6 @@ nLinearVary <- data.frame(func = "constantNeed",
                           startTime = NA,
                           slope = NA)
 
-## Vary the constant need from 0 to 1.0
-nVFS <- resLoop(t, nLinearVary, p2, r)
-nVFSplotRec <- pltMoveNeed(nVFS, 80)
-nVFSplotFail <- pltMoveNeed(nVFS, 30)
 
 ## Data frame with variable level of sigma
 ##########################################
@@ -143,7 +140,19 @@ SHLRplotRec <- pltSubNeed(SHLR, 80)
 SHLRplotFail <- pltSubNeed(SHLR, 30)
 
 ## Vary need with linear recovery
-NHLR <- resLoop(t, nLinearVary, pLin, r)
+NHLR <- resLoop(t2, nLinearVary, pLin, r)
 NHLRplotRec <- pltMoveNeed(NHLR, 80)
 NHLRplotFail <- pltMoveNeed(NHLR, 30)
+
+## Vary the constant need from 0 to 1.0
+nVFS <- resLoop(t, nLinearVary, p2, r)
+nVFSplotRec <- pltMoveNeed(nVFS, 80)
+nVFSplotFail <- pltMoveNeed(nVFS, 30)
+######################################################################
+## This is a plot of the linear performace
+######################################################################
+
+smallSetLin <- resLoop(t2, n2, pLin, r)
+
+pNPLin <- pltNeedPerf(smallSetLin)
 
