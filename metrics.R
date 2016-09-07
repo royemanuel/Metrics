@@ -582,41 +582,7 @@ pltMoveTimeH <- function(df){
         theme_bw(base_size = 8, base_family = "serif") +
             theme(legend.position = c(.85, .15))
 }
-## Same version of the above, but using a geom_point aesthetic to see
-## if it looks better. 
-scatterTimeH <- function(df){
-    workDF <- df %>%
-         select(Time, QR, EQR, Rho,
-                   extRho, statQuoResilience, extResilience)
-    workDF <- melt(data = workDF, id = c("Time"))
-    ## Assign a value to the pairings of extended and unextended values
-    ## there might be a better way to do this that you might want to
-    ## clear up, but for now, get it on the paper
-    workDF <- workDF %>%
-        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient Resilience",
-                   ifelse((variable == "Rho" | variable == "extRho"),
-                          "ESDF",
-                          ifelse((variable == "statQuoResilience" |
-                                      variable == "extResilience"),
-                                 "Integral Resilience", 0))))
-    workDF <- workDF %>%
-        mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
-                   "Extended",
-                   "Original"))
-    workDF <- rename(workDF, Resilience = value)
-    ## print(head(workDF))
-    ## print(tail(workDF))
-    ## print(colnames(workDF))
-    plt <- ggplot(workDF, aes(Time, Resilience,
-                              group = variable)) +
-                                  geom_point() +
-                                      facet_grid(ResType ~ .)
-    plt <- plt +
-    scale_linetype_discrete(name = "Metrics") +
-        theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .15))
-}
+
 ## Plot the need and performance of a resilience matrix when they are
 ## held constant. This allows you to look at what the performance profile
 ## looks like when analyzing the results.

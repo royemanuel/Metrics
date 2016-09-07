@@ -70,6 +70,7 @@ nLinearVary <- data.frame(func = "constantNeed",
                           cLevel = seq(from = 0.01,
                                        to = 1.0,
                                        by = .01),
+                          cLevel = 1.0,
                           startTime = NA,
                           slope = NA)
 
@@ -140,10 +141,9 @@ THLRplot
 SHLR <- resLoop(t, n2, pLin, r2)
 SHLRplotRec <- pltSubNeed(SHLR, 80)
 SHLRplotFail <- pltSubNeed(SHLR, 30)
-p
+
 ## Vary need with linear recovery
 NHLR <- resLoop(t, nLinearVary, pLin, r)
 NHLRplotRec <- pltMoveNeed(NHLR, 80)
 NHLRplotFail <- pltMoveNeed(NHLR, 30)
-
 
