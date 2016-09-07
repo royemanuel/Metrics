@@ -6,43 +6,6 @@ library('reshape2')
 library('ggplot2')
 library('extrafont')
 
-## Instead of doing this step by step, should I build a single function
-## that builds everything at once? No. but you should define the
-## inputs at the beginning
-
-## Define the time dataframe. From this, we will calculate all the other
-## values we need.
-
-## buildAll will get built as I make more and more functions to flesh
-## out the whole thing. This way I will keep track of my inputs.
-## buildAll <- function(timeHorizon, ## time from zero SH is interested in
-##                      resolution, ## ticks between 0 - timeHorizon
-##                      failtime, ## time failure is initiated
-##                      recoverTime, ## time recovery is initiated
-##                      preLevel, ## performance before failTime
-##                      failLevel, ## performance after failure
-##                      recLevel, ## performance after recovery
-##                      needFunction, ## function defining need
-##                      perfFunction, ## function defining performance
-##                      ){
-##     ## Build the initial data.frame timeline
-##     tt <- data.frame(Time = seq(from = 0,
-##                                to = timeHorizon,
-##                                by = resolution))
-## }
-
-
-timeHorizon <- 100
-resolution <- 5
-timeTick <- data.frame(Time = seq(from = 0, to = timeHorizon, by = resolution))
-
-timeColumn <- function(endTime, resolution){
-    data.frame(Time = seq(from = 0, to = endTime, by = resolution))
-}
-
-performance <- function(tt, FUN = 1, ...){
-    pt <- mutate(tt, Performance = FUN(tt$Time, ...))
-}
 
 ## This is an example of a step failure with a recovery
 ## failTime = time the system degrades
@@ -101,6 +64,10 @@ linearNeed <- function(tt, need0, startTime, slope){
 }
 ## A function to pull the performance at t0, the performance at td,
 ## and td
+######################################################################
+## This was commented out because we won't necessarily have the time
+## of failure and such defined for us. For a changing need, that may
+## be different
 ## paramPull <- function(tt){
 ##     pd <- min(tt$Performance)
 ##     p0 <- tt$Performance[1]
@@ -623,5 +590,5 @@ pltMoveTDelta <- function(df, time){
 }
 
 myPlotSave <- function(name){
-    ggsave(filename = name, plot = last_plot(), width = 3.5, height = 4)
+    ggsave(filename = name, plot = last_plot(), width = 5.75, height = 5)
 }
