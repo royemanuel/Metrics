@@ -86,7 +86,7 @@ p2 <- data.frame(func = "step",
                 failTime = 20,
                 recTime = 60,
                 preLevel = 1.2,
-                failLevel = .1,
+                failLevel = 0.1,
                 recLevel = 1.0)
 r2 <- data.frame(tDelta = 30,
                 decay = 0,
@@ -126,7 +126,7 @@ pLin <- data.frame(func = "resTriangle",
                 failTime = 20,
                 recTime = 60,
                 preLevel = 1.2,
-                failLevel = .1,
+                failLevel = 0.1,
                 recLevel = 1.0)
 
 ## Time Horizon with Linear Recovery

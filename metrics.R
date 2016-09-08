@@ -590,5 +590,5 @@ pltMoveTDelta <- function(df, time){
 }
 
 myPlotSave <- function(name){
-    ggsave(filename = name, plot = last_plot(), width = 5.75, height = 5)
+    ggsave(filename = name, plot = last_plot(), width = 5.75, height = 4)
 }
