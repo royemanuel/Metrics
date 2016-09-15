@@ -5,3 +5,6 @@ pyst.py~
 dTest.obj
 dTest.exe
 dTest.c
+*.png
+*.emf
+*.csv
