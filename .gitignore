@@ -8,3 +8,14 @@ dTest.c
 *.png
 *.emf
 *.csv
+#plotter.R#
+#school.py#
+#singleServer.py#
+.#school.py
+.#singleServer.py
+basename.exe.stackdump
+cNeedTest.R
+exData.R.rej
+school.py
+singleServer.py
+twoServers.py
