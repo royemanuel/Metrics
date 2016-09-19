@@ -45,7 +45,7 @@ class Airframe(Part):
         self.env = env
         super().__init__(env, ID)
         self.ageFail = 100
-        self.fltFail = np.random.random_integers(1,25)
+        self.fltFail = np.random.random_integers(1 ,25)
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -57,7 +57,7 @@ class Avionics(Part):
         self.env = env
         super().__init__(env, ID)
         self.ageFail = 10
-        self.fltFail = np.random.random_integers(1,25)
+        self.fltFail = np.random.random_integers(1, 25)
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -66,7 +66,7 @@ class Propulsion(Part):
         self.env = env
         super().__init__(env, ID)
         self.ageFail = 10
-        self.fltFail = np.random.random_integers(1,25)
+        self.fltFail = np.random.random_integers(1, 25)
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -89,12 +89,12 @@ class Aircraft(object):
         # Update aircrew values. For now, updating flight time
         # whether up or down, and not counting a syllabus event if down
         if self.status:
-            print("Airplane still worky")
+            print("Airplane " + str(self.BuNo) + " still worky")
         else:
             print("Plane broke dick")
         stud.hours = stud.hours + fltTime  # the way this is written is
         inst.hours = inst.hours + fltTime  # problematic for inst syllabus
-        if (self.status == True):
+        if self.status is True:
             stud.syllabus += 1
 
 
@@ -162,7 +162,9 @@ def flight(env, ac, stud, inst):
     if ac.status:
         ft = np.random.random([1]) + 0.5
         ac.flyAircraft(env, ft, stud, inst)
-        print("Tempted death again in aircraft " + str(ac.BuNo) + "!")
+        print(str(inst.ID) + " and " + str(stud.ID) +
+              " tempted death again in aircraft " +
+              str(ac.BuNo) + " at time " + str(env.now) + "!")
         yield env.timeout(ft)
     else:
         print("Side number " + str(ac.BuNo) + " is broke, fool!")
@@ -186,11 +188,14 @@ class Scheduler(object):
         while True:
             for stud in range(len(self.studList)):
                 fltStud = self.studList.pop(0)
+                print(str(fltStud.ID))
                 fltInst = self.instList.pop(0)
                 ac = self.acList[np.random.random_integers(0, len(self.acList) - 1)]
                 yield self.env.process(flight(self.env, ac, fltStud, fltInst))
                 self.studList.extend([fltStud])
+                # print(str(self.studList[0].ID) + str(self.studList[1].ID))
                 self.instList.extend([fltInst])
+                # print(str(self.instList[0].ID) + str(self.instList[1].ID))
 
 
 # def repair(env, ac)
@@ -209,12 +214,12 @@ ac2 = Aircraft(env, af2, av2, puls2)
 
 availAC = [ac1, ac2]
 
-stud1 = Student(env, 34)
-inst1 = Instructor(env, 2, 10)
+stud1 = Student(env, 1)
+inst1 = Instructor(env, 11, 10)
 
 
-stud2 = Student(env, 34)
-inst2 = Instructor(env, 2, 20)
+stud2 = Student(env, 2)
+inst2 = Instructor(env, 22, 20)
 
 availStud = [stud1, stud2]
 
