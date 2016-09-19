@@ -45,7 +45,7 @@ class Airframe(Part):
         self.env = env
         super().__init__(env, ID)
         self.ageFail = 100
-        self.fltFail = np.random.random_integers(1,25)
+        self.fltFail = np.random.random_integers(1, 25)
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -57,7 +57,7 @@ class Avionics(Part):
         self.env = env
         super().__init__(env, ID)
         self.ageFail = 10
-        self.fltFail = np.random.random_integers(1,25)
+        self.fltFail = np.random.random_integers(1, 25)
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -66,7 +66,7 @@ class Propulsion(Part):
         self.env = env
         super().__init__(env, ID)
         self.ageFail = 10
-        self.fltFail = np.random.random_integers(1,25)
+        self.fltFail = np.random.random_integers(1, 25)
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -94,7 +94,7 @@ class Aircraft(object):
             print("Plane broke dick")
         stud.hours = stud.hours + fltTime  # the way this is written is
         inst.hours = inst.hours + fltTime  # problematic for inst syllabus
-        if (self.status == True):
+        if self.status is True:
             stud.syllabus += 1
 
 
@@ -133,7 +133,7 @@ class Instructor(Aircrew):
 
 # Defining the maintainers although this might need to be a resource.
 class Maintainer(object):
-    def __init__(self, env, ID):
+    def __init__(self, env, ID, exp):
         self.env = env
         self.ID = ID
         self.exp = exp
@@ -166,9 +166,8 @@ def flight(env, ac, stud, inst):
         yield env.timeout(ft)
     else:
         print("Side number " + str(ac.BuNo) + " is broke, fool!")
-    # Hard code three hours to the next event 
+    # Hard code three hours to the next event
     yield env.timeout(3)
-
 
 
 class Scheduler(object):
@@ -234,4 +233,4 @@ sked = Scheduler(env, availAC, availStud, availInst)
 # flight(env, ac1, stud1, inst1)
 # flight(env, ac1, stud1, inst1)
 
-env.run(until = 20)
+env.run(until=20)
