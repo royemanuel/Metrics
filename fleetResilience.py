@@ -162,9 +162,8 @@ def flight(env, ac, stud, inst):
     if ac.status:
         ft = np.random.random([1]) + 0.5
         ac.flyAircraft(env, ft, stud, inst)
-        print(str(inst.ID) + " and " + str(stud.ID) +
-              " tempted death again in aircraft " +
-              str(ac.BuNo) + " at time " + str(env.now) + "!")
+        print(inst.ID, "and", stud.ID, "tempted death again in aircraft",
+              ac.BuNo, "at time", env.now, "for", ft, "hours!")
         yield env.timeout(ft)
     else:
         print("Side number " + str(ac.BuNo) + " is broke, fool!")
