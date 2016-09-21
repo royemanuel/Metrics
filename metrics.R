@@ -6,6 +6,10 @@ library('reshape2')
 library('ggplot2')
 library('extrafont')
 
+## build the time column
+timeColumn <- function(endTime, resolution){
+    t <- data.frame(Time = seq(0, endTime, resolution))
+}
 
 ## This is an example of a step failure with a recovery
 ## failTime = time the system degrades
@@ -378,7 +382,8 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                          perfList$recTime,
                          perfList$preLevel,
                          perfList$failLevel,
-                         perfList$recLevel))
+                         perfList$recLevel),
+                     custom = cbind(resMat, perfList$Performance))
     ## print("performance done")
     ## print(head(resMat))
     resMat <- quotRes(resMat)

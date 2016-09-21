@@ -156,3 +156,22 @@ smallSetLin <- resLoop(t2, n2, pLin, r)
 
 pNPLin <- pltNeedPerf(smallSetLin)
 
+######################################################################
+## Building an example plot where values are pulled                 ##
+######################################################################
+
+examFail <- list(func = "custom",
+                 Performance = c(rep(1, 20),
+                     seq(.85, .25, -.15),
+                     rep(.25, 15),
+                     rep(.6, 25),
+                     rep(.9, 36)))
+examTime <- list(endTime = 100, resolution = 1)
+examNeed <- list(func = "constantNeed",
+                 cLevel = 1)
+examRL <- list(sigma = .5, tDelta = 20, decay =  .1)
+exampData <- buildResMatrix(examTime, examNeed, examFail, examRL)
+examPlot <- pltMoveTimeH(exampData)
+
+## Add the points where the data is pulled. 
+examPlot <- examPlot + geom_point(data = )
