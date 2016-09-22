@@ -383,7 +383,8 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                          perfList$preLevel,
                          perfList$failLevel,
                          perfList$recLevel),
-                     custom = cbind(resMat, perfList$Performance))
+                     custom = cbind(resMat, Performance =
+                                        perfList$Performance))
     ## print("performance done")
     ## print(head(resMat))
     resMat <- quotRes(resMat)
