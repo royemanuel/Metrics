@@ -174,4 +174,6 @@ exampData <- buildResMatrix(examTime, examNeed, examFail, examRL)
 examPlot <- pltMoveTimeH(exampData)
 
 ## Add the points where the data is pulled. 
-examPlot <- examPlot + geom_point(data = )
+examPlot <- examPlot + geom_point(aes(x = exampData$QR_Td[1],
+                                      y = exampData$Performance[exampData$Time == exampData$QR_Td[1]]))
+
