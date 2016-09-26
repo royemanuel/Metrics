@@ -161,19 +161,59 @@ pNPLin <- pltNeedPerf(smallSetLin)
 ######################################################################
 
 examFail <- list(func = "custom",
-                 Performance = c(rep(1, 20),
+                 Performance = c(rep(1, 10),
                      seq(.85, .25, -.15),
-                     rep(.25, 15),
-                     rep(.6, 25),
-                     rep(.9, 36)))
+                     rep(.25, 5),
+                     seq(.25, .4, .015),
+                     seq(.42, .6, .005),
+                     seq(.61, .75, .02),
+                     seq(.76, .85, .01),
+                     seq(.855, .9, .005),
+                     rep(.9, 5)))
 examTime <- list(endTime = 100, resolution = 1)
 examNeed <- list(func = "constantNeed",
-                 cLevel = 1)
+                 cLevel = .8)
 examRL <- list(sigma = .5, tDelta = 20, decay =  .1)
 exampData <- buildResMatrix(examTime, examNeed, examFail, examRL)
-examPlot <- pltMoveTimeH(exampData)
 
-## Add the points where the data is pulled. 
-examPlot <- examPlot + geom_point(aes(x = exampData$QR_Td[1],
-                                      y = exampData$Performance[exampData$Time == exampData$QR_Td[1]]))
 
+examPlot <- pltPerf(exampData)
+examPlot <- examPlot + ylim(0, 1)
+
+exPLneed <- pltMoveTimeH(exampData)
+## Add the points where the data is pulled.
+points <- data.frame(Time = exampData$QR_Td[1],
+                 Performance = select(filter(exampData, Time == QR_Td[1]),
+                     Performance),
+                 name = 'BekTd')
+
+rbind(points, Time = )
+
+examPlot <- examPlot ## +
+##     geom_point(data = points,
+##                aes(x = Time, y = Performance)) ## +
+##                    geom_segment(data = points, aes(x = Time,
+##                                   y = Performance,
+##                                   xend = Time,
+##                                     yend = 0,
+##                                                    linetype = name))
+## examPlot <- examPlot + geom_segment(data = points, aes(x = Time,
+##                                         y = Performance,
+##                                         xend = 0,
+##                                         yend = Performance,
+##                                         linetype = name))
+## +
+##     geom_text(data = td, aes(x = Time, y = Performance), label = td$name)
+
+examPlot
+
+rbind(buildPoints, )
+p <- c(rep(1, 10),
+       seq(.85, .25, -.15),
+       rep(.25, 5),
+       seq(.25, .4, .015),
+       seq(.42, .6, .005),
+       seq(.61, .75, .02),
+       seq(.76, .85, .01),
+       seq(.855, .9, .005),
+       rep(.9, 5))
