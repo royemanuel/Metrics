@@ -596,8 +596,14 @@ pltMoveTDelta <- function(df, time){
 }
 
 pltPerf <- function(df){
-    plt <- ggplot(data = df, aes(Time, Performance)) + geom_line() +
-        geom_line(aes(Time, Need), linetype = 2)
+    df <- df %>%
+        select(Time, Performance, Need) %>%
+        melt(id = "Time")
+    plt <- ggplot(data = df, aes(Time, value,
+                                 group = variable,
+                                 linetype = variable)) + geom_line() +
+        theme_bw(base_size = 8, base_family = "serif") +
+        theme(legend.position = c(.85, .25))
 }
 
 myPlotSave <- function(name){

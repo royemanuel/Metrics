@@ -180,6 +180,7 @@ exampData <- buildResMatrix(examTime, examNeed, examFail, examRL)
 examPlot <- pltPerf(exampData)
 examPlot <- examPlot + ylim(0, 1)
 
+
 exPLneed <- pltMoveTimeH(exampData)
 ## Add the points where the data is pulled.
 points <- data.frame(Time = exampData$QR_Td[1],
