@@ -603,7 +603,9 @@ pltPerf <- function(df){
                                  group = variable,
                                  linetype = variable)) + geom_line() +
         theme_bw(base_size = 8, base_family = "serif") +
-        theme(legend.position = c(.85, .25))
+            scale_linetype_discrete(name = "") +
+                theme(legend.position = c(.85, .25)) +
+                    labs(y = "Performance") + ylim(0, 1)
 }
 
 myPlotSave <- function(name){
