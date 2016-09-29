@@ -19,3 +19,5 @@ exData.R.rej
 school.py
 singleServer.py
 twoServers.py
+.RData
+.Rhistory

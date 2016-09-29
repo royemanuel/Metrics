@@ -173,6 +173,8 @@ speedFactor <- function(disturbTime,
                         finRecTime,
                         tDelta,
                         decay){
+    ## This is adequate for a strictly increasing recovery.
+    ## Must include method for detecting pauses and dips in recovery.
     timeToInitRec <- initRecTime - disturbTime
     ## print("FinRec")
     ## print(finRecTime)
@@ -181,6 +183,8 @@ speedFactor <- function(disturbTime,
     if(finRecTime >= initRecTime){
         sf <- (tDelta/timeToInitRec)*exp(-decay*(finRecTime - initRecTime))
     } else {
+        ## Note that faster recovery than slack time "rewards" the
+        ## system with higher resilience.
         sf <- tDelta/timeToInitRec
     }
     return(sf)
@@ -198,16 +202,28 @@ resFac <- function(tt,
                    ##initRecTime,
                    ##finRecTime,
                    decay){
+    ## Find the minimum performance (phiD) and the first instance of time
+    ## that it is at this level. This becomes the disturbance time timeD
     disturbRow <- tt %>% filter(Performance == min(Performance)) %>%
         filter(Time == min(Time))
     phiD <- disturbRow$Performance
     ## print(phiD)
     timeD <- disturbRow$Time
+    ## Build a data frame that includes all of the recovery times
+    ## There is potential to detect additional failures by looping this
+    ## process over the recoveryID data frame. We would need to change the
+    ## disturbRow from looking for a minimum to looking to the lowest
+    ## performance that then is arrested for some given time.
     recoveryID <- tt %>%
         filter(Time > timeD) %>%
             filter(Performance > phiD)
     initRecTime <- recoveryID$Time[1]
-    # print(recoveryID)
+    ## print(recoveryID)
+    ## Likewise to the recoveryID, we can look for the first performance
+    ## that is repeated. This is good enough right now for a step
+    ## failure with a step recovery. When we start to include multiple
+    ## failures and a stepped recovery, it will be necessary to auto-
+    ## pull interim recovery times for this metric.
     finRecTime <- recoveryID[which.max(recoveryID$Performance), "Time"]
     ## print(list(initRecTime = initRecTime, finRecTime = finRecTime))
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
@@ -237,6 +253,15 @@ extResFac <- function(tt,
     ## occurring with very short recovery times and a finite tDelta
     ## print(head(tt))
     ## print(head(tt$npRatio))
+    ## Discussion point in the dissertation. For the current purposes
+    ## looking at single failure with strictly decreasing failure,
+    ## strictly increasing recovery, and constant need, this will
+    ## be adequate.
+    ## This is pulling the minimum RATIO!!! With a constant need
+    ## this is not a problem, but we will want to demonstrate the
+    ## difference when we get to more complicated need. Personally,
+    ## I like this because it will catch a catastrophic increase in
+    ## Need where the traditional metric does not!!!
     disturbRow <- tt %>% filter(npRatio == min(npRatio)) %>%
         filter(Time == min(Time))
     ## print(disturbRow$Time)
@@ -248,7 +273,6 @@ extResFac <- function(tt,
     disturbRatio <- disturbRow$npRatio
     ## Identify when recovery occurs. Simply defined as the first time
     ## increasing performance
-    
     recoveryID <- tt %>%
         filter(Time > timeD) %>%
         filter(Performance > phiD)
@@ -273,7 +297,6 @@ extResFac <- function(tt,
     ## print(max(tt$Time))
     ## print("finRecTime ERF")
     ## print(finRecTime)
-    ## I am changing something to see if anything happens
     sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
     recovRatio <- filter(tt, Time == finRecTime)$npRatio
     ## vars <- c(sf,
@@ -603,7 +626,9 @@ pltPerf <- function(df){
                                  group = variable,
                                  linetype = variable)) + geom_line() +
         theme_bw(base_size = 8, base_family = "serif") +
-        theme(legend.position = c(.85, .25))
+            scale_linetype_discrete(name = "") +
+                theme(legend.position = c(.85, .25)) +
+                    labs(y = "Performance") + ylim(0, 1)
 }
 
 myPlotSave <- function(name){
