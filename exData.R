@@ -175,10 +175,25 @@ examNeed <- list(func = "constantNeed",
                  cLevel = .8)
 examRL <- list(sigma = .5, tDelta = 20, decay =  .1)
 exampData <- buildResMatrix(examTime, examNeed, examFail, examRL)
-
-
 examPlot <- pltPerf(exampData)
 examPlot <- examPlot + ylim(0, 1)
+
+## Checking that the extended metric pulls are equal to the original
+## metrics when they should be
+checkExtP <- list(func = "custom",
+                 Performance = c(rep(1, 10),
+                     seq(.85, .25, -.15),
+                     rep(.25, 5),
+                     seq(.25, .4, .015),
+                     seq(.42, .6, .005),
+                     seq(.61, .75, .02),
+                     seq(.76, .85, .01),
+                     seq(.855, .9, .005),
+                     rep(1, 5)))
+
+unitaryNeed <- list(func = "constantNeed", cLevel = 1.0)
+checkExtMet <- buildResMatrix(examTime, unitaryNeed, checkExtP, examRL)
+
 
 
 exPLneed <- pltMoveTimeH(exampData)

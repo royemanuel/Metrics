@@ -94,14 +94,18 @@ linearNeed <- function(tt, need0, startTime, slope){
 ## failure (phi(pd|e))
 ## Requires a data frame with a performance function
 quotRes <- function(tt){
+    ## Define the value of the minimum performance for the entire profile
+    ## Much like the comments in ESDF, need to build a searching method
+    ## for accounting for multiple failures. Not built in at this time.
     pd <- min(tt$Performance)
+    ## Baseline performance at time 1
     p0 <- tt$Performance[1]
+    ## Pull the time of the failure by filtering for minimum performance
+    ## then taking the time value for the first row. May be more
+    ## elegant to use min, but I don't know if that is worthwhile
     Td <- filter(tt, Performance == min(Performance))$Time[1]
     ## print(Td)
     qr <- tt %>%
-        ## Will want to change all to transmute so we aren't carrying
-        ## around everything I think?
-        ## transmute(QR = (Performance - pd)/(p0 - pd))
         mutate(QR = (Performance - pd)/(p0 - pd),
                QR_Td = Td)
     return(qr)
@@ -117,7 +121,6 @@ sigmaApply <- function(tt, sigma, cn){
     colnames(df)[dim(df)[2]] <- cn
     df
 }
-## Find the failed states (performance is at the minimum)
 
 
 ## Requires a data frame with a performance function and a need function
@@ -286,8 +289,8 @@ extResFac <- function(tt,
     perfDiff <- tt %>%
         mutate(Diff = Performance - Need) %>%
             filter(Time > timeD & Diff >= 0)
-    ## print(perfDiff)
-    ## print(dim(perfDiff))
+    print(perfDiff)
+    print(dim(perfDiff))
     finRecTime <- ifelse(!dim(perfDiff)[1],
                          max(tt$Time),
                          perfDiff$Time[1])
