@@ -11,7 +11,6 @@ import pdb
 # numbers
 # import random
 
-np.random.seed([42])
 
 
 ######################################################################
@@ -73,11 +72,12 @@ class Propulsion(Part):
 class Aircraft(object):
     def __init__(self, env, af, av, puls):
         self.env = env
-        self.af = af
-        self.av = av
-        self.puls = puls
+        self.af = Airframe(env, af)
+        self.av = Avionics(env, av)
+        self.puls = Propulsion(env, puls)
         self.BuNo = self.af.ID
         self.status = self.af.status & self.av.status & self.puls.status
+        self.age = self.af.age
 
     def flyAircraft(self, env, fltTime, stud, inst):
         # Check to see if any of the parts failed in flight
@@ -173,10 +173,10 @@ def flight(env, ac, stud, inst):
 
 
 class Scheduler(object):
-    def __init__(self, env, acList, studList, instList):
+    def __init__(self, env, fl, studList, instList):
         self.env = env
-        self.acList = acList
         self.studList = studList
+        self.fl = fl
         self.instList = instList
         self.action = env.process(self.dailyFlightSked())
 
@@ -187,46 +187,92 @@ class Scheduler(object):
         while True:
             for stud in range(len(self.studList)):
                 fltStud = self.studList.pop(0)
-                print(str(fltStud.ID))
+                print("Yup "+ str(fltStud.ID))
                 fltInst = self.instList.pop(0)
-                ac = self.acList[np.random.random_integers(0, len(self.acList) - 1)]
+                print("getting ac")
+                ac = self.fl.pop(0)
+                print("got ac" + ac.BuNo)
+                # self.acList[np.random.random_integers(0, len(self.acList) - 1)]
+                print("Stud Vars ")
+                print(vars(fltStud))
+                print("Inst Vars ")
+                print(vars(fltInst))
                 yield self.env.process(flight(self.env, ac, fltStud, fltInst))
+                self.fl.append(ac)
                 self.studList.extend([fltStud])
                 # print(str(self.studList[0].ID) + str(self.studList[1].ID))
                 self.instList.extend([fltInst])
                 # print(str(self.instList[0].ID) + str(self.instList[1].ID))
 
 
+# Build an aircraft. If it is the start, it will build 
+def buildAC(env, numAC, fl):
+    # try:
+    #     acList
+    # except NameError:
+    #     acList = []
+    for n in range(numAC):
+        av = "av" + str(n)
+        af = "af" + str(n)
+        eng = "eng" + str(n)
+        ac = Aircraft(env, av, af, eng)
+        fl.append(ac)
+
+######################################################################
+# Constants                                                          #
+######################################################################
+
+RANDOM_SEED = 42
+NUM_AIRCRAFT = 3
+NUM_STUDENT = 1
+NUM_INSTRUCTOR = 1
+
+######################################################################
+# Build Aircraft, Students, and                                      #
+######################################################################
+
+
+np.random.seed([RANDOM_SEED])
+
+
 # def repair(env, ac)
 env = simpy.Environment()
-
-
-# Create an airplane to
-av1 = Avionics(env, "av1")
-af1 = Airframe(env, "af1")
-puls1 = Propulsion(env, "puls1")
-ac1 = Aircraft(env, af1, av1, puls1)
-av2 = Avionics(env, "av2")
-af2 = Airframe(env, "af2")
-puls2 = Propulsion(env, "puls2")
-ac2 = Aircraft(env, af2, av2, puls2)
-
-availAC = [ac1, ac2]
-
+flightLine = []
+buildAC(env, NUM_AIRCRAFT, flightLine)
 stud1 = Student(env, 1)
 inst1 = Instructor(env, 11, 10)
+sked = Scheduler(env, flightLine, [stud1], [inst1])
+env.run(until=20)
+
+######################################################################
+######################################################################
+
+# Create an airplane to
+# av1 = Avionics(env, "av1")
+# af1 = Airframe(env, "af1")
+# puls1 = Propulsion(env, "puls1")
+# ac1 = Aircraft(env, af1, av1, puls1)
+# av2 = Avionics(env, "av2")
+# af2 = Airframe(env, "af2")
+# puls2 = Propulsion(env, "puls2")
+# ac2 = Aircraft(env, af2, av2, puls2)
+# 
+# availAC = [ac1, ac2]
+# 
+# stud1 = Student(env, 1)
+# inst1 = Instructor(env, 11, 10)
+# 
+# 
+# stud2 = Student(env, 2)
+# inst2 = Instructor(env, 22, 20)
+# 
+# availStud = [stud1, stud2]
+# 
+# availInst = [inst1, inst2]
+# 
+# sked = Scheduler(env, availAC, availStud, availInst)
 
 
-stud2 = Student(env, 2)
-inst2 = Instructor(env, 22, 20)
-
-availStud = [stud1, stud2]
-
-availInst = [inst1, inst2]
-
-sked = Scheduler(env, availAC, availStud, availInst)
-
-
 # flight(env, ac1, stud1, inst1)
 # flight(env, ac1, stud1, inst1)
 # flight(env, ac1, stud1, inst1)
@@ -238,4 +284,4 @@ sked = Scheduler(env, availAC, availStud, availInst)
 # flight(env, ac1, stud1, inst1)
 # flight(env, ac1, stud1, inst1)
 
-env.run(until = 20)
+
