@@ -11,8 +11,14 @@ import pdb
 # numbers
 # import random
 
+######################################################################
+# Build the historical DataFrames                                    #
+######################################################################
 
-
+partHistory = pd.DataFrame()
+studHistory = pd.DataFrame()
+instHistory = pd.DataFrame()
+aicraftHistory = pd.DataFrame()
 ######################################################################
 # Aircraft Parts and assembling them to an aircraft                  #
 ######################################################################
@@ -26,6 +32,7 @@ class Part(object):
         self.age = 0
         self.fltHours = 0
         self.status = True
+
 
     # Check the whether the part breaks during the operation
     def failFlight(self, env, fltTime):
@@ -42,6 +49,7 @@ class Part(object):
 class Airframe(Part):
     def __init__(self, env, ID):
         self.env = env
+        self.obj = "Airframe"
         super().__init__(env, ID)
         self.ageFail = 100
         self.fltFail = np.random.random_integers(1 ,25)
@@ -54,6 +62,7 @@ class Airframe(Part):
 class Avionics(Part):
     def __init__(self, env, ID):
         self.env = env
+        self.obj = "Avionics"
         super().__init__(env, ID)
         self.ageFail = 10
         self.fltFail = np.random.random_integers(1, 25)
@@ -63,6 +72,7 @@ class Avionics(Part):
 class Propulsion(Part):
     def __init__(self, env, ID):
         self.env = env
+        self.obj = "Propulsion"
         super().__init__(env, ID)
         self.ageFail = 10
         self.fltFail = np.random.random_integers(1, 25)
@@ -72,6 +82,7 @@ class Propulsion(Part):
 class Aircraft(object):
     def __init__(self, env, af, av, puls):
         self.env = env
+        self.obj = "Aircraft"
         self.af = Airframe(env, af)
         self.av = Avionics(env, av)
         self.puls = Propulsion(env, puls)
@@ -111,11 +122,11 @@ class Aircrew(object):
         self.hours = 0
         self.dailyFlights = 0
 
-
-# A student collects a number of syllabus events and graduates
+# A student collects a number ofsyllabus events and graduates
 # A student is limited to 2 daily flights
 class Student(Aircrew):
     def __init__(self, env, ID):
+        self.obj = "Student"
         super().__init__(env, ID)
         self.syllabus = 0
         self.graduated = False
@@ -126,6 +137,7 @@ class Student(Aircrew):
 # An instructor is limited to 3 daily flights
 class Instructor(Aircrew):
     def __init__(self, env, ID, syl):
+        self.obj = "Instructor"
         super().__init__(env, ID)
         self.syllabus = syl
         self.qual = self.syllabus > 9
@@ -169,7 +181,6 @@ def flight(env, ac, stud, inst):
         print("Side number " + str(ac.BuNo) + " is broke, fool!")
     # Hard code three hours to the next event 
     yield env.timeout(3)
-
 
 
 class Scheduler(object):
@@ -218,6 +229,16 @@ def buildAC(env, numAC, fl):
         ac = Aircraft(env, av, af, eng)
         fl.append(ac)
 
+
+######################################################################
+# Useful Functions and Classes                                       #
+######################################################################
+
+def histUpdate(item):
+    if item.obj == "Airframe" | :
+        
+    
+    
 ######################################################################
 # Constants                                                          #
 ######################################################################
