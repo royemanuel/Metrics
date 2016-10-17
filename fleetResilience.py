@@ -29,17 +29,18 @@ aicraftHistory = pd.DataFrame()
 class Part(object):
     def __init__(self, env, ID):
         self.ID = ID
+        self.bornDate = env.now
         self.age = 0
-        self.fltHours = 0
+        self.fltHoursSinceFailure = 0
         self.status = True
 
     # Check the whether the part breaks during the operation
     def failFlight(self, env, fltTime):
-        if (self.fltFail < self.fltHours + fltTime):
-            self.fltHours = self.fltFail
+        if (self.fltFail < self.fltHoursSinceFailure + fltTime):
+            self.fltHoursSinceFailure = self.fltFail
             self.status = False
         else:
-            self.fltHours = self.fltHours + fltTime
+            self.fltHoursSinceFailure = self.fltHoursSinceFailure + fltTime
 
 
 # The parts have different types of parts. I think this is the way
@@ -87,7 +88,7 @@ class Aircraft(object):
         self.puls = Propulsion(env, puls)
         self.BuNo = self.af.ID
         self.status = self.af.status & self.av.status & self.puls.status
-        self.age = self.af.age
+        self.bornDate = env.now
 
     def flyAircraft(self, env, fltTime, stud, inst):
         # Check to see if any of the parts failed in flight
@@ -234,10 +235,10 @@ class Scheduler(object):
 # Build an aircraft. If it is the start, it will build 
 def buildAC(env, numAC, fl):
     for n in range(numAC):
-        av = "av" + str(n)
         af = "af" + str(n)
+        av = "av" + str(n)
         eng = "eng" + str(n)
-        ac = Aircraft(env, av, af, eng)
+        ac = Aircraft(env, af, av, eng)
         fl.append(ac)
 
 
@@ -287,7 +288,7 @@ buildAC(env, NUM_AIRCRAFT, flightLine)
 stud1 = Student(env, 1)
 inst1 = Instructor(env, 11, 10)
 sked = Scheduler(env, flightLine, [stud1], [inst1])
-env.run(until=20)
+env.run(until=500)
 
 ######################################################################
 ######################################################################
