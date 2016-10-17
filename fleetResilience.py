@@ -33,7 +33,6 @@ class Part(object):
         self.fltHours = 0
         self.status = True
 
-
     # Check the whether the part breaks during the operation
     def failFlight(self, env, fltTime):
         if (self.fltFail < self.fltHours + fltTime):
@@ -52,7 +51,7 @@ class Airframe(Part):
         self.obj = "Airframe"
         super().__init__(env, ID)
         self.ageFail = 100
-        self.fltFail = np.random.random_integers(1 ,25)
+        self.fltFail = np.random.random_integers(1, 25)
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -93,6 +92,7 @@ class Aircraft(object):
     def flyAircraft(self, env, fltTime, stud, inst):
         # Check to see if any of the parts failed in flight
         self.av.failFlight(env, fltTime)
+        # histUpdate(self.av)
         self.af.failFlight(env, fltTime)
         self.puls.failFlight(env, fltTime)
         # Update the aircraft status
@@ -103,8 +103,10 @@ class Aircraft(object):
             print("Airplane " + str(self.BuNo) + " still worky")
         else:
             print("Plane broke dick")
-        stud.hours = stud.hours + fltTime  # the way this is written is
-        inst.hours = inst.hours + fltTime  # problematic for inst syllabus
+        stud.hours = stud.hours + fltTime
+        inst.hours = inst.hours + fltTime
+        stud.flightLog(env, fltTime, self.BuNo)
+        inst.flightLog(env, fltTime, self.BuNo)
         if self.status is True:
             stud.syllabus += 1
 
@@ -121,6 +123,16 @@ class Aircrew(object):
         self.ID = ID
         self.hours = 0
         self.dailyFlights = 0
+        self.flightDF = pd.DataFrame()
+
+
+    def flightLog(self, env, fltTime, ac):
+        print("Updating Flight Log")
+        self.flightDF = self.flightDF.append({"Flight Time": fltTime,
+                                             "Aircraft": ac,
+                                             "Takeoff Time": env.now},
+                                             ignore_index=True)
+
 
 # A student collects a number ofsyllabus events and graduates
 # A student is limited to 2 daily flights
@@ -187,7 +199,7 @@ class Scheduler(object):
     def __init__(self, env, fl, studList, instList):
         self.env = env
         self.studList = studList
-        self.fl = fl
+        self.flightLine = fl
         self.instList = instList
         self.action = env.process(self.dailyFlightSked())
 
@@ -196,20 +208,23 @@ class Scheduler(object):
 # list. The aircraft list should contain aircraft where status is True
     def dailyFlightSked(self):
         while True:
-            for stud in range(len(self.studList)):
+            # numStuds = len(self.studList)
+            # numAC = len(self.flightLine)
+            # num = numStuds if numStuds <= numAC else numAC
+            for flt in range(len(self.studList)):
                 fltStud = self.studList.pop(0)
-                print("Yup "+ str(fltStud.ID))
+                # print("Yup "+ str(fltStud.ID))
                 fltInst = self.instList.pop(0)
                 print("getting ac")
-                ac = self.fl.pop(0)
+                ac = self.flightLine.pop(0)
                 print("got ac" + ac.BuNo)
-                # self.acList[np.random.random_integers(0, len(self.acList) - 1)]
-                print("Stud Vars ")
-                print(vars(fltStud))
-                print("Inst Vars ")
-                print(vars(fltInst))
+                # # self.acList[np.random.random_integers(0, len(self.acList) - 1)]
+                # print("Stud Vars ")
+                # print(vars(fltStud))
+                # print("Inst Vars ")
+                # print(vars(fltInst))
                 yield self.env.process(flight(self.env, ac, fltStud, fltInst))
-                self.fl.append(ac)
+                self.flightLine.append(ac)
                 self.studList.extend([fltStud])
                 # print(str(self.studList[0].ID) + str(self.studList[1].ID))
                 self.instList.extend([fltInst])
@@ -218,10 +233,6 @@ class Scheduler(object):
 
 # Build an aircraft. If it is the start, it will build 
 def buildAC(env, numAC, fl):
-    # try:
-    #     acList
-    # except NameError:
-    #     acList = []
     for n in range(numAC):
         av = "av" + str(n)
         af = "af" + str(n)
@@ -234,11 +245,24 @@ def buildAC(env, numAC, fl):
 # Useful Functions and Classes                                       #
 ######################################################################
 
-def histUpdate(item):
-    if item.obj == "Airframe" | :
-        
-    
-    
+# This is a catch all function for updating the dataframe storing the
+# history of whatever it is, airframe, aircraft, etc. I'm keeping it all
+# here so I know where to change it if I need to.
+## ***** Right now I just store the vars, but I know that is wrong for
+## Stud, inst, and AC ***************
+# I think I'm going to build the methods into the classes. So delete this
+# if you do that
+# def histUpdate(item):
+#     if item.obj == "Airframe" or item.obj == "Avionics" or item.obj == "Propulsion":
+#         partHistory = partHistory.append(vars(item))
+#     elif item.obj == "Student":
+#         studHistory = studHistory.append(vars(item))
+#     elif item.obj == "Instructor":
+#         instHistory = instHistory.append(vars(item))
+#     elif item.obj == "Aircraft":
+#         aircraftHistory == aircraftHistory.append(vars(item))
+
+
 ######################################################################
 # Constants                                                          #
 ######################################################################
