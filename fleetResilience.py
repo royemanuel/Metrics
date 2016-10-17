@@ -31,16 +31,30 @@ class Part(object):
         self.ID = ID
         self.bornDate = env.now
         self.age = 0
-        self.fltHoursSinceFailure = 0
+        self.fltHours = 0
+        self.fltHrsSinceFail = 0
         self.status = True
+        self.history = pd.DataFrame()
+        # hardcoding this in to demo failtTime
+        self.endtime = 25
+
+    # Define a fail time for the particular part.
+    def failTime(self, env, **kwargs):
+        # hard code in a failure time
+        self.fltFail = np.random.random_integers(1, kwargs[endTime])
 
     # Check the whether the part breaks during the operation
     def failFlight(self, env, fltTime):
-        if (self.fltFail < self.fltHoursSinceFailure + fltTime):
-            self.fltHoursSinceFailure = self.fltFail
+        if (self.fltFail < self.fltHrsSinceFail + fltTime):
+            self.fltHrsSinceFail = 0
+            self.fltHours = self.fltHours + self.fltFail - self.fltHrsSinceFail
             self.status = False
+            # THis section will go with a repair function, but for now
+            # I want to check the validity
+            # self.failTime(env, endTime=self.endtime)
         else:
-            self.fltHoursSinceFailure = self.fltHoursSinceFailure + fltTime
+            self.fltHrsSinceFail += fltTime
+            self.fltHours += fltTime
 
 
 # The parts have different types of parts. I think this is the way
@@ -52,6 +66,8 @@ class Airframe(Part):
         self.obj = "Airframe"
         super().__init__(env, ID)
         self.ageFail = 100
+        # This needs to be a call to a method for part. ID the parameters
+        # in the particular part
         self.fltFail = np.random.random_integers(1, 25)
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
