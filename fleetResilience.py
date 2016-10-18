@@ -37,24 +37,38 @@ class Part(object):
         self.history = pd.DataFrame()
         # hardcoding this in to demo failtTime
         self.endtime = 25
+        self.fltFail = self.failTime(env, **{"endTime": self.endtime})
 
     # Define a fail time for the particular part.
     def failTime(self, env, **kwargs):
-        # hard code in a failure time
-        self.fltFail = np.random.random_integers(1, kwargs[endTime])
+        for kw in kwargs:
+            if kwargs[kw] == "endTime":
+                self.fltFail = np.random.random_integers(1, kwargs[kw])
 
     # Check the whether the part breaks during the operation
     def failFlight(self, env, fltTime):
         if (self.fltFail < self.fltHrsSinceFail + fltTime):
-            self.fltHrsSinceFail = 0
             self.fltHours = self.fltHours + self.fltFail - self.fltHrsSinceFail
             self.status = False
+            self.age = env.now - self.bornDate
+            self.history = self.history.append({"ID": self.ID,
+                                               "Age": self.age,
+                                               "FlightHours": self.fltHours},
+                                               ignore_index=True)
             # THis section will go with a repair function, but for now
             # I want to check the validity
-            # self.failTime(env, endTime=self.endtime)
+            self.failTime(env, **{"endTime": self.endtime})
+            self.fltHrsSinceFail = 0
         else:
             self.fltHrsSinceFail += fltTime
             self.fltHours += fltTime
+            self.age = env.now - self.bornDate
+            self.history = self.history.append({"ID": self.ID,
+                                                "Age": self.age,
+                                                "FlightHours": self.fltHours,
+                                                "fhSinceFail": self.fltHrsSinceFail},
+                                                ignore_index=True)
+
 
 
 # The parts have different types of parts. I think this is the way
@@ -304,7 +318,7 @@ buildAC(env, NUM_AIRCRAFT, flightLine)
 stud1 = Student(env, 1)
 inst1 = Instructor(env, 11, 10)
 sked = Scheduler(env, flightLine, [stud1], [inst1])
-env.run(until=500)
+env.run(until=20)
 
 ######################################################################
 ######################################################################
