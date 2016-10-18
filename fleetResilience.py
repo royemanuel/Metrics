@@ -119,6 +119,46 @@ class Aircraft(object):
         self.BuNo = self.af.ID
         self.status = self.af.status & self.av.status & self.puls.status
         self.bornDate = env.now
+        self.blueBook = pd.DataFrame()
+
+    def updateBlueBook(self, env, fltTime):
+        print("Updating Blue Book")
+        self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
+                                              "FlightHours": fltTime,
+                                              "AC Status": self.status,
+                                              "Airframe Status": self.af.status,
+                                              "Avionics Status": self.av.status,
+                                              "Propulsion Status": self.puls.status,
+                                              "Flight Date": env.now},
+                                             ignore_index=True)
+        if self.status is False:
+            if self.af.status is False:
+                repTime = 15
+                yield env.timeout(repTime)
+                self.af.status = True
+                self.av.status = True
+                self.puls.status = True
+                print("The Airframe was broken, but now we fixed everything")
+            elif self.puls.status is False:
+                repTime = 15
+                yield env.timeout(repTime)
+                self.puls.status = True
+                self.av.status = True
+                print("The Engine busted, so we fixed that and checked the instruments")
+            elif self.av.status is False:
+                repTime = 15
+                yield env.timeout(repTime)
+                self.av.status = True
+                print("Just the instruments were down. Up and at'em")
+            self.status = self.af.status & self.av.status & self.puls.status
+            self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
+                                                  "FlightHours": fltTime,
+                                                  "AC Status": self.status,
+                                                  "Airframe Status": self.af.status,
+                                                  "Avionics Status": self.av.status,
+                                                  "Propulsion Status": self.puls.status,
+                                                  "RepairTime": repTime},
+                                                 ignore_index=True)
 
     def flyAircraft(self, env, fltTime, stud, inst):
         # Check to see if any of the parts failed in flight
@@ -128,6 +168,15 @@ class Aircraft(object):
         self.puls.failFlight(env, fltTime)
         # Update the aircraft status
         self.status = self.af.status & self.av.status & self.puls.status
+        # self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
+        #                                       "FlightHours": fltTime,
+        #                                       "AC Status": self.status,
+        #                                       "Airframe Status": self.af.status,
+        #                                       "Avionics Status": self.av.status,
+        #                                       "Propulsion Status": self.puls.status,
+        #                                       "Flight Date": env.now},
+        #                                      ignore_index=True)
+        # self.updateBlueBook(env, fltTime)
         # Update aircrew values. For now, updating flight time
         # whether up or down, and not counting a syllabus event if down
         if self.status:
@@ -138,6 +187,7 @@ class Aircraft(object):
         inst.hours = inst.hours + fltTime
         stud.flightLog(env, fltTime, self.BuNo)
         inst.flightLog(env, fltTime, self.BuNo)
+        env.process(self.updateBlueBook(env, fltTime))
         if self.status is True:
             stud.syllabus += 1
 
@@ -318,7 +368,7 @@ buildAC(env, NUM_AIRCRAFT, flightLine)
 stud1 = Student(env, 1)
 inst1 = Instructor(env, 11, 10)
 sked = Scheduler(env, flightLine, [stud1], [inst1])
-env.run(until=20)
+env.run(until=500)
 
 ######################################################################
 ######################################################################
