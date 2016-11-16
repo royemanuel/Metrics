@@ -15,10 +15,6 @@ import pdb
 # Build the historical DataFrames                                    #
 ######################################################################
 
-partHistory = pd.DataFrame()
-studHistory = pd.DataFrame()
-instHistory = pd.DataFrame()
-aicraftHistory = pd.DataFrame()
 ######################################################################
 # Aircraft Parts and assembling them to an aircraft                  #
 ######################################################################
@@ -43,7 +39,7 @@ class Part(object):
     def failTime(self, env, **kwargs):
         for kw in kwargs:
             if kwargs[kw] == "endTime":
-                self.fltFail = np.random.random_integers(1, kwargs[kw])
+                self.fltFail = np.random.random_integers(1, kwargs[kw]) 
 
     # Check the whether the part breaks during the operation
     def failFlight(self, env, fltTime):
@@ -82,7 +78,7 @@ class Airframe(Part):
         self.ageFail = 100
         # This needs to be a call to a method for part. ID the parameters
         # in the particular part
-        self.fltFail = np.random.random_integers(1, 25)
+        self.fltFail = np.random.random_integers(1, 25) 
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -95,7 +91,7 @@ class Avionics(Part):
         self.obj = "Avionics"
         super().__init__(env, ID)
         self.ageFail = 10
-        self.fltFail = np.random.random_integers(1, 25)
+        self.fltFail = np.random.random_integers(1, 25) 
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -105,7 +101,7 @@ class Propulsion(Part):
         self.obj = "Propulsion"
         super().__init__(env, ID)
         self.ageFail = 10
-        self.fltFail = np.random.random_integers(1, 25)
+        self.fltFail = np.random.random_integers(1, 25) 
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -209,7 +205,8 @@ class Aircrew(object):
 
     def flightLog(self, env, fltTime, ac):
         print("Updating Flight Log")
-        self.flightDF = self.flightDF.append({"Flight Time": fltTime,
+        self.flightDF = self.flightDF.append({"Stud ID": self.ID,
+                                             "Flight Time": fltTime,
                                              "Aircraft": ac,
                                              "Takeoff Time": env.now},
                                              ignore_index=True)
@@ -265,7 +262,7 @@ class AvMech(Maintainer):
 
 def flight(env, ac, stud, inst):
     if ac.status:
-        ft = np.random.random([1]) + 0.5
+        ft = np.random.random([1])  + 0.5
         ac.flyAircraft(env, ft, stud, inst)
         print(inst.ID, "and", stud.ID, "tempted death again in aircraft",
               ac.BuNo, "at time", env.now, "for", ft, "hours!")
@@ -293,7 +290,8 @@ class Scheduler(object):
             # numAC = len(self.flightLine)
             # num = numStuds if numStuds <= numAC else numAC
             for flt in range(len(self.studList)):
-                fltStud = self.studList.pop(0)
+                fltStud = self.studList[flt]
+                # fltStud = self.studList.pop(0)
                 # print("Yup "+ str(fltStud.ID))
                 fltInst = self.instList.pop(0)
                 print("getting ac")
@@ -306,7 +304,7 @@ class Scheduler(object):
                 # print(vars(fltInst))
                 yield self.env.process(flight(self.env, ac, fltStud, fltInst))
                 self.flightLine.append(ac)
-                self.studList.extend([fltStud])
+                # self.studList.extend([fltStud])
                 # print(str(self.studList[0].ID) + str(self.studList[1].ID))
                 self.instList.extend([fltInst])
                 # print(str(self.instList[0].ID) + str(self.instList[1].ID))
@@ -365,10 +363,13 @@ np.random.seed([RANDOM_SEED])
 env = simpy.Environment()
 flightLine = []
 buildAC(env, NUM_AIRCRAFT, flightLine)
-stud1 = Student(env, 1)
-inst1 = Instructor(env, 11, 10)
-sked = Scheduler(env, flightLine, [stud1], [inst1])
-env.run(until=500)
+studList = {0: Student(env, 0), 1: Student(env, 1), 2: Student(env, 2)}
+# [Student(env, 1), Student(env, 2), Student(env, 3)]
+instList = [Instructor(env, 11, 10),
+            Instructor(env, 12, 10),
+            Instructor(env, 13, 10)]
+sked = Scheduler(env, flightLine, studList, instList)
+env.run(until=50)
 
 ######################################################################
 ######################################################################
@@ -410,4 +411,15 @@ env.run(until=500)
 # flight(env, ac1, stud1, inst1)
 # flight(env, ac1, stud1, inst1)
 
+######################################################################
+##                    Data Collection                               ##
+######################################################################
 
+partHistory = pd.DataFrame()
+studHistory = pd.DataFrame()
+instHistory = pd.DataFrame()
+aicraftHistory = pd.DataFrame()
+
+for stud in studList:
+    studHistory = studHistory.append(studList[stud].flightDF)
+    
