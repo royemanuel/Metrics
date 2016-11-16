@@ -6,6 +6,7 @@ import numpy as np
 import scipy.stats as st
 import pandas as pd
 import pdb
+import random
 # pdb.set_trace()
 # for now we will use the Python provided module random to build random
 # numbers
@@ -293,9 +294,10 @@ class Scheduler(object):
                 fltStud = self.studList[flt]
                 # fltStud = self.studList.pop(0)
                 # print("Yup "+ str(fltStud.ID))
-                fltInst = self.instList.pop(0)
+                fltInst = self.instList[flt]
                 print("getting ac")
-                ac = self.flightLine.pop(0)
+                acPull = np.random.randint(0, len(flightLine))
+                ac = self.flightLine[acPull]
                 print("got ac" + ac.BuNo)
                 # # self.acList[np.random.random_integers(0, len(self.acList) - 1)]
                 # print("Stud Vars ")
@@ -303,10 +305,10 @@ class Scheduler(object):
                 # print("Inst Vars ")
                 # print(vars(fltInst))
                 yield self.env.process(flight(self.env, ac, fltStud, fltInst))
-                self.flightLine.append(ac)
+                # self.flightLine.append(ac)
                 # self.studList.extend([fltStud])
                 # print(str(self.studList[0].ID) + str(self.studList[1].ID))
-                self.instList.extend([fltInst])
+                # self.instList.extend([fltInst])
                 # print(str(self.instList[0].ID) + str(self.instList[1].ID))
 
 
@@ -316,8 +318,8 @@ def buildAC(env, numAC, fl):
         af = "af" + str(n)
         av = "av" + str(n)
         eng = "eng" + str(n)
-        ac = Aircraft(env, af, av, eng)
-        fl.append(ac)
+        fl[n] = Aircraft(env, af, av, eng)
+        
 
 
 ######################################################################
@@ -361,55 +363,16 @@ np.random.seed([RANDOM_SEED])
 
 # def repair(env, ac)
 env = simpy.Environment()
-flightLine = []
+flightLine = {}
 buildAC(env, NUM_AIRCRAFT, flightLine)
-studList = {0: Student(env, 0), 1: Student(env, 1), 2: Student(env, 2)}
-# [Student(env, 1), Student(env, 2), Student(env, 3)]
-instList = [Instructor(env, 11, 10),
-            Instructor(env, 12, 10),
-            Instructor(env, 13, 10)]
+studList = {0: Student(env, 0),
+            1: Student(env, 1),
+            2: Student(env, 2)}
+instList = {0: Instructor(env, 10, 10),
+            1: Instructor(env, 11, 10),
+            2: Instructor(env, 12, 10)}
 sked = Scheduler(env, flightLine, studList, instList)
 env.run(until=50)
-
-######################################################################
-######################################################################
-
-# Create an airplane to
-# av1 = Avionics(env, "av1")
-# af1 = Airframe(env, "af1")
-# puls1 = Propulsion(env, "puls1")
-# ac1 = Aircraft(env, af1, av1, puls1)
-# av2 = Avionics(env, "av2")
-# af2 = Airframe(env, "af2")
-# puls2 = Propulsion(env, "puls2")
-# ac2 = Aircraft(env, af2, av2, puls2)
-# 
-# availAC = [ac1, ac2]
-# 
-# stud1 = Student(env, 1)
-# inst1 = Instructor(env, 11, 10)
-# 
-# 
-# stud2 = Student(env, 2)
-# inst2 = Instructor(env, 22, 20)
-# 
-# availStud = [stud1, stud2]
-# 
-# availInst = [inst1, inst2]
-# 
-# sked = Scheduler(env, availAC, availStud, availInst)
-
-
-# flight(env, ac1, stud1, inst1)
-# flight(env, ac1, stud1, inst1)
-# flight(env, ac1, stud1, inst1)
-# flight(env, ac1, stud1, inst1)
-# flight(env, ac1, stud1, inst1)
-# flight(env, ac1, stud1, inst1)
-# flight(env, ac1, stud1, inst1)
-# flight(env, ac1, stud1, inst1)
-# flight(env, ac1, stud1, inst1)
-# flight(env, ac1, stud1, inst1)
 
 ######################################################################
 ##                    Data Collection                               ##
