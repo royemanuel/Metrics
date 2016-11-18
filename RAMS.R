@@ -220,8 +220,8 @@ WDpltMoveNeed <- function(df, time){
                                       facet_grid(. ~ ResType)
     plt <- plt +
         scale_linetype_discrete(name = "Metrics") +
-            theme_bw(base_size = 8, base_family = "serif") +
-                theme(legend.position = c(.85, .15))
+            theme_bw(base_size = 20, base_family = "serif") +
+                theme(legend.position = c(.95, .15))
 }
 
 ## Plot Substitution (sigma) for each metric
@@ -255,8 +255,8 @@ WDpltSubNeed <- function(df, time){
                                       facet_grid(. ~ ResType)
     plt <- plt +
         scale_linetype_discrete(name = "Metrics") +
-            theme_bw(base_size = 8, base_family = "serif") +
-                theme(legend.position = c(.85, .15))
+            theme_bw(base_size = 20, base_family = "serif") +
+                theme(legend.position = c(.95, .15))
 }
 ## Plot resilience as the time horizon changes
 WDpltMoveTimeH <- function(df){
@@ -289,8 +289,8 @@ WDpltMoveTimeH <- function(df){
                                       facet_grid(. ~ ResType)
     plt <- plt +
     scale_linetype_discrete(name = "Metrics") +
-        theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .15))
+        theme_bw(base_size = 20, base_family = "serif") +
+            theme(legend.position = c(.95, .15))
 }
 
 ## Plot the need and performance of a resilience matrix when they are
@@ -308,13 +308,10 @@ pltNeedPerf <- function(df){
                                theme(legend.position = c(.85, .15)) +
                                scale_linetype_discrete(name = "")
 }
-WDQtVFSplot <- WDpltMoveTimeH(tVFS)
-WDItVFSplot <- WDpltMoveTimeH(tVFS)
-WDEtVFSplot <- WDpltMoveTimeH(tVFS)
-WDnVFSplotRecQR <- WDpltMoveNeed(nVFS, 80)
-WDnVFSplotFailQR <- WDpltMoveNeed(nVFS, 30)
-WDnVFSplotRecIR <- WDpltMoveNeed(nVFS, 80)
-WDnVFSplotFailIR <- WDpltMoveNeed(nVFS, 30)
-WDnVFSplotRecE <- WDpltMoveNeed(nVFS, 80)
-WDnVFSplotFailE <- WDpltMoveNeed(nVFS, 30)
+WDtVFSplot <- WDpltMoveTimeH(tVFS)
+
+WDnVFSplotRec <- WDpltMoveNeed(nVFS, 80)
+WDnVFSplotFail <- WDpltMoveNeed(nVFS, 30)
+WDsVFSplotRec <- WDpltSubNeed(sVFS, 80)
+WDsVFSplotFail <- WDpltSubNeed(sVFS, 30)
 
