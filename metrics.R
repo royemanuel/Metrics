@@ -289,8 +289,8 @@ extResFac <- function(tt,
     perfDiff <- tt %>%
         mutate(Diff = Performance - Need) %>%
             filter(Time > timeD & Diff >= 0)
-    print(perfDiff)
-    print(dim(perfDiff))
+    ## print(perfDiff)
+    ## print(dim(perfDiff))
     finRecTime <- ifelse(!dim(perfDiff)[1],
                          max(tt$Time),
                          perfDiff$Time[1])
@@ -616,7 +616,7 @@ pltMoveTDelta <- function(df, time){
                                   -ERF_TDelta)
     ## Everything after this is wrong
     workDF <- melt(data = workDF, id = c("SF"))
-    print(head(workDF))
+    ## print(head(workDF))
     plt <- ggplot(data = workDF, aes(SF, value, group = variable,
                       color = variable)) + geom_line()
 }
