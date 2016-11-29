@@ -123,8 +123,11 @@ class Aircraft(object):
         self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
                                               "FlightHours": fltTime,
                                               "AC Status": self.status,
+                                              "Airframe ID": self.af.ID,
                                               "Airframe Status": self.af.status,
+                                              "Avionics ID": self.av.ID,
                                               "Avionics Status": self.av.status,
+                                              "Propulsion ID": self.puls.ID,
                                               "Propulsion Status": self.puls.status,
                                               "Flight Date": env.now},
                                              ignore_index=True)
@@ -381,8 +384,13 @@ env.run(until=50)
 partHistory = pd.DataFrame()
 studHistory = pd.DataFrame()
 instHistory = pd.DataFrame()
-aicraftHistory = pd.DataFrame()
+aircraftHistory = pd.DataFrame()
 
 for stud in studList:
     studHistory = studHistory.append(studList[stud].flightDF)
-    
+
+for inst in instList:
+    instHistory = instHistory.append(instList[inst].flightDF)
+
+for ac in flightLine:
+    aircraftHistory = aircraftHistory.append(flightLine[ac].blueBook)
