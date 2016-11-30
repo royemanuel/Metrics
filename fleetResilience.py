@@ -162,6 +162,7 @@ class Aircraft(object):
 
     def flyAircraft(self, env, fltTime, stud, inst):
         # Check to see if any of the parts failed in flight
+        attrit = .1
         self.av.failFlight(env, fltTime)
         # histUpdate(self.av)
         self.af.failFlight(env, fltTime)
@@ -189,7 +190,7 @@ class Aircraft(object):
         inst.flightLog(env, fltTime, self.BuNo)
         env.process(self.updateBlueBook(env, fltTime))
         if self.status is True:
-            stud.syllabus += 1
+            grading(env, stud, attrit)
 
 
 ######################################################################
@@ -223,6 +224,7 @@ class Student(Aircrew):
         self.obj = "Student"
         super().__init__(env, ID)
         self.syllabus = 0
+        self.downs = 0
         self.graduated = False
 
 
@@ -266,7 +268,7 @@ class AvMech(Maintainer):
 
 def flight(env, ac, stud, inst):
     if ac.status:
-        ft = np.random.random([1])  + 0.5
+        ft = np.random.random([1]) + 0.5
         ac.flyAircraft(env, ft, stud, inst)
         print(inst.ID, "and", stud.ID, "tempted death again in aircraft",
               ac.BuNo, "at time", env.now, "for", ft, "hours!")
@@ -275,6 +277,14 @@ def flight(env, ac, stud, inst):
         print("Side number " + str(ac.BuNo) + " is broke, fool!")
     # Hard code three hours to the next event 
     yield env.timeout(3)
+
+
+def grading(env, stud, attrit):
+    grade = np.random.random(1)
+    if (grade > attrit):
+        stud.syllabus += 1
+    else:
+        stud.downs += 1
 
 
 class Scheduler(object):
@@ -357,7 +367,7 @@ NUM_STUDENT = 1
 NUM_INSTRUCTOR = 1
 
 ######################################################################
-# Build Aircraft, Students, and                                      #
+# Build Aircraft, Students, and instructors                          #
 ######################################################################
 
 
@@ -375,10 +385,10 @@ instList = {0: Instructor(env, 10, 10),
             1: Instructor(env, 11, 10),
             2: Instructor(env, 12, 10)}
 sked = Scheduler(env, flightLine, studList, instList)
-env.run(until=50)
+env.run(until=500)
 
 ######################################################################
-##                    Data Collection                               ##
+#                    Data Collection                                 #
 ######################################################################
 
 partHistory = pd.DataFrame()
