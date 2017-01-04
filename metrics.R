@@ -6,12 +6,16 @@ library('reshape2')
 library('ggplot2')
 library('extrafont')
 
-## build the time column
+## Function that builds a  time column from 0 to endTime with resolution
+## size intervals
 timeColumn <- function(endTime, resolution){
     t <- data.frame(Time = seq(0, endTime, resolution))
 }
 
-## This is an example of a step failure with a recovery
+## This is an example of a performance profile with step failure and recovery
+## ____     ____
+##     |   |
+##     |___|
 ## failTime = time the system degrades
 ## recoverTime = time the system has recovered
 ## preLevel = performance level of the system before failure
@@ -31,7 +35,11 @@ stepFailRecover <- function(tt, failTime, recoverTime, preLevel,
     timeAndPerf <- rbind(preFail, postFail, postRec)
     return(timeAndPerf)
 }
-
+## This is a performance profile with step failure and linear recovery
+## ____    ____
+##     |  /
+##     | /
+##     |/
 resTriangle <- function(tt,
                         failTime,
                         recoverTime,
@@ -52,6 +60,11 @@ resTriangle <- function(tt,
     return(timeAndPerf)
 }
 
+######################################################################
+## I will need to add a function that pulls the time endpoints and
+## the interval from the model outputs automatically. This should be
+## somewhat simple. 
+######################################################################
 
 ## a quick build for a need column that has a constant value
 constantNeed <- function(tt, Need){
@@ -161,8 +174,10 @@ extQuotRes <- function(tt, sigma){
     ## print(vars)
     return(tt)
 }
+###################################################################### 
+## Building the ESDF model                                          ## 
+######################################################################
 
-## Building the ESDF model
 ## Speedfactor is a function that needs the time of the disturbance
 ## (disturbTime), the time that initial recovery activities are complete,
 ## (initRecTime), the time final recovery activities are complete
