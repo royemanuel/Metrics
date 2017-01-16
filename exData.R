@@ -81,20 +81,32 @@ nLinearVary <- data.frame(func = "constantNeed",
 n2 <- data.frame(func = "constantNeed",
                 cLevel = 0.9,
                 startTime = NA,
-                slope = NA)
+                 slope = NA)
+
 p2 <- data.frame(func = "step",
                 failTime = 20,
                 recTime = 60,
                 preLevel = 1.2,
                 failLevel = 0.1,
                 recLevel = 1.0)
+
+pRAMS <- data.frame(func = "step",
+                failTime = 20,
+                recTime = 60,
+                preLevel = 1.0,
+                failLevel = 0.1,
+                recLevel = 1.2)
+
 r2 <- data.frame(tDelta = 30,
                 decay = 0,
                  sigma = seq(from = 0,
                      to = 1.0,
                      by = .01))
+
 sVFS <- resLoop(t, n2, p2, r2)
+
 sVFSplotRec <- pltSubNeed(sVFS, 80)
+
 sVFSplotFail <- pltSubNeed(sVFS, 30)
 
 ## Data frame with variable time horizon

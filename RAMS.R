@@ -9,6 +9,8 @@
 ## resilience metrics
 
 ## Plot Need for each metric
+
+## 
 RAMSpltMoveNeed <- function(df, time, restype){
     workDF <- df %>%
         filter(Time == time) %>%
@@ -179,10 +181,10 @@ pltPerf <- function(df){
     plt <- ggplot(data = df, aes(Time, value,
                                  group = variable,
                                  linetype = variable)) + geom_line() +
-        theme_bw(base_size = 8, base_family = "serif") +
+        theme_bw(base_size = 20, base_family = "serif") +
             scale_linetype_discrete(name = "") +
-                theme(legend.position = c(.85, .25)) +
-                    labs(y = "Performance") + ylim(0, 1)
+                theme(legend.position = c(.85, .15)) +
+                    labs(y = "Performance") + ylim(0, 1.5)
 }
 
 RAMSPlotSave <- function(name){
@@ -292,26 +294,31 @@ WDpltMoveTimeH <- function(df){
         theme_bw(base_size = 20, base_family = "serif") +
             theme(legend.position = c(.95, .15))
 }
-
-## Plot the need and performance of a resilience matrix when they are
-## held constant. This allows you to look at what the performance profile
-## looks like when analyzing the results.
-pltNeedPerf <- function(df){
-    wdf <- df %>%
-        filter(tRun == 1, nRun == 1, pRun == 1, rRun == 1) %>%
-            select(Need, Time, Performance)
-    wdf <- melt(data = wdf, id = c("Time"))
-    wdf <- rename(wdf, Performance = value)
-    plt <- ggplot(wdf, aes(Time, Performance, group = variable)) +
-                               geom_line(aes(linetype = variable)) +
-                               theme_bw(base_size = 8, base_family = "serif") +
-                               theme(legend.position = c(.85, .15)) +
-                               scale_linetype_discrete(name = "")
 }
+## The RAMS performance data and plot
+examplePerf <- list(sigma = 0, tDelta = 20, decay =  0)
+
+examplePerfData <- buildResMatrix(t, n, p2, r)
+
+
+## The RAMS presentation plot varying time horizon
 WDtVFSplot <- WDpltMoveTimeH(tVFS)
 
+## The RAMS presentation plot varying need at time 80
 WDnVFSplotRec <- WDpltMoveNeed(nVFS, 80)
+
+## The RAMS presentation plot varying need at time 30
 WDnVFSplotFail <- WDpltMoveNeed(nVFS, 30)
+
+## The RAMS presentation plot varying substition (sigma) at time 80
 WDsVFSplotRec <- WDpltSubNeed(sVFS, 80)
+
+## The RAMS presentation plot varying substition (sigma) at time 30
 WDsVFSplotFail <- WDpltSubNeed(sVFS, 30)
 
+## I have a crummy way of naming these files. I am forgetting everything
+## the letters mean. I'll try to do better
+
+## The RAMS presentation plot of the performance profile with constant
+## need profile
+perfPlotRAMSPres <- pltPerf(sVFS)
