@@ -165,7 +165,7 @@ pltMoveTDelta <- function(df, time){
                        mutate(SF = RF_TDelta / RF_DwellTime) %>%
                            select(-RF_DwellTime,
                                   -RF_TDelta,
-                                  -ERF_DwellTime,
+                                  -ERF_DwellTime, 
                                   -ERF_TDelta)
     ## Everything after this is wrong
     workDF <- melt(data = workDF, id = c("SF"))
@@ -177,12 +177,16 @@ pltMoveTDelta <- function(df, time){
 pltPerf <- function(df){
     df <- df %>%
         select(Time, Performance, Need) %>%
-        melt(id = "Time")
+                melt(id = "Time")
     plt <- ggplot(data = df, aes(Time, value,
                                  group = variable,
-                                 linetype = variable)) + geom_line() +
+                      linetype = variable)) +
+                          geom_line(size=1) +
+                              scale_linetype_manual(values=c("solid",
+                                                        "dashed"),
+                                                    (name = ""))+
         theme_bw(base_size = 20, base_family = "serif") +
-            scale_linetype_discrete(name = "") +
+            ## scale_linetype_discrete(name = "") +
                 theme(legend.position = c(.85, .15)) +
                     labs(y = "Performance") + ylim(0, 1.5)
 }
@@ -294,7 +298,7 @@ WDpltMoveTimeH <- function(df){
         theme_bw(base_size = 20, base_family = "serif") +
             theme(legend.position = c(.95, .15))
 }
-}
+
 ## The RAMS performance data and plot
 examplePerf <- list(sigma = 0, tDelta = 20, decay =  0)
 
