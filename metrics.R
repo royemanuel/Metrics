@@ -194,10 +194,10 @@ speedFactor <- function(disturbTime,
     ## This is adequate for a strictly increasing recovery.
     ## Must include method for detecting pauses and dips in recovery.
     timeToInitRec <- initRecTime - disturbTime
-    ## print("FinRec")
-    ## print(finRecTime)
-    ## print("initRec")
-    ## print(initRecTime)
+    print("FinRec")
+    print(finRecTime)
+    print("initRec")
+    print(initRecTime)
     if(finRecTime >= initRecTime){
         sf <- (tDelta/timeToInitRec)*exp(-decay*(finRecTime - initRecTime))
     } else {
@@ -227,35 +227,46 @@ resFac <- function(tt,
     phiD <- disturbRow$Performance
     ## print(phiD)
     timeD <- disturbRow$Time
-    ## Build a data frame that includes all of the recovery times
-    ## There is potential to detect additional failures by looping this
-    ## process over the recoveryID data frame. We would need to change the
-    ## disturbRow from looking for a minimum to looking to the lowest
-    ## performance that then is arrested for some given time.
-    recoveryID <- tt %>%
-        filter(Time > timeD) %>%
-            filter(Performance > phiD)
-    initRecTime <- recoveryID$Time[1]
-    ## print(recoveryID)
-    ## Likewise to the recoveryID, we can look for the first performance
-    ## that is repeated. This is good enough right now for a step
-    ## failure with a step recovery. When we start to include multiple
-    ## failures and a stepped recovery, it will be necessary to auto-
-    ## pull interim recovery times for this metric.
-    finRecTime <- recoveryID[which.max(recoveryID$Performance), "Time"]
-    ## print(list(initRecTime = initRecTime, finRecTime = finRecTime))
-    sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
-    phi0 <- tt$Performance[1]
-    vars <- c(sf, phiD, timeD, phi0)
-    names(vars) <- c("SpeedFactor", "Phi_D", "timeD", "Phi_0")
-    ## print(vars)
-    tt <- mutate(tt, Rho = ifelse(Time < timeD, 1,
-                         sf * phiD * tt$Performance /
-                             (phi0 ^ 2)))
-    tt$RF_FailTime <- timeD
-    tt$RF_TDelta <- tDelta
-    tt$RF_RecTime <- finRecTime
-    tt$RF_DwellTime <- tt$RF_RecTime - tt$RF_FailTime
+    if(timeD > 0){
+        ## print("timeD")
+        ## print(timeD)
+        ## Build a data frame that includes all of the recovery times
+        ## There is potential to detect additional failures by looping this
+        ## process over the recoveryID data frame. We would need to change the
+        ## disturbRow from looking for a minimum to looking to the lowest
+        ## performance that then is arrested for some given time.
+        recoveryID <- tt %>%
+            filter(Time > timeD) %>%
+                filter(Performance > phiD)
+        initRecTime <- recoveryID$Time[1]
+        ## print(length(recoveryID))
+        ## Likewise to the recoveryID, we can look for the first performance
+        ## that is repeated. This is good enough right now for a step
+        ## failure with a step recovery. When we start to include multiple
+        ## failures and a stepped recovery, it will be necessary to auto-
+        ## pull interim recovery times for this metric.
+        finRecTime <- recoveryID[which.max(recoveryID$Performance), "Time"]
+        ## print(list(initRecTime = initRecTime, finRecTime = finRecTime))
+        sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
+        phi0 <- tt$Performance[1]
+        vars <- c(sf, phiD, timeD, phi0)
+        names(vars) <- c("SpeedFactor", "Phi_D", "timeD", "Phi_0")
+        ## print(vars)
+        tt <- mutate(tt, Rho = ifelse(Time < timeD, 1,
+                             sf * phiD * tt$Performance /
+                                 (phi0 ^ 2)))
+        tt$RF_FailTime <- timeD
+        tt$RF_TDelta <- tDelta
+        tt$RF_RecTime <- finRecTime
+        tt$RF_DwellTime <- tt$RF_RecTime - tt$RF_FailTime
+    } else {
+        tt <- mutate(tt, Rho = 1)
+        tt$RF_FailTime <- NA
+        tt$RF_TDelta <- tDelta
+        tt$RF_RecTime <- NA
+        tt$RF_DwellTime <- NA
+
+    }
     return(tt)
 }
 
@@ -288,57 +299,65 @@ extResFac <- function(tt,
     timeD <- disturbRow$Time
     ## print("This is timeD")
     ## print(timeD)
-    disturbRatio <- disturbRow$npRatio
-    ## Identify when recovery occurs. Simply defined as the first time
-    ## increasing performance
-    recoveryID <- tt %>%
-        filter(Time > timeD) %>%
-        filter(Performance > phiD)
-    ## print(head(recoveryID))
-    initRecTime <- recoveryID$Time[1]
-    ## print("initRecTime ERF")
-    ## print(initRecTime)
-    ## Simplistic recovery defined as the first time step that has
-    ## performance greater than need.
-    ## print(tail(tt))
-    perfDiff <- tt %>%
-        mutate(Diff = Performance - Need) %>%
-            filter(Time > timeD & Diff >= 0)
-    ## print(perfDiff)
-    ## print(dim(perfDiff))
-    finRecTime <- ifelse(!dim(perfDiff)[1],
-                         max(tt$Time),
-                         perfDiff$Time[1])
-    if (is.na(initRecTime)){
-        initRecTime <- timeD
+    if(timeD>0){
+        disturbRatio <- disturbRow$npRatio
+        ## Identify when recovery occurs. Simply defined as the first time
+        ## increasing performance
+        recoveryID <- tt %>%
+            filter(Time > timeD) %>%
+                filter(Performance > phiD)
+        ## print(head(recoveryID))
+        initRecTime <- recoveryID$Time[1]
+        ## print("initRecTime ERF")
+        ## print(initRecTime)
+        ## Simplistic recovery defined as the first time step that has
+        ## performance greater than need.
+        ## print(tail(tt))
+        perfDiff <- tt %>%
+            mutate(Diff = Performance - Need) %>%
+                filter(Time > timeD & Diff >= 0)
+        ## print(perfDiff)
+        ## print(dim(perfDiff))
+        finRecTime <- ifelse(!dim(perfDiff)[1],
+                             max(tt$Time),
+                             perfDiff$Time[1])
+        if (is.na(initRecTime)){
+            initRecTime <- timeD
+        }
+        ## print(max(tt$Time))
+        ## print("finRecTime ERF")
+        ## print(finRecTime)
+        sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
+        recovRatio <- filter(tt, Time == finRecTime)$npRatio
+        ## vars <- c(sf,
+        ##           timeD,
+        ##           disturbRow$Time,
+        ##           initRecTime,
+        ##           finRecTime,
+        ##           disturbRatio,
+        ##           recovRatio)
+        ## names(vars) <- c("SF",
+        ##                  "timeD",
+        ##                  "disturbRow$Time",
+        ##                  "initRecTime",
+        ##                  "finRecTime",
+        ##                  "disturbRatio",
+        ##                  "recovRatio")
+        ## print(vars)
+        tt <- mutate(tt, extRho = ifelse(Time < timeD, 1,
+                             sf * (disturbRatio * tt$npRatio)),
+                     ERF_FailTime = timeD,
+                     ERF_TDelta = tDelta,
+                     ERF_FinalRecTime = finRecTime,
+                     ERF_DwellTime = ERF_FinalRecTime - ERF_FailTime
+                     )
+    } else {
+        tt <- mutate(tt, extRho = 1,
+                     ERF_FailTime = NA,
+                     ERF_TDelta = tDelta,
+                     ERF_FinalRecTime = NA,
+                     ERF_DwellTime = NA)
     }
-    ## print(max(tt$Time))
-    ## print("finRecTime ERF")
-    ## print(finRecTime)
-    sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
-    recovRatio <- filter(tt, Time == finRecTime)$npRatio
-    ## vars <- c(sf,
-    ##           timeD,
-    ##           disturbRow$Time,
-    ##           initRecTime,
-    ##           finRecTime,
-    ##           disturbRatio,
-    ##           recovRatio)
-    ## names(vars) <- c("SF",
-    ##                  "timeD",
-    ##                  "disturbRow$Time",
-    ##                  "initRecTime",
-    ##                  "finRecTime",
-    ##                  "disturbRatio",
-    ##                  "recovRatio")
-    ## print(vars)
-    tt <- mutate(tt, extRho = ifelse(Time < timeD, 1,
-                         sf * (disturbRatio * tt$npRatio)),
-                 ERF_FailTime = timeD,
-                 ERF_TDelta = tDelta,
-                 ERF_FinalRecTime = finRecTime,
-                 ERF_DwellTime = ERF_FinalRecTime - ERF_FailTime
-                 )
 }
 
 intRes <- function(tt, sigma){
