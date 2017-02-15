@@ -17,7 +17,7 @@ time <- data.frame(endTime = 100,
 need <- data.frame(func = "constantNeed",
                    cLevel = seq(from = 0.1,
                        to = 1.0,
-                       by = .1),
+                       by = .05),
                    startTime = NA,
                    slope = NA)
 
@@ -27,7 +27,7 @@ p <- data.frame(func = "step",
                 preLevel = 1,
                 failLevel = seq(from = 0.1,
                     to = 1,
-                    by = 0.1),
+                    by = 0.05),
                 recLevel = 1)
 
 resParams <- data.frame(tDelta = 20,
@@ -40,4 +40,11 @@ indiffRes <- resLoop (time, need, p, resParams)
 
 IntResInd <- indiffRes %>%
     filter(Time == 100) %>%
-        select(extResilience, Time, Need, pRun)
+        select(extResilience, Time, Need, pRun, EQR, extRho)
+
+r <- ggplot(IntResInd, aes(pRun, Need, z=extResilience)) +
+    geom_raster(aes(fill = extResilience)) + geom_contour(color = "white")
+q <- ggplot(IntResInd, aes(pRun, Need, z=EQR)) +
+    geom_contour()
+e <- ggplot(IntResInd, aes(pRun, Need, z=extRho)) +
+    geom_raster(aes(fill = extRho)) + geom_contour(color = "white")

@@ -194,10 +194,10 @@ speedFactor <- function(disturbTime,
     ## This is adequate for a strictly increasing recovery.
     ## Must include method for detecting pauses and dips in recovery.
     timeToInitRec <- initRecTime - disturbTime
-    print("FinRec")
-    print(finRecTime)
-    print("initRec")
-    print(initRecTime)
+    ## print("FinRec")
+    ## print(finRecTime)
+    ## print("initRec")
+    ## print(initRecTime)
     if(finRecTime >= initRecTime){
         sf <- (tDelta/timeToInitRec)*exp(-decay*(finRecTime - initRecTime))
     } else {
