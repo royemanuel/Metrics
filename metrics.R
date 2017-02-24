@@ -507,6 +507,48 @@ resLoop <- function(time, need, performance, resFactors){
     }
     rm
 }
+## Call the function multiple time for variable inputs. All inputs
+## are data.frame. This one pulls only the columns you want. Makes
+## a smaller dataframe.
+resLoopShrink <- function(time, need, performance, resFactors){
+    rm <- data.frame()
+    needStep <- dim(need)[1]
+    perfStep <- dim(performance)[1]
+    resStep <- dim(resFactors)[1]
+    timeStep <- dim(time)[1]
+    for (needRun in 1:needStep){
+        for (perfRun in 1:perfStep){
+            for (resRun in 1:resStep){
+                for (timeRun in 1:timeStep){
+                    print(paste0("NR = ", needRun, ", ",
+                                 "PR = ", perfRun, ", ",
+                                 "RR = ", resRun, ", ",
+                                 "TR = ", timeRun))
+                    k <- buildResMatrix(time[timeRun,],
+                                        need[needRun,],
+                                        performance[perfRun,],
+                                        resFactors[resRun,]
+                                        )
+                    k <- cbind(k,
+                               tRun = timeRun,
+                               nRun = needRun,
+                               pRun = perfRun,
+                               rRun = resRun,
+                               Decay = resFactors$decay[resRun],
+                               Sigma = resFactors$sigma[resRun]
+                               )
+                    ## This is where you select the columns you want
+                    ## in the final matrix
+                    k <-  k %>% filter(Time == 100) %>%
+                        select(extResilience, Time, Need, pRun, EQR,
+                               extRho)
+                    rm <- rbind(rm, k)
+                }
+            }
+        }
+    }
+    rm
+}
 
 
 ######################################################################
