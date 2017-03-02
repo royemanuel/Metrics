@@ -211,9 +211,9 @@ class Aircrew(object):
     def flightLog(self, env, fltTime, ac):
         print("Updating Flight Log")
         self.flightDF = self.flightDF.append({"Stud ID": self.ID,
-                                             "Flight Time": fltTime,
-                                             "Aircraft": ac,
-                                             "Takeoff Time": env.now},
+                                              "Flight Time": fltTime,
+                                              "Aircraft": ac,
+                                              "Takeoff Time": env.now},
                                              ignore_index=True)
 
 
