@@ -1,5 +1,5 @@
 ## A script to pull in the data from the AnyLogic Model
-mdl <- read.csv("singleRunOutput.csv")
+mdl <- read.csv("singleRunOutputsimple.csv")
 mdl <- mdl %>% select(-Electric.Degrade) %>%
     mutate(Time = Time - Time[1]) %>%
     melt(id.vars = "Time", na.rm = TRUE) %>%
@@ -7,7 +7,12 @@ mdl <- mdl %>% select(-Electric.Degrade) %>%
 
 infraPlot <- ggplot(mdl, aes(Time, value)) +
     facet_wrap(~  variable, ncol = 2) +
-    geom_line()
+    geom_line() +
+    theme_bw(base_size = 12, base_family = "serif") +
+    scale_linetype_discrete(name = "") +
+    theme(legend.position = c(.85, .25)) +
+    labs(y = "Performance") + ylim(0, 1)
+
 
 ## Build the resilience matrix for each of these
 
@@ -52,13 +57,10 @@ simResilience <- function(TPmatrix, needList, resFactors){
 }
 
 needExample <- data.frame(func = c("constantNeed","constantNeed"),
-                          cLevel = c(.8, 1.5),
+                          cLevel = c(.8, .4),
                           startTime = c(NA, NA),
                           slope = c(NA, NA))
 
-g <- simResilience(El.Av, needExample, r)
-h <- pltMoveTimeH(g)
-h
 
 ## Run through the whole data.frame for each variable like resLoop and
 ## resLoopShrink
@@ -117,7 +119,7 @@ pltMoveTimeInfra <- function(df){
                                  "Integral Resilience", 0))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
-                   nRun,
+                   .4 * nRun/10,
                    "Original"))
     workDF <- rename(workDF, Resilience = value)
     print(head(workDF))
@@ -125,11 +127,27 @@ pltMoveTimeInfra <- function(df){
     ## print(colnames(workDF))
     plt <- ggplot(workDF, aes(Time, Resilience,
                               group = variable)) +
-                                  geom_line(aes(linetype = variable)) +
-                                      facet_grid(ResType ~ Infrastructure)
+        geom_line(aes(linetype = variable,
+                      color = variable)) +
+        facet_grid(Infrastructure ~ ResType)
     plt <- plt +
-    scale_linetype_discrete(name = "Metrics") +
-        theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .15))
+        scale_linetype_discrete(name = "Need") +
+        scale_color_discrete(name = "Need") +
+        theme_bw(base_size = 8, base_family = "serif")
 }
 n <- pltMoveTimeInfra(m)
+
+######################################################################
+## Build the model with the need level stepping from .1 to 1.0 by .1
+
+nCnst <- data.frame(func = "constantNeed",
+                          cLevel = seq(from = 0.1,
+                                       to = 1.0,
+                                       by = .1),
+                          cLevel = 1.0,
+                          startTime = NA,
+                          slope = NA)
+
+cnstNeed <- infraResAll(mdl, nCnst, r)
+
+cnPlot <- pltMoveTimeInfra(cnstNeed)

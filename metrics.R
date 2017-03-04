@@ -503,7 +503,7 @@ resLoop <- function(time, need, performance, resFactors){
                                Decay = resFactors$decay[resRun],
                                Sigma = resFactors$sigma[resRun]
                                )
-                    resMat <- rbind(rm, k)
+                    resMat <- rbind(resMat, k)
                 }
             }
         }
@@ -590,6 +590,38 @@ pltMoveNeed <- function(df, time){
         scale_linetype_discrete(name = "Metrics") +
             theme_bw(base_size = 8, base_family = "serif") +
                 theme(legend.position = c(.85, .15))
+}
+
+## Plot Recovery time changing for each **original** metric
+pltMoveRecovery <- function(df, t){
+    workDF <- df %>%
+        filter(Time == t) %>%
+        mutate(TTR = ERF_FinalRecTime - ERF_FailTime) %>%
+        select(Time, QR, EQR, Rho, TTR,
+               extRho, statQuoResilience, extResilience)
+    workDF <- melt(data = workDF, id = c("Time", "TTR"))
+    workDF <- workDF %>%
+        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
+                   "Quotient Resilience",
+                   ifelse((variable == "Rho" | variable == "extRho"),
+                          "ESDF",
+                          ifelse((variable == "statQuoResilience" |
+                                      variable == "extResilience"),
+                                 "Integral Resilience", 0))))
+    ## print(colnames(workDF))
+    workDF <- workDF %>%
+        mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
+                                 "Extended",
+                                 "Original")) %>%
+        filter(variable == "Original")
+    workDF <- rename(workDF, Resilience = value)
+    plt <- ggplot(workDF, aes(TTR, Resilience)) +
+        geom_line() +
+        facet_grid(ResType ~ .)
+    plt <- plt +
+        theme_bw(base_size = 8, base_family = "serif") +
+        theme(legend.position = c(.85, .15)) +
+        scale_x_continuous("Time to Recover")
 }
 
 ## Plot Substitution (sigma) for each metric

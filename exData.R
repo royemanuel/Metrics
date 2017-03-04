@@ -50,6 +50,81 @@ pVaryFailStep <- data.frame(failLevel = seq(from = 0,
                             recTime = 60,
                             preLevel = 1,
                             recLevel = 1)
+## Vary the failure level from 0 to .99
+pVFS <- resLoop(t, n, pVaryFailStep, r)
+
+######################################################################
+## This is the same as the above, but with a larger step, so all
+## can be plotted at once over time to demonstrate the insensitivity
+## of the quotient resilience metric
+pVaryFailStepBig <- data.frame(failLevel = seq(from = 0,
+                                            to = .9,
+                                            by = .3),
+                            func = "step",
+                            failTime = 10,
+                            recTime = 60,
+                            preLevel = 1,
+                            recLevel = 1)
+## Vary the failure level from 0 to .99
+pVFSbigstep <- resLoop(t, n, pVaryFailStepBig, r)
+
+## Plot it so it has all of the profiles on each one
+pltMoveFailLevelPerfP <- function(df){
+    workDF <- df %>%
+         select(Time, QR, EQR, Rho, 
+                extRho, statQuoResilience, extResilience, pRun)
+    workDF <- melt(data = workDF, id = c("Time",  "pRun"))
+    ## Assign a value to the pairings of extended and unextended values
+    ## there might be a better way to do this that you might want to
+    ## clear up, but for now, get it on the paper
+    workDF <- workDF %>%
+        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
+                   "Quotient Resilience",
+                   ifelse((variable == "Rho" | variable == "extRho"),
+                          "ESDF",
+                          ifelse((variable == "statQuoResilience" |
+                                      variable == "extResilience"),
+                                 "Integral Resilience", 0))))
+    workDF <- workDF %>%
+        mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
+                   "Extended",
+                   "Original")) %>%
+        filter(variable == "Original") %>%
+        mutate(pRun = 3 * (pRun - 1)/10)
+    workDF <- rename(workDF, Resilience = value)
+    print(head(workDF))
+    workDF$pRun <- as.character(workDF$pRun)
+    ## print(tail(workDF))
+    ## print(colnames(workDF))
+    plt <- ggplot(workDF, aes(Time, Resilience,
+                              group = pRun)) +
+        geom_line(aes(color = pRun,
+                      linetype = pRun)) +
+        facet_grid(ResType ~ .) + 
+        scale_linetype_discrete(name = "Fail Level") +
+        scale_color_discrete(name = "Fail Level") +
+        theme_bw(base_size = 12, base_family = "serif")
+}
+
+pltVFSbigstep <- pltMoveFailLevelPerfP(pVFSbigstep)
+
+## Also plot the performance curves to go with it
+perfVFS <- function(df){
+    workDF <- df %>%
+        select(Time, Performance, pRun)
+    workDF <- melt(data = workDF, id = c("Time", "pRun"))
+    workDF <- mutate(workDF, pRun = 3 * (pRun - 1)/ 10)
+    workDF$pRun <- as.character(workDF$pRun)
+    workDF <- rename(workDF, Performance = value)
+    print(head(workDF))
+    plt <- ggplot(workDF, aes(Time, Performance, group = pRun)) +
+        geom_line(aes(color = pRun, linetype = pRun)) + 
+        scale_linetype_discrete(name = "Fail Level") +
+        scale_color_discrete(name = "Fail Level") +
+        theme_bw(base_size = 12, base_family = "serif")
+}
+
+pltperfVFS <- perfVFS(pVFSbigstep)
 
 ## Data frame with a variable level of performance during failure
 ## from zero to one with a linear recovery
@@ -62,11 +137,33 @@ pVaryFailTri <- data.frame(failLevel = seq(from = 0,
                             failTime = 10,
                             recTime = 60,
                             preLevel = 1,
-                            recLevel = 1)
-## Vary the failure level from 0 to .99
-pVFS <- resLoop(t, n, pVaryFailStep, r)
+                           recLevel = 1)
 
-## Vary to
+## Data frame with a variable time of recovery
+## from 1 tick after the failure to 1 tick before complete
+#######
+
+pVaryRecoveryTime <- data.frame(failLevel = 0.1,
+                            func = "step",
+                            failTime = 10,
+                            recTime = seq(from = 13,
+                                          to = 99,
+                                          by = 1),
+                            preLevel = 1,
+                            recLevel = 1)
+
+## Vary time to recover
+pVR <- resLoop(t, n, pVaryRecoveryTime, r)
+## Plot Resilience by Time to recover
+
+## This is a good plot for showing the indifference quotient resilience
+## has in regard to many of the key
+
+pltVR <- pltMoveRecovery(pVR, 100)
+######################################################################
+
+
+## Data.frame with variable level of constant need.
 nLinearVary <- data.frame(func = "constantNeed",
                           cLevel = seq(from = 0.01,
                                        to = 1.0,
