@@ -384,8 +384,8 @@ intRes <- function(tt, sigma){
     tt <- mutate(tt, needLag = lag(Need, 1))
     tt$needLag[1] <- tt$needLag[2]
     stepSize <- tt$Time[2] - tt$Time[1]
-    tt <- mutate(tt, needHeight = ifelse(Need > needLag, needLag,
-                         Need),
+    tt <- mutate(tt,
+                 needHeight = ifelse(Need > needLag, needLag, Need),
                  needStepArea = stepSize *
                      (needHeight + abs(Need - needLag)/2),
                  needArea = cumsum(needStepArea),
@@ -427,7 +427,10 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                          resMat,
                          needList$cLevel,
                          needList$startTime,
-                         needList$slope))
+                         needList$slope),
+                     ## fullDef should bind a fully defined need
+                     ## vector
+                     fullDef = cbind(fullDef, resMat))
     ## print("need done")
     # print( head(resMat))
     resMat <- switch(as.character(perfList$func),
@@ -474,7 +477,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
 ## Call the function multiple time for variable inputs. All inputs
 ## are data.frame
 resLoop <- function(time, need, performance, resFactors){
-    rm <- data.frame()
+    resMat <- data.frame()
     needStep <- dim(need)[1]
     perfStep <- dim(performance)[1]
     resStep <- dim(resFactors)[1]
@@ -500,18 +503,18 @@ resLoop <- function(time, need, performance, resFactors){
                                Decay = resFactors$decay[resRun],
                                Sigma = resFactors$sigma[resRun]
                                )
-                    rm <- rbind(rm, k)
+                    resMat <- rbind(rm, k)
                 }
             }
         }
     }
-    rm
+    resMat
 }
 ## Call the function multiple time for variable inputs. All inputs
 ## are data.frame. This one pulls only the columns you want. Makes
 ## a smaller dataframe.
 resLoopShrink <- function(time, need, performance, resFactors){
-    rm <- data.frame()
+    resMat <- data.frame()
     needStep <- dim(need)[1]
     perfStep <- dim(performance)[1]
     resStep <- dim(resFactors)[1]
@@ -542,17 +545,17 @@ resLoopShrink <- function(time, need, performance, resFactors){
                     k <-  k %>% filter(Time == 100) %>%
                         select(extResilience, Time, Need, pRun, EQR,
                                extRho)
-                    rm <- rbind(rm, k)
+                    resMat <- rbind(resMat, k)
                 }
             }
         }
     }
-    rm
+    resMat
 }
 
 
 ######################################################################
-######################################################################
+ ######################################################################
 ## PLOTTING FUNCTIONS
 ######################################################################
 ######################################################################
