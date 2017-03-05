@@ -342,3 +342,51 @@ p <- c(rep(1, 10),
        seq(.76, .85, .01),
        seq(.855, .9, .005),
        rep(.9, 5))
+
+######################################################################
+## Change the failure profiles and the recovery profiles
+######################################################################
+## Use the math from Tran. "A framework fo rhte quantitative assessment
+## of performance-based systems, February 2016"
+## y(t) = A_1 + (K_1 - A_1)/(1 + exp[B_1*(t - x_1)]) + N(0, \sigma_1)
+## I'll ignore the noise factor for now
+## Build the performance function that uses the above parameters
+## A1 = minimum performance       | A2 = 
+## B1 = inflection steepness      | B2 = inflection steepness
+## K1 = initial performance level | K2 =
+
+set.seed(124)
+## Builds the general ramp for both failure and recovery
+
+ramp <- function(resMat, A, B, K, x, sig){
+    y <- A + (K - A)/(1 + exp(B * (resMat$Time - x)) +
+                      rnorm(1, sd = sig))
+    return(y)
+}
+
+## Combine two ramps to get a performance function
+failAndRecover <- function(resMat, A, B1, B2, K1, K2, x1, x2, sig, name){
+    lull <- 2 * x1
+    timeLength <- length(resMat$Time)
+    ft <- slice(resMat, 1:lull)
+    rt <- slice(resMat, (lull + 1):timeLength)
+    yFail <- ramp(ft, A, B1, K1, x1, sig)
+    recStart <- tail(yFail, n = 1)
+    yRecover <- ramp(rt, recStart, B2, K2, x2, sig)
+    y <- c(yFail, yRecover)
+    resMat <- cbind(resMat, value = y, variable = name)
+}
+
+######################################################################
+## I want to build a need that bumps from .8 to 1.2 to demo how the metrics
+## capture this case
+
+needBump <- c(rep(.8, 20), rep(1.2, 60), rep(.8, 20))
+noFail <- c(rep(1, 100))
+nb <- data.frame(Time = seq(from = 0, to = 99, by = 1),
+                 Need = needBump,
+                 value = noFail)
+needBumpRes <- infraResAll(nb, 0, r)
+## Plot the Resilience
+nbrPlot <- pltNeedPerf(needBumpRes)
+## Plot the performance and need

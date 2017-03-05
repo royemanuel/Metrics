@@ -119,7 +119,7 @@ class Aircraft(object):
         self.blueBook = pd.DataFrame()
 
     def updateBlueBook(self, env, fltTime):
-        print("Updating Blue Book")
+        # print("Updating Blue Book")
         self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
                                               "FlightHours": fltTime,
                                               "AC Status": self.status,
@@ -162,7 +162,7 @@ class Aircraft(object):
 
     def flyAircraft(self, env, fltTime, stud, inst):
         # Check to see if any of the parts failed in flight
-        attrit = .1
+        attrit = .2
         self.av.failFlight(env, fltTime)
         # histUpdate(self.av)
         self.af.failFlight(env, fltTime)
@@ -180,10 +180,10 @@ class Aircraft(object):
         # self.updateBlueBook(env, fltTime)
         # Update aircrew values. For now, updating flight time
         # whether up or down, and not counting a syllabus event if down
-        if self.status:
-            print("Airplane " + str(self.BuNo) + " still worky")
-        else:
-            print("Plane broke dick")
+        # if self.status:
+            # print("Airplane " + str(self.BuNo) + " still worky")
+        # else:
+            # print("Plane broke dick")
         stud.hours = stud.hours + fltTime
         inst.hours = inst.hours + fltTime
         stud.flightLog(env, fltTime, self.BuNo)
@@ -211,7 +211,7 @@ class Aircrew(object):
 
 
     def flightLog(self, env, fltTime, ac):
-        print("Updating Flight Log")
+        # print("Updating Flight Log")
         self.flightDF = self.flightDF.append({"Stud ID": self.ID,
                                               "Flight Time": fltTime,
                                               "Aircraft": ac,
@@ -286,13 +286,13 @@ class AvMech(Maintainer):
 
 def flight(env, ac, stud, inst):
     if ac.status:
-        ft = np.random.random([1]) + 0.5
+        ft = np.random.randint(low=5, high=20, size=1) / 10
         ac.flyAircraft(env, ft, stud, inst)
-        print(inst.ID, "and", stud.ID, "tempted death again in aircraft",
-              ac.BuNo, "at time", env.now, "for", ft, "hours!")
+        # print(inst.ID, "and", stud.ID, "tempted death again in aircraft",
+        #       ac.BuNo, "at time", env.now, "for", ft, "hours!")
         yield env.timeout(ft)
-    else:
-        print("Side number " + str(ac.BuNo) + " is broke, fool!")
+    # else:
+        # print("Side number " + str(ac.BuNo) + " is broke, fool!")
     # Hard code three hours to the next event 
     yield env.timeout(3)
 
@@ -328,10 +328,10 @@ class Scheduler(object):
                     # fltStud = self.studList.pop(0)
                     # print("Yup "+ str(fltStud.ID))
                     fltInst = self.instList[flt]
-                    print("getting ac")
+                    # print("getting ac")
                     acPull = np.random.randint(0, len(flightLine))
                     ac = self.flightLine[acPull]
-                    print("got ac" + ac.BuNo)
+                    # print("got ac" + ac.BuNo)
                     # self.acList[np.random.random_integers(0, len(self.acList) - 1)]
                     # print("Stud Vars ")
                     # print(vars(fltStud))
@@ -392,7 +392,7 @@ def buildAC(env, numAC, fl):
 ######################################################################
 
 RANDOM_SEED = 42
-NUM_AIRCRAFT = 10
+NUM_AIRCRAFT = 5
 NUM_STUDENT = 1
 NUM_INSTRUCTOR = 1
 
@@ -431,7 +431,7 @@ instList = {0: Instructor(env, 10, 10),
             8: Instructor(env, 18, 10),
             9: Instructor(env, 19, 10)}
 sked = Scheduler(env, flightLine, studList, instList)
-env.run(until=500)
+env.run(until=1000)
 
 ######################################################################
 #                    Data Collection                                 #

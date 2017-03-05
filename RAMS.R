@@ -139,9 +139,10 @@ EtVFSplot <- RAMSpltMoveTimeH(tVFS, "ESDF")
 ## held constant. This allows you to look at what the performance profile
 ## looks like when analyzing the results.
 pltNeedPerf <- function(df){
-    wdf <- df %>%
-        filter(tRun == 1, nRun == 1, pRun == 1, rRun == 1) %>%
-            select(Need, Time, Performance)
+    if (dim(df)[2] > 26){
+        wdf <- df %>% filter(tRun == 1, nRun == 1, pRun == 1, rRun == 1)
+    }
+    wdf <- df %>% select(Need, Time, Performance)
     wdf <- melt(data = wdf, id = c("Time"))
     wdf <- rename(wdf, Performance = value)
     plt <- ggplot(wdf, aes(Time, Performance, group = variable)) +

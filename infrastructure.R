@@ -32,17 +32,20 @@ r <- data.frame(tDelta = 30,
 
 simResilience <- function(TPmatrix, needList, resFactors){
     ## add the Need column to the whole thing
-    resMat <- switch(as.character(needList$func),
-                     constantNeed = constantNeed(TPmatrix, needList$cLevel),
-                     linearNeed = linearNeed(
-                         resMat,
-                         needList$cLevel,
-                         needList$startTime,
-                         needList$slope),
-                     ## fullDef should bind a fully defined need
-                     ## vector
-                     fullDef = cbind(fullDef, resMat))
-    resMat <- quotRes(resMat)
+    if (!is.null(dim(needList))){
+        TPmatrix <- switch(as.character(needList$func),
+                         constantNeed = constantNeed(TPmatrix,
+                                                     needList$cLevel),
+                         linearNeed = linearNeed(
+                             resMat,
+                             needList$cLevel,
+                             needList$startTime,
+                             needList$slope),
+                         ## fullDef should bind a fully defined need
+                         ## vector
+                         fullDef = cbind(fullDef, resMat))
+    }
+    resMat <- quotRes(TPmatrix)
     resMat <- extQuotRes(resMat, sigma = resFactors$sigma)
     resMat <- resFac(resMat,
                      tDelta = resFactors$tDelta,
@@ -52,7 +55,7 @@ simResilience <- function(TPmatrix, needList, resFactors){
                         decay = resFactors$decay,
                         sigma = resFactors$sigma)
     resMat <- intRes(resMat, sigma = resFactors$sigma)
-    ## resMat <- tidyDF(resMat)
+    resMat <- tidyDF(resMat)
     return(resMat)
 }
 
@@ -66,8 +69,18 @@ needExample <- data.frame(func = c("constantNeed","constantNeed"),
 ## resLoopShrink
 infraResAll <- function(cleanData, need, resFactors){
     resMat <- data.frame()
+    ## if this isn't a list of infrastructure, build a function list
+    ## so it runs.
+    if (is.null(unique(cleanData$variable))){
+        cleanData <- cleanData %>% mutate(variable = "One List")
+    }
     funList <- unique(cleanData$variable)
     ## print(funList)
+    ## if need is already part of the cleanData, build a need data.frame
+    ## so it will run
+    if (is.null(dim(need)[1])){
+        need <- data.frame(0)
+    }
     needStep <- dim(need)[1]
     resStep <- dim(resFactors)[1]
     for (fun in 1:length(funList)){
@@ -119,10 +132,14 @@ pltMoveTimeInfra <- function(df){
                                  "Integral Resilience", 0))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
-                   .4 * nRun/10,
-                   "Original"))
+                                 "Extended",
+                                        # this for plotting multiple
+                                        # needs on one timeline
+                                        # replace "Extended" with
+                                        # .4 * nRun/10,
+                                 "Original"))
     workDF <- rename(workDF, Resilience = value)
-    print(head(workDF))
+    ## print(head(workDF))
     ## print(tail(workDF))
     ## print(colnames(workDF))
     plt <- ggplot(workDF, aes(Time, Resilience,
@@ -151,3 +168,47 @@ nCnst <- data.frame(func = "constantNeed",
 cnstNeed <- infraResAll(mdl, nCnst, r)
 
 cnPlot <- pltMoveTimeInfra(cnstNeed)
+
+nl <- c(.5, .9, .75, .95, .8)
+sl <- c(.1, .2, .4, .7, 0, .5)
+nMat <- data.frame(func = "constantNeed",
+                   cLevel = nl,
+                   startTime = NA,
+                   slope = NA)
+
+rMat <-data.frame(tDelta = 30,
+                decay = 0,
+                sigma = sl)
+
+stakeRes <- infraResAll(mdl, need = nMat, resFactors = rMat)
+wf <- stakeRes %>%
+    filter(Need == .8 &
+                          Infrastructure == "Water.Functionality" &
+                          Sigma == 0.5)
+es <- stakeRes %>%
+    filter(Need == .8 &
+           Infrastructure == "Emergency.Services.Functionality" &
+           Sigma == 0)
+cmf <- stakeRes %>%
+    filter(Need == .95 &
+           Infrastructure == "Critical.Manufacturing.Functionality" &
+           Sigma == .7)
+tf <- stakeRes %>%
+    filter(Need == .75 &
+           Infrastructure == "Transportation.Function" &
+           Sigma == .4)
+hf <- stakeRes %>%
+    filter(Need == .9 &
+           Infrastructure == "Healthcare.Function" &
+           Sigma == .2)
+itf <- stakeRes %>%
+    filter(Need == .5 &
+           Infrastructure == "IT.Function" &
+           Sigma == .2)
+commf <- stakeRes %>%
+    filter(Need == .5 &
+           Infrastructure == "Communications.Function" &
+           Sigma == .1)
+selectedStakeRes <- bind_rows(wf, es, cmf, tf, hf, itf, commf)
+
+ssrPlot <- pltMoveTimeInfra(selectedStakeRes)
