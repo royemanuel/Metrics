@@ -191,6 +191,8 @@ class Aircraft(object):
         env.process(self.updateBlueBook(env, fltTime))
         if self.status is True:
             grading(env, stud, attrit)
+            stud.checkAttrite(env)
+            stud.checkGraduate(env)
 
 
 ######################################################################
@@ -226,6 +228,22 @@ class Student(Aircrew):
         self.syllabus = 0
         self.downs = 0
         self.graduated = False
+        self.attrited = False
+
+    def checkGraduate(self, env):
+        if self.syllabus > 15:
+            self.graduated = True
+            print("I'm going to TOPGUN!!")
+            gradStuds.append(self.ID)
+
+    def checkAttrite(self, env):
+        if self.downs > 4:
+            self.attrited = True
+            print("Truck driving school for me.")
+            print("<sad trombone>")
+            attritStuds.append(self.ID)
+
+
 
 
 # An instructor cannot instruct until the syllabus is complete
@@ -305,24 +323,36 @@ class Scheduler(object):
             # num = numStuds if numStuds <= numAC else numAC
             for flt in range(len(self.studList)):
                 fltStud = self.studList[flt]
-                # fltStud = self.studList.pop(0)
-                # print("Yup "+ str(fltStud.ID))
-                fltInst = self.instList[flt]
-                print("getting ac")
-                acPull = np.random.randint(0, len(flightLine))
-                ac = self.flightLine[acPull]
-                print("got ac" + ac.BuNo)
-                # # self.acList[np.random.random_integers(0, len(self.acList) - 1)]
-                # print("Stud Vars ")
-                # print(vars(fltStud))
-                # print("Inst Vars ")
-                # print(vars(fltInst))
-                yield self.env.process(flight(self.env, ac, fltStud, fltInst))
-                # self.flightLine.append(ac)
-                # self.studList.extend([fltStud])
-                # print(str(self.studList[0].ID) + str(self.studList[1].ID))
-                # self.instList.extend([fltInst])
-                # print(str(self.instList[0].ID) + str(self.instList[1].ID))
+                if (fltStud.graduated == False and
+                        fltStud.attrited == False):
+                    # fltStud = self.studList.pop(0)
+                    # print("Yup "+ str(fltStud.ID))
+                    fltInst = self.instList[flt]
+                    print("getting ac")
+                    acPull = np.random.randint(0, len(flightLine))
+                    ac = self.flightLine[acPull]
+                    print("got ac" + ac.BuNo)
+                    # self.acList[np.random.random_integers(0, len(self.acList) - 1)]
+                    # print("Stud Vars ")
+                    # print(vars(fltStud))
+                    # print("Inst Vars ")
+                    # print(vars(fltInst))
+                    yield self.env.process(flight(self.env,
+                                                  ac,
+                                                  fltStud,
+                                                  fltInst))
+                    # self.flightLine.append(ac)
+                    # self.studList.extend([fltStud])
+                    # print(str(self.studList[0].ID) + str(self.studList[1].ID))
+                    # self.instList.extend([fltInst])
+                    # print(str(self.instList[0].ID) + str(self.instList[1].ID))
+            outOfPipeline = len(gradStuds) + len(attritStuds)
+            if (outOfPipeline == len(studList)):
+                print("There is no one left to teach")
+                yield env.timeout(10)
+
+
+
 
 
 # Build an aircraft. If it is the start, it will build 
@@ -362,7 +392,7 @@ def buildAC(env, numAC, fl):
 ######################################################################
 
 RANDOM_SEED = 42
-NUM_AIRCRAFT = 3
+NUM_AIRCRAFT = 10
 NUM_STUDENT = 1
 NUM_INSTRUCTOR = 1
 
@@ -380,10 +410,26 @@ flightLine = {}
 buildAC(env, NUM_AIRCRAFT, flightLine)
 studList = {0: Student(env, 0),
             1: Student(env, 1),
-            2: Student(env, 2)}
+            2: Student(env, 2),
+            3: Student(env, 3),
+            4: Student(env, 4),
+            5: Student(env, 5),
+            6: Student(env, 6),
+            7: Student(env, 7),
+            8: Student(env, 8),
+            9: Student(env, 9)}
+gradStuds = []
+attritStuds = []
 instList = {0: Instructor(env, 10, 10),
             1: Instructor(env, 11, 10),
-            2: Instructor(env, 12, 10)}
+            2: Instructor(env, 12, 10),
+            3: Instructor(env, 13, 10),
+            4: Instructor(env, 14, 10),
+            5: Instructor(env, 15, 10),
+            6: Instructor(env, 16, 10),
+            7: Instructor(env, 17, 10),
+            8: Instructor(env, 18, 10),
+            9: Instructor(env, 19, 10)}
 sked = Scheduler(env, flightLine, studList, instList)
 env.run(until=500)
 
