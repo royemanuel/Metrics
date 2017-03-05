@@ -247,7 +247,7 @@ resFac <- function(tt,
         ## pull interim recovery times for this metric.
         finRecTime <- recoveryID[which.max(recoveryID$Performance), "Time"]
         ## print(list(initRecTime = initRecTime, finRecTime = finRecTime))
-        sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
+        sf <- 1 ## speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
         phi0 <- tt$Performance[1]
         vars <- c(sf, phiD, timeD, phi0)
         names(vars) <- c("SpeedFactor", "Phi_D", "timeD", "Phi_0")
@@ -327,7 +327,7 @@ extResFac <- function(tt,
         ## print(max(tt$Time))
         ## print("finRecTime ERF")
         ## print(finRecTime)
-        sf <- speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
+        sf <- 1 ## speedFactor(timeD, initRecTime, finRecTime, tDelta, decay)
         recovRatio <- filter(tt, Time == finRecTime)$npRatio
         ## vars <- c(sf,
         ##           timeD,
