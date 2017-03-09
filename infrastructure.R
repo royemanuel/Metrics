@@ -132,11 +132,11 @@ pltMoveTimeInfra <- function(df){
                                  "Integral Resilience", 0))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
-                                 "Extended",
+                                 # "Extended",
                                         # this for plotting multiple
                                         # needs on one timeline
                                         # replace "Extended" with
-                                        # .4 * nRun/10,
+                                         .4 * nRun/10,
                                  "Original"))
     workDF <- rename(workDF, Resilience = value)
     ## print(head(workDF))
@@ -169,22 +169,39 @@ cnstNeed <- infraResAll(mdl, nCnst, r)
 
 cnPlot <- pltMoveTimeInfra(cnstNeed)
 
+######################################################################
+## Build the data.frame with the resilience metrics according to each
+## of the stakeholders.
+
+## First, define the need of each stakeholder
 nl <- c(.5, .9, .75, .95, .8)
+
+## Second, define the sigmas for each stakeholder. I did not vary the
+## decay parameter here, but I may want to when I get the SpeedFactor
+## fixed. I wonder what I need to do for that. That can be our initial
+## simplifying assumption
 sl <- c(.1, .2, .4, .7, 0, .5)
+
+## build the need data.frame for input into infraResAll
 nMat <- data.frame(func = "constantNeed",
                    cLevel = nl,
                    startTime = NA,
                    slope = NA)
 
+## build the resilience factor data.frame for input into infraResAll
 rMat <-data.frame(tDelta = 30,
                 decay = 0,
-                sigma = sl)
+                  sigma = sl)
 
+## Build the full data.frame of resilience. This is pretty darn big
 stakeRes <- infraResAll(mdl, need = nMat, resFactors = rMat)
 wf <- stakeRes %>%
     filter(Need == .8 &
                           Infrastructure == "Water.Functionality" &
-                          Sigma == 0.5)
+                              Sigma == 0.5)
+
+## shrink the data.frame for each stakeholder's perspective on their
+## own function
 es <- stakeRes %>%
     filter(Need == .8 &
            Infrastructure == "Emergency.Services.Functionality" &
