@@ -234,15 +234,25 @@ ssrPlot <- pltMoveTimeInfra(selectedStakeRes)
 ## Plot out the results of the resilience .csv-s.
 
 asIs <- read.csv("AsIsResilience.csv")
-asIs <- filter(asIs, Time == 13059)
+asIs <- asIs %>%
+    filter(Time == 13059) %>%
+    mutate(Profile = "As Is")
 fail20 <- read.csv("20percentFailResilience.csv")
-fail20 <- filter(fail20, Time == 13059)
+fail20 <- fail20 %>%
+    filter(Time == 13059) %>%
+    mutate(Profile = "fail20")
 fail5000 <- read.csv("fail5000Resilience.csv")
-fail5000 <- filter(fail5000, Time == 13059)
+fail5000 <- fail5000 %>%
+    filter(Time == 13059) %>%
+    mutate(Profile = "fail5000")
 rec100 <- read.csv("100percentResilience.csv")
-rec100 <- filter(rec100, Time == 13059)
+rec100 <- rec100 %>%
+    filter(Time == 13059) %>%
+    mutate(Profile = "rec100")
 stepRec <- read.csv("SteppedRecoveryResilience.csv")
-stepRec <- filter(stepRec, Time == 13059)
+stepRec <- stepRec %>%
+    filter(Time == 13059) %>%
+    mutate(Profile = "stepRec")
 allRes <- bind_rows(asIs, fail20, fail5000, rec100, stepRec)
 allRes <- select(allRes,
                  Infrastructure,
@@ -251,5 +261,14 @@ allRes <- select(allRes,
                  Rho,
                  extRho,
                  statQuoResilience,
-                 extResilience)
+                 extResilience,
+                 Profile)
 allRes <- group_by(allRes, Infrastructure)
+
+allResMlt <- melt(allRes, id.vars = c("Profile", "Infrastructure"))
+allResNoESDF <- allResMlt %>%
+    filter(variable != "Rho") %>%
+    filter(variable != "extRho")
+resInfPlots <- ggplot(allResNoESDF, aes(Profile, value)) +
+    geom_col() +
+    facet_grid(variable ~ Infrastructure)
