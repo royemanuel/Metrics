@@ -229,3 +229,18 @@ commf <- stakeRes %>%
 selectedStakeRes <- bind_rows(wf, es, cmf, tf, hf, itf, commf)
 
 ssrPlot <- pltMoveTimeInfra(selectedStakeRes)
+
+######################################################################
+## Plot out the results of the resilience .csv-s.
+
+asIs <- read.csv("AsIsResilience.csv")
+asIs <- filter(asIs, Time == 13059)
+fail20 <- read.csv("20percentFailResilience.csv")
+fail20 <- filter(fail20, Time == 13059)
+fail5000 <- read.csv("fail5000Resilience.csv")
+fail5000 <- filter(fail5000, Time == 13059)
+rec100 <- read.csv("100percentResilience.csv")
+rec100 <- filter(rec100, Time == 13059)
+stepRec <- read.csv("SteppedRecoveryResilience.csv")
+stepRec <- filter(stepRec, Time == 13059)
+allRes <- bind_rows(asIs, fail20, fail5000, rec100, stepRec)
