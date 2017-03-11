@@ -244,3 +244,12 @@ rec100 <- filter(rec100, Time == 13059)
 stepRec <- read.csv("SteppedRecoveryResilience.csv")
 stepRec <- filter(stepRec, Time == 13059)
 allRes <- bind_rows(asIs, fail20, fail5000, rec100, stepRec)
+allRes <- select(allRes,
+                 Infrastructure,
+                 QR,
+                 EQR,
+                 Rho,
+                 extRho,
+                 statQuoResilience,
+                 extResilience)
+allRes <- group_by(allRes, Infrastructure)
