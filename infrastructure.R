@@ -272,3 +272,63 @@ allResNoESDF <- allResMlt %>%
 resInfPlots <- ggplot(allResNoESDF, aes(Profile, value)) +
     geom_col() +
     facet_grid(variable ~ Infrastructure)
+######################################################################
+## Build a Microsoft word table for the dissertation.
+######################################################################
+## Make the data look how we want it to look
+## round all values to the hundredths place
+round_df <- function(df, digits){
+    nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
+    df[,nums] <- round(df[,nums], digits = digits)
+    (df)
+}
+allResRnd <- round_df(allRes, digits = 2)
+## Get rid of the periods in the infrastructure names
+library(stringi)
+allResRnd$Infrastructure <- stri_replace_all_fixed(allResRnd$Infrastructure,
+                                                   c("."),
+                                                   c(" "))
+## Change the column names
+propColnames <- c("Infrastructure",
+                  "Quotient Resilience",
+                  "Extended Quotient Resilience",
+                  "ESDF",
+                  "Extended ESDF",
+                  "Integral Resilience",
+                  "Extended Integral Resilience",
+                  "Profile")
+colnames(allResRnd) <- propColnames
+
+## Organize the data into the appropriate tables by profile
+
+asIsRes <- allResRnd %>%
+    filter(Profile == "As Is") %>%
+        select(-Profile)
+fail20Res <- allResRnd %>%
+    filter(Profile == "fail20") %>%
+        select(-Profile)
+fail5000Res <- allResRnd %>%
+    filter(Profile == "fail5000") %>%
+        select(-Profile)
+rec100Res <- allResRnd %>%
+    filter(Profile == "rec100") %>%
+        select(-Profile)
+stepRecRes <- allResRnd %>%
+    filter(Profile == "stepRec") %>%
+        select(-Profile)
+
+library(ReporteRs)
+
+## Build the Flex Tables
+asIsTable <- vanilla.table(asIsRes)
+asIsTable <- addHeaderRow(asIsTable, text.properties = textBold(),
+                          value = 'As-Is Scenario', colspan = 7)
+resTable <- docx()
+
+resTable <- addFlexTable(resTable, vanilla.table(asIsRes))
+resTable <- addFlexTable(resTable, vanilla.table(fail20Res))
+resTable <- addFlexTable(resTable, vanilla.table(fail5000Res))
+resTable <- addFlexTable(resTable, vanilla.table(rec100Res))
+resTable <- addFlexTable(resTable, vanilla.table(stepRecRes))
+resTable <- addFlexTable(resTable, asIsTable)
+writeDoc(resTable, file = "resTable.docx")
