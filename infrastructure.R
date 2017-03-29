@@ -5,8 +5,15 @@ mdl <- mdl %>% select(-Electric.Degrade) %>%
     melt(id.vars = "Time", na.rm = TRUE) %>%
     mutate(value = value/100)
 
-infraPlot <- ggplot(mdl, aes(Time, value)) +
-    facet_wrap(~  variable, ncol = 2) +
+## Reshape a resilience CSV so we can plot the responses
+
+rim <- read.csv("SteppedRecoveryResilience.csv")
+rim <- rim %>%
+    select(Time, Performance, Infrastructure) %>%
+    melt(id.vars = c("Time", "Infrastructure"), na.rm = TRUE)
+
+infraPlot <- ggplot(rim, aes(Time, value)) +
+    facet_wrap(~  Infrastructure, ncol = 2) +
     geom_line() +
     theme_bw(base_size = 12, base_family = "serif") +
     scale_linetype_discrete(name = "") +
