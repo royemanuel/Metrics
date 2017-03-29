@@ -332,3 +332,8 @@ resTable <- addFlexTable(resTable, vanilla.table(rec100Res))
 resTable <- addFlexTable(resTable, vanilla.table(stepRecRes))
 resTable <- addFlexTable(resTable, asIsTable)
 writeDoc(resTable, file = "resTable.docx")
+
+allResTable <- docx()
+allResTable <- addFlexTable(allResTable, vanilla.table(allResRnd))
+writeDoc(allResTable, file = "allResTable.docx")
+
