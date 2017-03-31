@@ -1,5 +1,8 @@
 ## A script to pull in the data from the AnyLogic Model
-mdl <- read.csv("singleRunOutputsimple.csv")
+mdl <- read.csv("big16kRec.csv")
+colmdl <- colnames(mdl)
+colmdl[1] <- "Time"
+colnames(mdl) <- colmdl
 mdl <- mdl %>% select(-Electric.Degrade) %>%
     mutate(Time = Time - Time[1]) %>%
     melt(id.vars = "Time", na.rm = TRUE) %>%
@@ -108,6 +111,50 @@ infraResAll <- function(cleanData, need, resFactors){
                            Infrastructure = funList[fun],
                            Decay = resFactors$decay[resRun],
                            Sigma = resFactors$sigma[resRun])
+                resMat <- rbind(resMat, k)
+            }
+        }
+    }
+    resMat
+}
+## Same as above, but you need to specify the time that you want to
+## pull the resilience. MUCH faster. Use the one above when you need
+## make a time plot of the resilience. 
+infraResFast <- function(cleanData, need, resFactors, timeHorizon){
+    resMat <- data.frame()
+    ## if this isn't a list of infrastructure, build a function list
+    ## so it runs.
+    if (is.null(unique(cleanData$variable))){
+        cleanData <- cleanData %>% mutate(variable = "One List")
+    }
+    funList <- unique(cleanData$variable)
+    ## print(funList)
+    ## if need is already part of the cleanData, build a need data.frame
+    ## so it will run
+    if (is.null(dim(need)[1])){
+        need <- data.frame(0)
+    }
+    needStep <- dim(need)[1]
+    resStep <- dim(resFactors)[1]
+    for (fun in 1:length(funList)){
+        TPmatrix <- cleanData %>%
+            filter(variable == funList[fun]) %>%
+            select(-variable, Performance = value)
+        for (needRun in 1:needStep){
+            for (resRun in 1:resStep){
+                print(paste0("NR = ", needRun, ", ",
+                             "RR = ", resRun, ", ",
+                             "Infrastructure = ", funList[fun]))
+                k <- simResilience(TPmatrix,
+                                   need[needRun,],
+                                   resFactors[resRun,])
+                k <- cbind(k,
+                           nRun = needRun,
+                           rRun = resRun,
+                           Infrastructure = funList[fun],
+                           Decay = resFactors$decay[resRun],
+                           Sigma = resFactors$sigma[resRun])
+                k <- filter(k, Time == timeHorizon)
                 resMat <- rbind(resMat, k)
             }
         }
