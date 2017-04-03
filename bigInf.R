@@ -6,8 +6,6 @@ metricRollup <- function(names, need, resFactors, timeHorizon){
     ssr <- data.frame()
     for (csv in 1:length(names)){
         f <- read.csv(names[csv])
-        print(head(f))
-        readline(prompt="Press [enter] to continue")
         fCol <- colnames(f)
         fCol[1] <- "Time"
         colnames(f) <- fCol
@@ -15,12 +13,11 @@ metricRollup <- function(names, need, resFactors, timeHorizon){
             mutate(Time = Time - Time[1]) %>%
                 melt(id.vars = "Time", na.rm = TRUE) %>%
                     mutate(value = value/100)
-        print(head(f))
-        readline(prompt="Press [enter] to continue")
         fRes <- infraResFast(f, need, resFactors, timeHorizon)
-        print(colnames(fRes))
-        print(dim(fRes))
-        print(head(fRes))
+        wf <- stakeRes %>%
+            filter(Need == .8 &
+                       Infrastructure == "Water.Functionality" &
+                           Sigma == 0.5)
         es <- fRes %>%
             filter(Need == .8 &
                        Infrastructure == "Emergency.Services.Functionality" &
@@ -33,12 +30,10 @@ metricRollup <- function(names, need, resFactors, timeHorizon){
             filter(Need == .75 &
                        Infrastructure == "Transportation.Function" &
                            Sigma == .4)
-        print(tf)
         hf <- fRes %>%
             filter(Need == .9 &
                        Infrastructure == "Healthcare.Function" &
                            Sigma == .2)
-        print(hf)
         itf <- fRes %>%
             filter(Need == .5 &
                        Infrastructure == "IT.Function" &
@@ -47,17 +42,16 @@ metricRollup <- function(names, need, resFactors, timeHorizon){
             filter(Need == .5 &
                        Infrastructure == "Communications.Function" &
                            Sigma == .1)
-        ssr <- bind_rows(ssr,
-                         wf, es, cmf, tf,
-                         hf, itf, commf)
-        print(ssrs)
-        readline(prompt="Press [enter] to continue")
-        return(ssr)
+        thisScenario <- bind_rows(wf, es, cmf, tf, hf, itf, commf)
+        thisScenario$Scenario <- names[csv]
+        print(dim(thisScenario))
+        ssr <- bind_rows(ssr, thisScenario)
+        ## readline(prompt="Press [enter] to continue")
     }
     return(ssr)
 }
 
-nameList <- c("bigAsIs.csv", "big16kRec.csv") #, "big100percentRec.csv",
+nameList <- c("bigAsIs.csv", "big16kRec.csv", "big100percentRec.csv",
               "bigRob.csv", "bigStep.csv")
 
 ## First, define the need of each stakeholder
@@ -80,5 +74,18 @@ rMat <-data.frame(tDelta = 30,
                 decay = 0,
                   sigma = sl)
 
+## This builds the resilience for each electric failure scenario
+## (particular to the SD model).
+bigInfRFR <- metricRollup(nameList, need = nMat, resFactors = rMat, 39000)
 
-tryItOut <- metricRollup(nameList, need = nMat, resFactors = rMat, 39960)
+## Writing the .csv. Leave it commented out unless you have new data and
+## want to make it happen. I would recommend rewriting this part each
+## time you ahve new data to put into it.
+write.csv(bigInfRFR, "bigInfrastructureRunsForRecord.csv")
+
+## Pull out only the resilience metrics, Infrastructure and scenario
+bigInfResilience <- select(bigInfRFR, QR, EQR, Rho, extRho,
+                           statQuoResilience, extResilience,
+                           Infrastructure, Scenario)
+write.csv(bigInfResilience, "bigInfrastructureResilience.csv")
+
