@@ -89,3 +89,33 @@ bigInfResilience <- select(bigInfRFR, QR, EQR, Rho, extRho,
                            Infrastructure, Scenario)
 write.csv(bigInfResilience, "bigInfrastructureResilience.csv")
 
+buildDF <- function(fileNames){
+    allDF <- data.frame()
+    for (f in 1:length(fileNames)){
+        print(fileNames[f])
+        DF <- read.csv(fileNames[f])
+        dfCol <- colnames(DF)
+        dfCol[1] <- "Time"
+        colnames(DF) <- dfCol
+        DF <- DF %>% select(1:10) %>%
+            select(-Electric.Degrade)
+        DF$Scenario <- fileNames[f]
+        allDF <- bind_rows(allDF, DF)
+    }
+    return(allDF)
+}
+
+allPerfPlot <- function(fileNames){
+   allDF <- buildDF(fileNames)
+    resDF <- melt(allDF, id.vars = c("Time", "Scenario"))
+    print(colnames(resDF))
+    pPlot <- ggplot(resDF, aes(Time, value, group = variable)) +
+        geom_line() + facet_grid(Scenario ~ variable)
+}
+bigInfraPlot <- ggplot(rim, aes(Time, value)) +
+    facet_wrap(~  Infrastructure, ncol = 2) +
+    geom_line() +
+    theme_bw(base_size = 12, base_family = "serif") +
+    scale_linetype_discrete(name = "") +
+    theme(legend.position = c(.85, .25)) +
+        labs(y = "Performance") + ylim(0, 1)
