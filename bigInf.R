@@ -6,13 +6,14 @@ metricRollup <- function(names, need, resFactors, timeHorizon){
     ssr <- data.frame()
     for (csv in 1:length(names)){
         f <- read.csv(names[csv])
-        fCol <- colnames(f)
-        fCol[1] <- "Time"
-        colnames(f) <- fCol
-        f <- f %>% select(-Electric.Degrade) %>%
-            mutate(Time = Time - Time[1]) %>%
-                melt(id.vars = "Time", na.rm = TRUE) %>%
-                    mutate(value = value/100)
+        ## fCol <- colnames(f)
+        ## fCol[1] <- "Time"
+        ## colnames(f) <- fCol
+        ## f <- f %>% select(-Electric.Degrade) %>%
+        ##     mutate(Time = Time - Time[1]) %>%
+        ##         melt(id.vars = "Time", na.rm = TRUE) %>%
+        ##             mutate(value = value/100)
+        tidyMat(f)
         fRes <- infraResFast(f, need, resFactors, timeHorizon)
         wf <- stakeRes %>%
             filter(Need == .8 &
