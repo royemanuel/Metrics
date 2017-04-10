@@ -1,4 +1,5 @@
 ## The data pulls from the big Austin model runs
+## This replciates the creation of the bigInfrastructureResilience.csv
 
 nameList <- c("bigAsIs.csv", "big16kRec.csv", "big100percentRec.csv",
               "bigRob.csv", "bigStep.csv")
