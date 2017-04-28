@@ -1,3 +1,4 @@
+## This is obsolete to the buildElecDegTimePlot.R file
 f20 <- read.csv("20percentFailsingleRunOutput.csv")
 f20$Profile <- "Fail 20"
 rec100 <- read.csv("100percentRecoverysingleRunOutput.csv")
