@@ -110,7 +110,7 @@ resilienceVersusTimeHorizon <- function(df){
         theme_bw(base_size = 20, base_family = "serif") +
             theme(legend.position = c(.95, .15))
 }
-## Plot resilience as the time horizon changes
+## Plot resilience as the time to fail changes
 resilienceVersusTimeToFail <- function(df, time){
     workDF <- df %>%
          select(Time, QR, EQR, Rho,
@@ -139,6 +139,44 @@ resilienceVersusTimeToFail <- function(df, time){
     ## print(tail(workDF))
     ## print(colnames(workDF))
     plt <- ggplot(workDF, aes(FailTime, Resilience,
+                              group = variable)) +
+                                  geom_line(aes(linetype = variable)) +
+                                      facet_grid(ResType ~ .)
+    plt <- plt +
+    scale_linetype_discrete(name = "Metrics") +
+        theme_bw(base_size = 20, base_family = "serif") +
+            theme(legend.position = c(.95, .15))
+}
+
+## Plot resilience as the time horizon changes
+resilienceVersusFailLevel <- function(df, time){
+    workDF <- df %>%
+         select(Time, QR, EQR, Rho,
+                extRho, statQuoResilience, extResilience, pRun) %>%
+                    mutate(FailLevel = (pRun - 1) / 100) %>%
+                        filter(Time == time) %>%
+                        select(-pRun, -Time)
+    workDF <- melt(data = workDF, id = c("FailLevel"))
+    ## Assign a value to the pairings of extended and unextended values
+    ## there might be a better way to do this that you might want to
+    ## clear up, but for now, get it on the paper
+    workDF <- workDF %>%
+        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
+                   "Quotient Resilience",
+                   ifelse((variable == "Rho" | variable == "extRho"),
+                          "ESDF",
+                          ifelse((variable == "statQuoResilience" |
+                                      variable == "extResilience"),
+                                 "Integral Resilience", 0))))
+    workDF <- workDF %>%
+        mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
+                   "Extended",
+                   "Original"))
+    workDF <- rename(workDF, Resilience = value)
+    ## print(head(workDF))
+    ## print(tail(workDF))
+    ## print(colnames(workDF))
+    plt <- ggplot(workDF, aes(FailLevel, Resilience,
                               group = variable)) +
                                   geom_line(aes(linetype = variable)) +
                                       facet_grid(ResType ~ .)
@@ -189,6 +227,18 @@ steppedRecovery <- data.frame(func = "step",
                 failLevel = 0.1,
                 recLevel = 1.0)
 
+## Stepped recovery where the robustness or fail level varies from
+## 0 to 1
+
+steppedRecoveryVaryFailLevel <- data.frame(func = "step",
+                                           failTime = 20,
+                                           recTime = 60,
+                                           preLevel = 1.2,
+                                           failLevel = seq(from = 0,
+                                               to = 1.2,
+                                               by = .01),
+                                           recLevel = 1.2)
+
 ## Linear recovery - resilience triangle
 linearRecovery <- data.frame(func = "resTriangle",
                              failTime = 20,
@@ -197,6 +247,7 @@ linearRecovery <- data.frame(func = "resTriangle",
                              failLevel = 0.1,
                              recLevel = 1.0)
 
+## No Recovery and the time to fail changes from 20 to 59
 varyTimeToFail <- data.frame(func = "step",
                              failTime = c(20:59),
                              recTime = 60,
@@ -264,6 +315,16 @@ sigma0to1SteppedRecoveryData <- resLoop(t,
 ## Then plot it at time = 80 or after the recovery
 plotSigma0to1SteppedRecovery <- resilienceVersusSigma(sigma0to1SteppedRecoveryData,
                                                       80)
+
+## Build a stepped recovery where the fail level varies from 0 to 1
+failLevel0to1Data <- resLoop(t,
+                             needConstant,
+                             steppedRecoveryVaryFailLevel,
+                             r)
+
+## Then plot it at time 80
+
+plotFailLevel0to1 <- resilienceVersusFailLevel(failLevel0to1Data, 80)
 
 ######################################################################
 ## Build the plots using a linear recovery                         ##
