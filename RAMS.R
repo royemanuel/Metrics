@@ -42,14 +42,6 @@ RAMSpltMoveNeed <- function(df, time, restype){
                 theme(legend.position = c(.85, .15)) + ylim(0, 1)
 }
 
-## Vary the constant need from 0 to 1.0
-nVFS <- resLoop(t, nLinearVary, p2, r)
-nVFSplotRecQR <- RAMSpltMoveNeed(nVFS, 80, "Quotient Resilience")
-nVFSplotFailQR <- RAMSpltMoveNeed(nVFS, 30, "Quotient Resilience")
-nVFSplotRecIR <- RAMSpltMoveNeed(nVFS, 80, "Integral Resilience")
-nVFSplotFailIR <- RAMSpltMoveNeed(nVFS, 30, "Integral Resilience")
-nVFSplotRecE <- RAMSpltMoveNeed(nVFS, 80, "ESDF")
-nVFSplotFailE <- RAMSpltMoveNeed(nVFS, 30, "ESDF")
 
 
 
@@ -86,14 +78,6 @@ RAMSpltSubNeed <- function(df, time, restype){
                 theme(legend.position = c(.85, .15)) + ylim(0, 1)
 }
 
-sVFS <- resLoop(t, n2, p2, r2)
-QRsVFSplotRec <- RAMSpltSubNeed(sVFS, 80, "Quotient Resilience")
-QRsVFSplotFail <- RAMSpltSubNeed(sVFS, 30, "Quotient Resilience")
-IRsVFSplotRec <- RAMSpltSubNeed(sVFS, 80, "Integral Resilience")
-IRsVFSplotFail <- RAMSpltSubNeed(sVFS, 30, "Integral Resilience")
-EsVFSplotRec <- RAMSpltSubNeed(sVFS, 80, "ESDF")
-EsVFSplotFail <- RAMSpltSubNeed(sVFS, 30, "ESDF")
-
 ## Plot resilience as the time horizon changes
 RAMSpltMoveTimeH <- function(df, restype){
     workDF <- df %>%
@@ -127,11 +111,6 @@ RAMSpltMoveTimeH <- function(df, restype){
         theme_bw(base_size = 8, base_family = "serif") +
             theme(legend.position = c(.85, .15)) + ylim(0,1)
 }
-
-tVFS <- resLoop(t, n2, p2, r)
-QtVFSplot <- RAMSpltMoveTimeH(tVFS, "Quotient Resilience")
-ItVFSplot <- RAMSpltMoveTimeH(tVFS, "Integral Resilience")
-EtVFSplot <- RAMSpltMoveTimeH(tVFS, "ESDF")
 
 
 
@@ -299,6 +278,83 @@ WDpltMoveTimeH <- function(df){
         theme_bw(base_size = 20, base_family = "serif") +
             theme(legend.position = c(.95, .15))
 }
+
+######################################################################
+######################################################################
+## The variables and plots using the values above
+## Data.frame with variable level of constant need.
+nLinearVary <- data.frame(func = "constantNeed",
+                          cLevel = seq(from = 0.01,
+                                       to = 1.0,
+                                       by = .01),
+                          cLevel = 1.0,
+                          startTime = NA,
+                          slope = NA)
+n2 <- data.frame(func = "constantNeed",
+                cLevel = 0.9,
+                startTime = NA,
+                 slope = NA)
+
+p2 <- data.frame(func = "step",
+                failTime = 20,
+                recTime = 60,
+                preLevel = 1.2,
+                failLevel = 0.1,
+                recLevel = 1.0)
+
+pRAMS <- data.frame(func = "step",
+                failTime = 20,
+                recTime = 60,
+                preLevel = 1.0,
+                failLevel = 0.1,
+                recLevel = 1.2)
+
+r2 <- data.frame(tDelta = 30,
+                decay = 0,
+                 sigma = seq(from = 0,
+                     to = 1.0,
+                     by = .01))
+
+t <- data.frame(endTime = 100,
+                resolution = .1)
+t2 <- data.frame(endTime = 100,
+                resolution = 5)
+n <- data.frame(func = "constantNeed",
+                cLevel = 1.0,
+                startTime = NA,
+                slope = NA)
+p <- data.frame(func = "step",
+                failTime = 10,
+                recTime = 60,
+                preLevel = 1,
+                failLevel = .1,
+                recLevel = 1)
+r <- data.frame(tDelta = 30,
+                decay = 0,
+                sigma = 0)
+
+
+## Vary the constant need from 0 to 1.0
+nVFS <- resLoop(t, nLinearVary, p2, r)
+nVFSplotRecQR <- RAMSpltMoveNeed(nVFS, 80, "Quotient Resilience")
+nVFSplotFailQR <- RAMSpltMoveNeed(nVFS, 30, "Quotient Resilience")
+nVFSplotRecIR <- RAMSpltMoveNeed(nVFS, 80, "Integral Resilience")
+nVFSplotFailIR <- RAMSpltMoveNeed(nVFS, 30, "Integral Resilience")
+nVFSplotRecE <- RAMSpltMoveNeed(nVFS, 80, "ESDF")
+nVFSplotFailE <- RAMSpltMoveNeed(nVFS, 30, "ESDF")
+
+sVFS <- resLoop(t, n2, p2, r2)
+QRsVFSplotRec <- RAMSpltSubNeed(sVFS, 80, "Quotient Resilience")
+QRsVFSplotFail <- RAMSpltSubNeed(sVFS, 30, "Quotient Resilience")
+IRsVFSplotRec <- RAMSpltSubNeed(sVFS, 80, "Integral Resilience")
+IRsVFSplotFail <- RAMSpltSubNeed(sVFS, 30, "Integral Resilience")
+EsVFSplotRec <- RAMSpltSubNeed(sVFS, 80, "ESDF")
+EsVFSplotFail <- RAMSpltSubNeed(sVFS, 30, "ESDF")
+
+tVFS <- resLoop(t, n2, p2, r)
+QtVFSplot <- RAMSpltMoveTimeH(tVFS, "Quotient Resilience")
+ItVFSplot <- RAMSpltMoveTimeH(tVFS, "Integral Resilience")
+EtVFSplot <- RAMSpltMoveTimeH(tVFS, "ESDF")
 
 ## The RAMS performance data and plot
 examplePerf <- list(sigma = 0, tDelta = 20, decay =  0)
