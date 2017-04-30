@@ -186,6 +186,100 @@ resilienceVersusFailLevel <- function(df, time){
             theme(legend.position = c(.95, .15))
 }
 
+## Plot resilience as the recovery level changes
+resilienceVersusRecoveryLevel <- function(df, time){
+    workDF <- df %>%
+         select(Time, QR, EQR, Rho,
+                extRho, statQuoResilience, extResilience, pRun) %>%
+                    mutate(RecoveryLevel = (((pRun - 1) / 100) + 0.1)) %>%
+                        filter(Time == time) %>%
+                        select(-pRun, -Time)
+    workDF <- melt(data = workDF, id = c("RecoveryLevel"))
+    ## Assign a value to the pairings of extended and unextended values
+    ## there might be a better way to do this that you might want to
+    ## clear up, but for now, get it on the paper
+    workDF <- workDF %>%
+        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
+                   "Quotient Resilience",
+                   ifelse((variable == "Rho" | variable == "extRho"),
+                          "ESDF",
+                          ifelse((variable == "statQuoResilience" |
+                                      variable == "extResilience"),
+                                 "Integral Resilience", 0))))
+    workDF <- workDF %>%
+        mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
+                   "Extended",
+                   "Original"))
+    workDF <- rename(workDF, Resilience = value)
+    ## print(head(workDF))
+    ## print(tail(workDF))
+    ## print(colnames(workDF))
+    plt <- ggplot(workDF, aes(RecoveryLevel, Resilience,
+                              group = variable)) +
+                                  geom_line(aes(linetype = variable)) +
+                                      facet_grid(ResType ~ .)
+    plt <- plt +
+    scale_linetype_discrete(name = "Metrics") +
+        theme_bw(base_size = 20, base_family = "serif") +
+            theme(legend.position = c(.95, .15))
+}
+## Plot resilience as the recovery time changes
+resilienceVersusRecoveryTime <- function(df, time){
+    workDF <- df %>%
+         select(Time, QR, EQR, Rho,
+                extRho, statQuoResilience, extResilience, pRun) %>%
+                    mutate(RecoveryTime = (pRun + 20)) %>%
+                        filter(Time == time) %>%
+                        select(-pRun, -Time)
+    workDF <- melt(data = workDF, id = c("RecoveryTime"))
+    ## Assign a value to the pairings of extended and unextended values
+    ## there might be a better way to do this that you might want to
+    ## clear up, but for now, get it on the paper
+    workDF <- workDF %>%
+        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
+                   "Quotient Resilience",
+                   ifelse((variable == "Rho" | variable == "extRho"),
+                          "ESDF",
+                          ifelse((variable == "statQuoResilience" |
+                                      variable == "extResilience"),
+                                 "Integral Resilience", 0))))
+    workDF <- workDF %>%
+        mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
+                   "Extended",
+                   "Original"))
+    workDF <- rename(workDF, Resilience = value)
+    ## print(head(workDF))
+    ## print(tail(workDF))
+    ## print(colnames(workDF))
+    plt <- ggplot(workDF, aes(RecoveryTime, Resilience,
+                              group = variable)) +
+                                  geom_line(aes(linetype = variable)) +
+                                      facet_grid(ResType ~ .)
+    plt <- plt +
+    scale_linetype_discrete(name = "Metrics") +
+        theme_bw(base_size = 20, base_family = "serif") +
+            theme(legend.position = c(.95, .15))
+}
+
+## A plot of performance against need to show the general behavior
+## of the system
+pltPerf <- function(df){
+    df <- df %>%
+        select(Time, Performance, Need) %>%
+                melt(id = "Time")
+    plt <- ggplot(data = df, aes(Time, value,
+                                 group = variable,
+                      linetype = variable)) +
+                          geom_line(size=1) +
+                              scale_linetype_manual(values=c("solid",
+                                                        "dotted"),
+                                                    (name = ""))+
+        theme_bw(base_size = 20, base_family = "serif") +
+            ## scale_linetype_discrete(name = "") +
+                theme(legend.position = c(.85, .15)) +
+                    labs(y = "Performance") + ylim(0, 1.5)
+}
+
 ######################################################################
 ## Build the values used for the plotting                           ##
 ######################################################################
@@ -205,7 +299,7 @@ timeRough <- data.frame(endTime = 100,
 ######################################################################
 ## Constant need at 0.9
 needConstant <- data.frame(func = "constantNeed",
-                cLevel = 0.9,
+                cLevel = 0.8,
                 startTime = NA,
                  slope = NA)
 nLinearVary <- data.frame(func = "constantNeed",
@@ -223,9 +317,9 @@ nLinearVary <- data.frame(func = "constantNeed",
 steppedRecovery <- data.frame(func = "step",
                 failTime = 20,
                 recTime = 60,
-                preLevel = 1.2,
+                preLevel = 1.0,
                 failLevel = 0.1,
-                recLevel = 1.0)
+                recLevel = 0.9)
 
 ## Stepped recovery where the robustness or fail level varies from
 ## 0 to 1
@@ -233,32 +327,49 @@ steppedRecovery <- data.frame(func = "step",
 steppedRecoveryVaryFailLevel <- data.frame(func = "step",
                                            failTime = 20,
                                            recTime = 60,
-                                           preLevel = 1.2,
+                                           preLevel = 1.0,
                                            failLevel = seq(from = 0,
-                                               to = 1.2,
+                                               to = 1.0,
                                                by = .01),
-                                           recLevel = 1.2)
+                                           recLevel = 1.0)
+
+steppedRecoveryVaryRecoveryLevel <- data.frame(func = "step",
+                                           failTime = 20,
+                                           recTime = 60,
+                                           preLevel = 1.0,
+                                           failLevel = 0.1,
+                                           recLevel =  seq(from = 0.1,
+                                               to = 1.2,
+                                               by = .01))
 
 ## Linear recovery - resilience triangle
 linearRecovery <- data.frame(func = "resTriangle",
                              failTime = 20,
                              recTime = 60,
-                             preLevel = 1.2,
+                             preLevel = 1.0,
                              failLevel = 0.1,
-                             recLevel = 1.0)
+                             recLevel = 0.9)
 
 ## No Recovery and the time to fail changes from 20 to 59
 varyTimeToFail <- data.frame(func = "step",
                              failTime = c(20:59),
                              recTime = 60,
-                             preLevel = 1.2,
+                             preLevel = 1.0,
                              failLevel = 0.1,
                              recLevel = 0.1)
+
+## No Recovery and the time to recover changes from 21 to 60
+varyTimeToRecover <- data.frame(func = "step",
+                             failTime = 20,
+                             recTime = c(21:60),
+                             preLevel = 1.0,
+                             failLevel = 0.1,
+                             recLevel = 0.9)
 
 noRecovery <- data.frame(func = "step",
                          failTime = 20,
                          recTime = 60,
-                         preLevel = 1.2,
+                         preLevel = 1.0,
                          failLevel = 0.1,
                          recLevel = 0.1)
 
@@ -293,6 +404,9 @@ steppedRecoveryTimeHorizonData <- resLoop(t,
 ## Then plot it.
 plotSteppedRecoveryTimeHorizon <- resilienceVersusTimeHorizon(steppedRecoveryTimeHorizonData)
 
+## Plot the general performance vs constant need
+steppedRecoveryPerformance <- pltPerf(steppedRecoveryTimeHorizonData)
+
 ## The plot of resilience versus changing need level. First build the
 ## resilience matrix
 
@@ -326,6 +440,27 @@ failLevel0to1Data <- resLoop(t,
 
 plotFailLevel0to1 <- resilienceVersusFailLevel(failLevel0to1Data, 80)
 
+## Build a stepped recovery where the recovery level varies from 0.1 to 1.2
+recoveryLevel0to1Data <- resLoop(t,
+                             needConstant,
+                             steppedRecoveryVaryRecoveryLevel,
+                             r)
+
+## Then plot it at time 80
+
+plotRecoveryLevel0to1 <- resilienceVersusRecoveryLevel(recoveryLevel0to1Data, 80)
+
+## Build a stepped recovery where the recovery time varies from 21 to 60
+recoveryTime21to60Data <- resLoop(t,
+                             needConstant,
+                             varyTimeToRecover,
+                             r)
+
+## Then plot it at time 80
+
+plotRecoveryTime21to60 <- resilienceVersusRecoveryTime(recoveryTime21to60Data, 80)
+
+
 ######################################################################
 ## Build the plots using a linear recovery                         ##
 ######################################################################
@@ -339,6 +474,9 @@ linearRecoveryTimeHorizonData <- resLoop(t,
 
 ## Then plot it.
 plotLinearRecoveryTimeHorizon <- resilienceVersusTimeHorizon(linearRecoveryTimeHorizonData)
+
+## Plot the general performance vs constant need
+linearRecoveryPerformance <- pltPerf(linearRecoveryTimeHorizonData)
 
 ## The plot of resilience versus changing need level. First build the
 ## resilience matrix
@@ -377,7 +515,11 @@ noRecoveryTimeToFailData <- resLoop(t,
                                     r)
 
 ## Then plot it.
-plotnoRecoveryTimeToFail <- resilienceVersusTimeToFail(varyTimeToFail, 80)
+plotnoRecoveryTimeToFail <- resilienceVersusTimeToFail(noRecoveryTimeToFailData, 80)
+
+## Plot the general performance vs constant need
+noRecoveryFailTime20 <- filter(noRecoveryTimeToFailData, pRun == 1)
+noRecoveryPerformance <- pltPerf(noRecoveryFailTime20)
 
 ## Build the data Time horizon data with a failure at 20 and no recovery
 noRecoveryTimeHorizonData <- resLoop(t,
