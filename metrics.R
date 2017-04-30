@@ -257,7 +257,11 @@ resFac <- function(tt,
                                  (phi0 ^ 2)))
         tt$RF_FailTime <- timeD
         tt$RF_TDelta <- tDelta
-        tt$RF_RecTime <- finRecTime
+        if (length(finRecTime) > 0){
+            tt$RF_RecTime <- finRecTime
+        } else {
+            tt$RF_RecTime <- Inf
+        }
         tt$RF_DwellTime <- tt$RF_RecTime - tt$RF_FailTime
     } else {
         tt <- mutate(tt, Rho = 1)
