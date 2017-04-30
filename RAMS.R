@@ -8,6 +8,8 @@
 ## These are split up for individual plots of the different types of
 ## resilience metrics
 
+source("metrics.R")
+
 ## Plot Need for each metric
 
 ## 
@@ -302,13 +304,6 @@ p2 <- data.frame(func = "step",
                 failLevel = 0.1,
                 recLevel = 1.0)
 
-pRAMS <- data.frame(func = "step",
-                failTime = 20,
-                recTime = 60,
-                preLevel = 1.0,
-                failLevel = 0.1,
-                recLevel = 1.2)
-
 r2 <- data.frame(tDelta = 30,
                 decay = 0,
                  sigma = seq(from = 0,
@@ -383,3 +378,4 @@ WDsVFSplotFail <- WDpltSubNeed(sVFS, 30)
 ## The RAMS presentation plot of the performance profile with constant
 ## need profile
 perfPlotRAMSPres <- pltPerf(sVFS)
+
