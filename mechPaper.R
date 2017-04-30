@@ -110,11 +110,51 @@ resilienceVersusTimeHorizon <- function(df){
         theme_bw(base_size = 20, base_family = "serif") +
             theme(legend.position = c(.95, .15))
 }
+## Plot resilience as the time horizon changes
+resilienceVersusTimeToFail <- function(df, time){
+    workDF <- df %>%
+         select(Time, QR, EQR, Rho,
+                extRho, statQuoResilience, extResilience, pRun) %>%
+                    mutate(FailTime = pRun + 19) %>%
+                        filter(Time == time) %>%
+                        select(-pRun, -Time)
+    workDF <- melt(data = workDF, id = c("FailTime"))
+    ## Assign a value to the pairings of extended and unextended values
+    ## there might be a better way to do this that you might want to
+    ## clear up, but for now, get it on the paper
+    workDF <- workDF %>%
+        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
+                   "Quotient Resilience",
+                   ifelse((variable == "Rho" | variable == "extRho"),
+                          "ESDF",
+                          ifelse((variable == "statQuoResilience" |
+                                      variable == "extResilience"),
+                                 "Integral Resilience", 0))))
+    workDF <- workDF %>%
+        mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
+                   "Extended",
+                   "Original"))
+    workDF <- rename(workDF, Resilience = value)
+    ## print(head(workDF))
+    ## print(tail(workDF))
+    ## print(colnames(workDF))
+    plt <- ggplot(workDF, aes(FailTime, Resilience,
+                              group = variable)) +
+                                  geom_line(aes(linetype = variable)) +
+                                      facet_grid(ResType ~ .)
+    plt <- plt +
+    scale_linetype_discrete(name = "Metrics") +
+        theme_bw(base_size = 20, base_family = "serif") +
+            theme(legend.position = c(.95, .15))
+}
 
 ######################################################################
 ## Build the values used for the plotting                           ##
 ######################################################################
 
+######################################################################
+## Time data.frames
+######################################################################
 ## The detailed time level
 t <- data.frame(endTime = 100,
                 resolution = .1)
@@ -122,11 +162,24 @@ t <- data.frame(endTime = 100,
 ## The rough scale time level to prove things out
 timeRough <- data.frame(endTime = 100,
                         resolution = 5)
+######################################################################
+## Need data.frames
+######################################################################
 ## Constant need at 0.9
 needConstant <- data.frame(func = "constantNeed",
                 cLevel = 0.9,
                 startTime = NA,
                  slope = NA)
+nLinearVary <- data.frame(func = "constantNeed",
+                          cLevel = seq(from = 0.01,
+                                       to = 1.0,
+                                       by = .01),
+                          cLevel = 1.0,
+                          startTime = NA,
+                          slope = NA)
+######################################################################
+## Performance data.frames
+######################################################################
 
 ## Stepped recovery performance
 steppedRecovery <- data.frame(func = "step",
@@ -144,9 +197,36 @@ linearRecovery <- data.frame(func = "resTriangle",
                              failLevel = 0.1,
                              recLevel = 1.0)
 
+varyTimeToFail <- data.frame(func = "step",
+                             failTime = c(20:59),
+                             recTime = 60,
+                             preLevel = 1.2,
+                             failLevel = 0.1,
+                             recLevel = 0.1)
+
+noRecovery <- data.frame(func = "step",
+                         failTime = 20,
+                         recTime = 60,
+                         preLevel = 1.2,
+                         failLevel = 0.1,
+                         recLevel = 0.1)
+
+
+######################################################################
+## Resilience Paramater data.frames
+######################################################################
+
 r <- data.frame(tDelta = 30,
                 decay = 0,
                 sigma = 0)
+
+## steps through sigma values from 0 to 1
+rSigmaVary <- data.frame(tDelta = 30,
+                decay = 0,
+                 sigma = seq(from = 0,
+                     to = 1.0,
+                     by = .01))
+
 
 ######################################################################
 ## Build the plots using a stepped recovery                         ##
@@ -159,6 +239,113 @@ steppedRecoveryTimeHorizonData <- resLoop(t,
                                           steppedRecovery,
                                           r)
 
-## Then plot it. 
+## Then plot it.
 plotSteppedRecoveryTimeHorizon <- resilienceVersusTimeHorizon(steppedRecoveryTimeHorizonData)
+
+## The plot of resilience versus changing need level. First build the
+## resilience matrix
+
+need0to1SteppedRecoveryData <- resLoop(t,
+                                       nLinearVary,
+                                       steppedRecovery,
+                                       r)
+
+## Then plot it at time = 80 or after the recovery
+plotNeed0to1SteppedRecovery <- resilienceVersusNeed(need0to1SteppedRecoveryData, 80)
+
+## The plot of changing sigma from 0 to 1 on stepped recovery. First build
+## the resilience matrix
+
+sigma0to1SteppedRecoveryData <- resLoop(t,
+                                        needConstant,
+                                        steppedRecovery,
+                                        rSigmaVary)
+
+## Then plot it at time = 80 or after the recovery
+plotSigma0to1SteppedRecovery <- resilienceVersusSigma(sigma0to1SteppedRecoveryData,
+                                                      80)
+
+######################################################################
+## Build the plots using a linear recovery                         ##
+######################################################################
+
+## The time horizon plot for the stepped recovery. First build the
+## resilience matrix
+linearRecoveryTimeHorizonData <- resLoop(t,
+                                          needConstant,
+                                          linearRecovery,
+                                          r)
+
+## Then plot it.
+plotLinearRecoveryTimeHorizon <- resilienceVersusTimeHorizon(linearRecoveryTimeHorizonData)
+
+## The plot of resilience versus changing need level. First build the
+## resilience matrix
+
+need0to1LinearRecoveryData <- resLoop(t,
+                                       nLinearVary,
+                                       linearRecovery,
+                                       r)
+
+## Then plot it at time = 80 or after the recovery
+plotNeed0to1LinearRecovery <- resilienceVersusNeed(need0to1LinearRecoveryData, 80)
+
+## The plot of changing sigma from 0 to 1 on stepped recovery. First build
+## the resilience matrix
+
+sigma0to1LinearRecoveryData <- resLoop(t,
+                                        needConstant,
+                                        linearRecovery,
+                                        rSigmaVary)
+
+## Then plot it at time = 80 or after the recovery
+plotSigma0to1LinearRecovery <- resilienceVersusSigma(sigma0to1LinearRecoveryData,
+                                                     80)
+
+######################################################################
+## Build the plots using no recovery                                ##
+######################################################################
+
+## This one is different from the previous. First we need to plot
+## Resilience against failtime varying from 20 to 59. To make my code
+## work, I cheated and made recovery tiny-tiny-tiny. This is close enough
+
+noRecoveryTimeToFailData <- resLoop(t,
+                                    needConstant,
+                                    varyTimeToFail,
+                                    r)
+
+## Then plot it.
+plotnoRecoveryTimeToFail <- resilienceVersusTimeToFail(varyTimeToFail, 80)
+
+## Build the data Time horizon data with a failure at 20 and no recovery
+noRecoveryTimeHorizonData <- resLoop(t,
+                                     needConstant,
+                                     noRecovery,
+                                     r)
+## Then plot it
+plotNoRecoveryTimeHorizon <- resilienceVersusTimeHorizon(noRecoveryTimeHorizonData)
+
+## The plot of resilience versus changing need level. First build the
+## resilience matrix
+
+need0to1NoRecoveryData <- resLoop(t,
+                                  nLinearVary,
+                                  noRecovery,
+                                  r)
+
+## Then plot it at time = 80 or after the recovery
+plotNeed0to1NoRecovery <- resilienceVersusNeed(need0to1NoRecoveryData, 80)
+
+## The plot of changing sigma from 0 to 1 on stepped recovery. First build
+## the resilience matrix
+
+sigma0to1NoRecoveryData <- resLoop(t,
+                                   needConstant,
+                                   noRecovery,
+                                   rSigmaVary)
+
+## Then plot it at time = 80 or after the recovery
+plotSigma0to1NoRecovery <- resilienceVersusSigma(sigma0to1NoRecoveryData,
+                                                     80)
 
