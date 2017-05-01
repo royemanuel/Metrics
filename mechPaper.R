@@ -37,9 +37,10 @@ resilienceVersusNeed <- function(df, time){
                                   geom_line(aes(linetype = variable)) +
                                       facet_grid(ResType ~ .)
     plt <- plt +
-        scale_linetype_discrete(name = "Metrics") +
+        ## scale_linetype_discrete(name = "Metrics") +
             theme_bw(base_size = 8, base_family = "serif") +
-                theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
+                theme(legend.position = c(.85, .12),
+                  legend.title = element_blank()) + ylim(0, 1.2)
 }
 
 ## Plot Substitution (sigma) for each metric
@@ -72,9 +73,10 @@ resilienceVersusSigma <- function(df, time){
                                       ## probably fact it.
                                       facet_grid(ResType ~ .)
     plt <- plt +
-        scale_linetype_discrete(name = "Metrics") +
+        ## scale_linetype_discrete(name = "Metrics") +
             theme_bw(base_size = 8, base_family = "serif") +
-                theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
+                theme(legend.position = c(.85, .12),
+                  legend.title = element_blank()) + ylim(0, 1.2)
 }
 ## Plot resilience as the time horizon changes
 resilienceVersusTimeHorizon <- function(df){
@@ -106,9 +108,10 @@ resilienceVersusTimeHorizon <- function(df){
                                   geom_line(aes(linetype = variable)) +
                                       facet_grid(ResType ~ .)
     plt <- plt +
-    scale_linetype_discrete(name = "Metrics") +
+    ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
+            theme(legend.position = c(.85, .12),
+                  legend.title = element_blank()) + ylim(0, 1.2)
 }
 ## Plot resilience as the time to fail changes
 resilienceVersusTimeToFail <- function(df, time){
@@ -143,9 +146,10 @@ resilienceVersusTimeToFail <- function(df, time){
                                   geom_line(aes(linetype = variable)) +
                                       facet_grid(ResType ~ .)
     plt <- plt +
-    scale_linetype_discrete(name = "Metrics") +
+    ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
+            theme(legend.position = c(.85, .12),
+                  legend.title = element_blank()) + ylim(0, 1.2)
 }
 
 ## Plot resilience as the time horizon changes
@@ -181,9 +185,10 @@ resilienceVersusFailLevel <- function(df, time){
                                   geom_line(aes(linetype = variable)) +
                                       facet_grid(ResType ~ .)
     plt <- plt +
-    scale_linetype_discrete(name = "Metrics") +
+    ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
+            theme(legend.position = c(.85, .12),
+                  legend.title = element_blank()) + ylim(0, 1.2)
 }
 
 ## Plot resilience as the recovery level changes
@@ -219,9 +224,10 @@ resilienceVersusRecoveryLevel <- function(df, time){
                                   geom_line(aes(linetype = variable)) +
                                       facet_grid(ResType ~ .)
     plt <- plt +
-    scale_linetype_discrete(name = "Metrics") +
+    ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
+            theme(legend.position = c(.85, .12),
+                  legend.title = element_blank()) + ylim(0, 1.2)
 }
 ## Plot resilience as the recovery time changes
 resilienceVersusRecoveryTime <- function(df, time){
@@ -256,9 +262,11 @@ resilienceVersusRecoveryTime <- function(df, time){
                                   geom_line(aes(linetype = variable)) +
                                       facet_grid(ResType ~ .)
     plt <- plt +
-    scale_linetype_discrete(name = "Metrics") +
+        ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
+            theme(legend.position = c(.85, .12),
+                  legend.title = element_blank()) +
+                      ylim(0, 1.2)
 }
 
 ## A plot of performance against need to show the general behavior
