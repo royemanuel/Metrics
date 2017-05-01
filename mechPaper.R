@@ -658,3 +658,13 @@ ggsave(plot = plotSigma0to1NoRecovery,
 ## Bank of ggsaves that can be commented out after being saved      ##
 ######################################################################
 ######################################################################
+
+######################################################################\
+## Calculate values for use in the paper
+
+compareNoRecovery <- noRecoveryTimeHorizonData %>%
+    filter(Time == 100) %>%
+        select(Time, Rho, extRho, statQuoResilience, extResilience)
+ESDFcompNoRecovery <- compareNoRecovery$extRho - compareNoRecovery$Rho
+intRescompNoRecovery <- compareNoRecovery$extResilience -
+    compareNoRecovery$statQuoResilience
