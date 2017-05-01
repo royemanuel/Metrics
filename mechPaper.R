@@ -39,7 +39,7 @@ resilienceVersusNeed <- function(df, time){
     plt <- plt +
         scale_linetype_discrete(name = "Metrics") +
             theme_bw(base_size = 8, base_family = "serif") +
-                theme(legend.position = c(.85, .12))
+                theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
 }
 
 ## Plot Substitution (sigma) for each metric
@@ -74,7 +74,7 @@ resilienceVersusSigma <- function(df, time){
     plt <- plt +
         scale_linetype_discrete(name = "Metrics") +
             theme_bw(base_size = 8, base_family = "serif") +
-                theme(legend.position = c(.85, .12))
+                theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
 }
 ## Plot resilience as the time horizon changes
 resilienceVersusTimeHorizon <- function(df){
@@ -108,7 +108,7 @@ resilienceVersusTimeHorizon <- function(df){
     plt <- plt +
     scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12))
+            theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
 }
 ## Plot resilience as the time to fail changes
 resilienceVersusTimeToFail <- function(df, time){
@@ -145,7 +145,7 @@ resilienceVersusTimeToFail <- function(df, time){
     plt <- plt +
     scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12))
+            theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
 }
 
 ## Plot resilience as the time horizon changes
@@ -183,7 +183,7 @@ resilienceVersusFailLevel <- function(df, time){
     plt <- plt +
     scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12))
+            theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
 }
 
 ## Plot resilience as the recovery level changes
@@ -221,7 +221,7 @@ resilienceVersusRecoveryLevel <- function(df, time){
     plt <- plt +
     scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12))
+            theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
 }
 ## Plot resilience as the recovery time changes
 resilienceVersusRecoveryTime <- function(df, time){
@@ -258,7 +258,7 @@ resilienceVersusRecoveryTime <- function(df, time){
     plt <- plt +
     scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12))
+            theme(legend.position = c(.85, .12)) + ylim(0, 1.2)
 }
 
 ## A plot of performance against need to show the general behavior
@@ -276,8 +276,8 @@ pltPerf <- function(df){
                                                     (name = ""))+
         theme_bw(base_size = 8, base_family = "serif") +
             ## scale_linetype_discrete(name = "") +
-                theme(legend.position = c(.85, .12)) +
-                    labs(y = "Performance") + ylim(0, 1.5)
+                theme(legend.position = c(.85, .25)) +
+                    labs(y = "Performance") + ylim(0, 1.2)
 }
 
 ######################################################################
@@ -592,6 +592,12 @@ ggsave(plot = plotnoRecoveryTimeToFail,
 ## Plot the general performance vs constant need
 noRecoveryFailTime20 <- filter(noRecoveryTimeToFailData, pRun == 1)
 noRecoveryPerformance <- pltPerf(noRecoveryFailTime20)
+ggsave(plot = noRecoveryPerformance,
+       filename = paste0("noRecoveryPerformance",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
 
 ## Build the data Time horizon data with a failure at 20 and no recovery
 noRecoveryTimeHorizonData <- resLoop(t,
