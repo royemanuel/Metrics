@@ -317,9 +317,27 @@ nLinearVary <- data.frame(func = "constantNeed",
                           cLevel = 1.0,
                           startTime = NA,
                           slope = NA)
+
+## Motivating example of need where there is a bump between times
+needBump <- data.frame(func = "stepNeed",
+                       startLevel = .9,
+                       step1Time = 200,
+                       step1Level = 1.2,
+                       step2Time = 600,
+                       step2Level = .9,
+                       endTime = 1001)
 ######################################################################
 ## Performance data.frames
 ######################################################################
+
+## Steady Performance without a failure
+noFailure <- data.frame(func = "step",
+                        failTime = 20,
+                        recTime = 60,
+                        preLevel = 1.0,
+                        failLevel = 1.0,
+                        recLevel = 1.0)
+
 
 ## Stepped recovery performance
 steppedRecovery <- data.frame(func = "step",
@@ -649,6 +667,36 @@ plotSigma0to1NoRecovery <- resilienceVersusSigma(sigma0to1NoRecoveryData,
                                                      80)
 ggsave(plot = plotSigma0to1NoRecovery,
        filename = paste0("plotSigma0to1NoRecovery",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
+
+## The motivating example where there is no failure, but the demand
+## changes. This results in a shortfall
+## First, the time horizon plot
+noFailureTimeHorizonData <- resLoop(t, needBump, noFailure, r)
+## Then plot it
+performanceNoFailureNeedBump <- pltPerf(noFailureTimeHorizonData)
+ggsave(plot = performanceNoFailureNeedBump,
+       filename = paste0("performanceNoFailureNeedBump",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
+plotNoFailureTimeHorizon <- resilienceVersusTimeHorizon(noFailureTimeHorizonData)
+ggsave(plot = plotNoFailureTimeHorizon,
+       filename = paste0("plotNoFailureTimeHorizon",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
+## Now the sigma plot
+noFailureSigma0to1Data <- resLoop(t, needBump, noFailure, rSigmaVary)
+## Then plot it
+plotNoFailureSigma0to1 <- resilienceVersusSigma(noFailureSigma0to1Data, 80)
+ggsave(plot = plotNoFailureSigma0to1,
+       filename = paste0("plotNoFailureSigma0to1",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
