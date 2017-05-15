@@ -20,12 +20,12 @@ resilienceVersusNeed <- function(df, time){
     workDF <- melt(data = workDF, id = c("Time", "Need"))
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient Resilience",
+                   "Quotient\nResilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          "ESDF",
+                          "Resilience\nFactor",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 "Integral Resilience", 0))))
+                                 "Integral\nResilience", 0))))
     ## print(colnames(workDF))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
@@ -39,8 +39,9 @@ resilienceVersusNeed <- function(df, time){
     plt <- plt +
         ## scale_linetype_discrete(name = "Metrics") +
             theme_bw(base_size = 8, base_family = "serif") +
-                theme(legend.position = c(.85, .12),
-                  legend.title = element_blank()) + ylim(0, 1.2)
+                theme(legend.position = "top",
+                      legend.margin = margin(t = 0, unit = "cm"),
+                      legend.title = element_blank()) + ylim(0, 1.2)
 }
 
 ## Plot Substitution (sigma) for each metric
@@ -52,12 +53,12 @@ resilienceVersusSigma <- function(df, time){
     workDF <- melt(data = workDF, id = c("Time", "Sigma"))
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient Resilience",
+                   "Quotient\nResilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          "ESDF",
+                          "Resilience\nFactor",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 "Integral Resilience", 0))))
+                                 "Integral\nResilience", 0))))
     ## print(colnames(workDF))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
@@ -75,8 +76,9 @@ resilienceVersusSigma <- function(df, time){
     plt <- plt +
         ## scale_linetype_discrete(name = "Metrics") +
             theme_bw(base_size = 8, base_family = "serif") +
-                theme(legend.position = c(.85, .12),
-                  legend.title = element_blank()) + ylim(0, 1.2)
+                theme(legend.margin=margin(t = 0, unit = 'cm'),
+                      legend.position = "top",
+                      legend.title = element_blank()) + ylim(0, 1.2)
 }
 ## Plot resilience as the time horizon changes
 resilienceVersusTimeHorizon <- function(df){
@@ -89,12 +91,12 @@ resilienceVersusTimeHorizon <- function(df){
     ## clear up, but for now, get it on the paper
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient Resilience",
+                   "Quotient\nResilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          "ESDF",
+                          "Resilience\nFactor",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 "Integral Resilience", 0))))
+                                 "Integral\nResilience", 0))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
                    "Extended",
@@ -110,7 +112,7 @@ resilienceVersusTimeHorizon <- function(df){
     plt <- plt +
     ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12),
+            theme(legend.position = "top",
                   legend.title = element_blank()) + ylim(0, 1.2)
 }
 ## Plot resilience as the time to fail changes
@@ -127,12 +129,12 @@ resilienceVersusTimeToFail <- function(df, time){
     ## clear up, but for now, get it on the paper
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient Resilience",
+                   "Quotient\nResilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          "ESDF",
+                          "Resilience\nFactor",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 "Integral Resilience", 0))))
+                                 "Integral\nResilience", 0))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
                    "Extended",
@@ -148,7 +150,7 @@ resilienceVersusTimeToFail <- function(df, time){
     plt <- plt +
     ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12),
+            theme(legend.position = "top",
                   legend.title = element_blank()) + ylim(0, 1.2)
 }
 
@@ -166,12 +168,12 @@ resilienceVersusFailLevel <- function(df, time){
     ## clear up, but for now, get it on the paper
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient Resilience",
+                   "Quotient\nResilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          "ESDF",
+                          "Resilience\nFactor",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 "Integral Resilience", 0))))
+                                 "Integral\nResilience", 0))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
                    "Extended",
@@ -187,7 +189,7 @@ resilienceVersusFailLevel <- function(df, time){
     plt <- plt +
     ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12),
+            theme(legend.position = "top",
                   legend.title = element_blank()) + ylim(0, 1.2)
 }
 
@@ -205,12 +207,12 @@ resilienceVersusRecoveryLevel <- function(df, time){
     ## clear up, but for now, get it on the paper
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient Resilience",
+                   "Quotient\nResilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          "ESDF",
+                          "Resilience\nFactor",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 "Integral Resilience", 0))))
+                                 "Integral\nResilience", 0))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
                    "Extended",
@@ -226,7 +228,7 @@ resilienceVersusRecoveryLevel <- function(df, time){
     plt <- plt +
     ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12),
+            theme(legend.position = "top",
                   legend.title = element_blank()) + ylim(0, 1.2)
 }
 ## Plot resilience as the recovery time changes
@@ -243,12 +245,12 @@ resilienceVersusRecoveryTime <- function(df, time){
     ## clear up, but for now, get it on the paper
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient Resilience",
+                   "Quotient\nResilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          "ESDF",
+                          "Resilience\nFactor",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 "Integral Resilience", 0))))
+                                 "Integral\nResilience", 0))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
                    "Extended",
@@ -264,7 +266,7 @@ resilienceVersusRecoveryTime <- function(df, time){
     plt <- plt +
         ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 8, base_family = "serif") +
-            theme(legend.position = c(.85, .12),
+            theme(legend.position = "top",
                   legend.title = element_blank()) +
                       ylim(0, 1.2)
 }
@@ -434,16 +436,16 @@ ggsave(plot = plotSteppedRecoveryTimeHorizon,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
-## Plot the general performance vs constant need
+## Plot the general performance vs co nstant need
 steppedRecoveryPerformance <- pltPerf(steppedRecoveryTimeHorizonData)
 ggsave(plot = steppedRecoveryPerformance,
        filename = paste0("steppedRecoveryPerformance",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
 ## The plot of resilience versus changing need level. First build the
 ## resilience matrix
@@ -460,7 +462,7 @@ ggsave(plot = plotNeed0to1SteppedRecovery,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
 ## The plot of changing sigma from 0 to 1 on stepped recovery. First build
 ## the resilience matrix
@@ -478,7 +480,7 @@ ggsave(plot = plotSigma0to1SteppedRecovery,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
 ## Build a stepped recovery where the fail level varies from 0 to 1
 failLevel0to1Data <- resLoop(t,
@@ -494,7 +496,7 @@ ggsave(plot = plotFailLevel0to1,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
 ## Build a stepped recovery where the recovery level varies from 0.1 to 1.2
 recoveryLevel0to1Data <- resLoop(t,
@@ -510,7 +512,7 @@ ggsave(plot = plotRecoveryLevel0to1,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
 ## Build a stepped recovery where the recovery time varies from 21 to 60
 recoveryTime21to60Data <- resLoop(t,
@@ -526,7 +528,7 @@ ggsave(plot = plotRecoveryTime21to60,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
 
 ######################################################################
@@ -548,7 +550,7 @@ ggsave(plot = plotLinearRecoveryTimeHorizon,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
 ## Plot the general performance vs constant need
 linearRecoveryPerformance <- pltPerf(linearRecoveryTimeHorizonData)
@@ -557,7 +559,7 @@ ggsave(plot = linearRecoveryPerformance,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
 ## The plot of resilience versus changing need level. First build the
 ## resilience matrix
@@ -574,7 +576,7 @@ ggsave(plot = plotNeed0to1LinearRecovery,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
 ## The plot of changing sigma from 0 to 1 on stepped recovery. First build
 ## the resilience matrix
@@ -592,7 +594,7 @@ ggsave(plot = plotSigma0to1LinearRecovery,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
 ######################################################################
 ## Build the plots using no recovery                                ##
@@ -614,7 +616,7 @@ ggsave(plot = plotnoRecoveryTimeToFail,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 ## Plot the general performance vs constant need
 noRecoveryFailTime20 <- filter(noRecoveryTimeToFailData, pRun == 1)
 noRecoveryPerformance <- pltPerf(noRecoveryFailTime20)
@@ -623,7 +625,7 @@ ggsave(plot = noRecoveryPerformance,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
 ## Build the data Time horizon data with a failure at 20 and no recovery
 noRecoveryTimeHorizonData <- resLoop(t,
@@ -637,7 +639,7 @@ ggsave(plot = plotNoRecoveryTimeHorizon,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 ## The plot of resilience versus changing need level. First build the
 ## resilience matrix
 
@@ -653,7 +655,7 @@ ggsave(plot = plotNeed0to1NoRecovery,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 ## The plot of changing sigma from 0 to 1 on stepped recovery. First build
 ## the resilience matrix
 
@@ -670,7 +672,7 @@ ggsave(plot = plotSigma0to1NoRecovery,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 
 ## The motivating example where there is no failure, but the demand
 ## changes. This results in a shortfall
@@ -683,14 +685,14 @@ ggsave(plot = performanceNoFailureNeedBump,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 plotNoFailureTimeHorizon <- resilienceVersusTimeHorizon(noFailureTimeHorizonData)
 ggsave(plot = plotNoFailureTimeHorizon,
        filename = paste0("plotNoFailureTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 ## Now the sigma plot
 noFailureSigma0to1Data <- resLoop(t, needBump, noFailure, rSigmaVary)
 ## Then plot it
@@ -700,7 +702,7 @@ ggsave(plot = plotNoFailureSigma0to1,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 3)
 ######################################################################
 ######################################################################
 ## Bank of ggsaves that can be commented out after being saved      ##

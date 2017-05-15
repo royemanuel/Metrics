@@ -434,7 +434,15 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                          needList$slope),
                      ## fullDef should bind a fully defined need
                      ## vector
-                     fullDef = cbind(fullDef, resMat))
+                     stepNeed = mutate(resMat,
+                         Need = c(
+                             rep(needList$startLevel,
+                                 needList$step1Time),
+                             rep(needList$step1Level,
+                                 needList$step2Time - needList$step1Time),
+                             rep(needList$step2Level,
+                                 needList$endTime -needList$ step2Time))),
+                     fullDef = mutate(resMat, Need = needList$Need))
     ## print("need done")
     # print( head(resMat))
     resMat <- switch(as.character(perfList$func),
@@ -574,12 +582,12 @@ pltMoveNeed <- function(df, time){
     workDF <- melt(data = workDF, id = c("Time", "Need"))
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient Resilience",
+                   "Quotient\nResilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          "ESDF",
+                          "Resilience\nFactor",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 "Integral Resilience", 0))))
+                                 "Integral\nResilience", 0))))
     ## print(colnames(workDF))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
@@ -606,12 +614,12 @@ pltMoveRecovery <- function(df, t){
     workDF <- melt(data = workDF, id = c("Time", "TTR"))
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient Resilience",
+                   "Quotient\nResilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          "ESDF",
+                          "Resilience\nFactor",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 "Integral Resilience", 0))))
+                                 "Integral\nResilience", 0))))
     ## print(colnames(workDF))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
@@ -637,12 +645,12 @@ pltSubNeed <- function(df, time){
     workDF <- melt(data = workDF, id = c("Time", "Sigma"))
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient Resilience",
+                   "Quotient\nResilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          "ESDF",
+                          "Resilience\nFactor",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 "Integral Resilience", 0))))
+                                 "Integral\nResilience", 0))))
     ## print(colnames(workDF))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
@@ -673,12 +681,12 @@ pltMoveTimeH <- function(df){
     ## clear up, but for now, get it on the paper
     workDF <- workDF %>%
         mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient Resilience",
+                   "Quotient\nResilience",
                    ifelse((variable == "Rho" | variable == "extRho"),
-                          "ESDF",
+                          "Resilience\nFactor",
                           ifelse((variable == "statQuoResilience" |
                                       variable == "extResilience"),
-                                 "Integral Resilience", 0))))
+                                 "Integral\nResilience", 0))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
                    "Extended",
