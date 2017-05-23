@@ -38,7 +38,7 @@ resilienceVersusNeed <- function(df, time){
                                       facet_grid(ResType ~ .)
     plt <- plt +
         ## scale_linetype_discrete(name = "Metrics") +
-            theme_bw(base_size = 8, base_family = "serif") +
+            theme_bw(base_size = 12, base_family = "serif") +
                 theme(legend.position = "top",
                       legend.margin = margin(t = 0, unit = "cm"),
                       legend.title = element_blank()) + ylim(0, 1.2)
@@ -75,13 +75,13 @@ resilienceVersusSigma <- function(df, time){
                                       facet_grid(ResType ~ .)
     plt <- plt +
         ## scale_linetype_discrete(name = "Metrics") +
-            theme_bw(base_size = 8, base_family = "serif") +
+            theme_bw(base_size = 12, base_family = "serif") +
                 theme(legend.margin=margin(t = 0, unit = 'cm'),
                       legend.position = "top",
                       legend.title = element_blank()) + ylim(0, 1.2)
 }
 ## Plot resilience as the time horizon changes
-resilienceVersusTimeHorizon <- function(df){
+resilienceVersusTimeHorizon <- function(df, title){
     workDF <- df %>%
          select(Time, QR, EQR, Rho,
                    extRho, statQuoResilience, extResilience)
@@ -111,7 +111,7 @@ resilienceVersusTimeHorizon <- function(df){
                                       facet_grid(ResType ~ .)
     plt <- plt +
     ## scale_linetype_discrete(name = "Metrics") +
-        theme_bw(base_size = 8, base_family = "serif") +
+        theme_bw(base_size = 12, base_family = "serif") +
             theme(legend.position = "top",
                   legend.title = element_blank()) + ylim(0, 1.2)
 }
@@ -147,9 +147,9 @@ resilienceVersusTimeToFail <- function(df, time){
                               group = variable)) +
                                   geom_line(aes(linetype = variable)) +
                                       facet_grid(ResType ~ .)
-    plt <- plt +
+    plt <- plt + labs(x = "Fail Time") +
     ## scale_linetype_discrete(name = "Metrics") +
-        theme_bw(base_size = 8, base_family = "serif") +
+        theme_bw(base_size = 12, base_family = "serif") +
             theme(legend.position = "top",
                   legend.title = element_blank()) + ylim(0, 1.2)
 }
@@ -186,9 +186,9 @@ resilienceVersusFailLevel <- function(df, time){
                               group = variable)) +
                                   geom_line(aes(linetype = variable)) +
                                       facet_grid(ResType ~ .)
-    plt <- plt +
+    plt <- plt + labs(x = "Robustness") + 
     ## scale_linetype_discrete(name = "Metrics") +
-        theme_bw(base_size = 8, base_family = "serif") +
+        theme_bw(base_size = 12, base_family = "serif") +
             theme(legend.position = "top",
                   legend.title = element_blank()) + ylim(0, 1.2)
 }
@@ -227,7 +227,7 @@ resilienceVersusRecoveryLevel <- function(df, time){
                                       facet_grid(ResType ~ .)
     plt <- plt +
     ## scale_linetype_discrete(name = "Metrics") +
-        theme_bw(base_size = 8, base_family = "serif") +
+        theme_bw(base_size = 12, base_family = "serif") +
             theme(legend.position = "top",
                   legend.title = element_blank()) + ylim(0, 1.2)
 }
@@ -265,7 +265,7 @@ resilienceVersusRecoveryTime <- function(df, time){
                                       facet_grid(ResType ~ .)
     plt <- plt +
         ## scale_linetype_discrete(name = "Metrics") +
-        theme_bw(base_size = 8, base_family = "serif") +
+        theme_bw(base_size = 12, base_family = "serif") +
             theme(legend.position = "top",
                   legend.title = element_blank()) +
                       ylim(0, 1.2)
@@ -284,7 +284,7 @@ pltPerf <- function(df){
                               scale_linetype_manual(values=c("solid",
                                                         "dotted"),
                                                     (name = ""))+
-        theme_bw(base_size = 8, base_family = "serif") +
+        theme_bw(base_size = 12, base_family = "serif") +
             ## scale_linetype_discrete(name = "") +
                 theme(legend.position = c(.85, .25)) +
                     labs(y = "Performance") + ylim(0, 1.2)
@@ -431,21 +431,9 @@ steppedRecoveryTimeHorizonData <- resLoop(t,
 
 ## Then plot it.
 plotSteppedRecoveryTimeHorizon <- resilienceVersusTimeHorizon(steppedRecoveryTimeHorizonData)
-ggsave(plot = plotSteppedRecoveryTimeHorizon,
-       filename = paste0("plotSteppedRecoveryTimeHorizon",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
 
 ## Plot the general performance vs co nstant need
 steppedRecoveryPerformance <- pltPerf(steppedRecoveryTimeHorizonData)
-ggsave(plot = steppedRecoveryPerformance,
-       filename = paste0("steppedRecoveryPerformance",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
 
 ## The plot of resilience versus changing need level. First build the
 ## resilience matrix
@@ -457,12 +445,6 @@ need0to1SteppedRecoveryData <- resLoop(t,
 
 ## Then plot it at time = 80 or after the recovery
 plotNeed0to1SteppedRecovery <- resilienceVersusNeed(need0to1SteppedRecoveryData, 80)
-ggsave(plot = plotNeed0to1SteppedRecovery,
-       filename = paste0("plotNeed0to1SteppedRecovery",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
 
 ## The plot of changing sigma from 0 to 1 on stepped recovery. First build
 ## the resilience matrix
@@ -475,13 +457,6 @@ sigma0to1SteppedRecoveryData <- resLoop(t,
 ## Then plot it at time = 80 or after the recovery
 plotSigma0to1SteppedRecovery <- resilienceVersusSigma(sigma0to1SteppedRecoveryData,
                                                       80)
-ggsave(plot = plotSigma0to1SteppedRecovery,
-       filename = paste0("plotSigma0to1SteppedRecovery",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
-
 ## Build a stepped recovery where the fail level varies from 0 to 1
 failLevel0to1Data <- resLoop(t,
                              needConstant,
@@ -491,13 +466,6 @@ failLevel0to1Data <- resLoop(t,
 ## Then plot it at time 80
 
 plotFailLevel0to1 <- resilienceVersusFailLevel(failLevel0to1Data, 80)
-ggsave(plot = plotFailLevel0to1,
-       filename = paste0("plotFailLevel0to1",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
-
 ## Build a stepped recovery where the recovery level varies from 0.1 to 1.2
 recoveryLevel0to1Data <- resLoop(t,
                              needConstant,
@@ -507,12 +475,6 @@ recoveryLevel0to1Data <- resLoop(t,
 ## Then plot it at time 80
 
 plotRecoveryLevel0to1 <- resilienceVersusRecoveryLevel(recoveryLevel0to1Data, 80)
-ggsave(plot = plotRecoveryLevel0to1,
-       filename = paste0("plotRecoveryLevel0to1",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
 
 ## Build a stepped recovery where the recovery time varies from 21 to 60
 recoveryTime21to60Data <- resLoop(t,
@@ -523,13 +485,6 @@ recoveryTime21to60Data <- resLoop(t,
 ## Then plot it at time 80
 
 plotRecoveryTime21to60 <- resilienceVersusRecoveryTime(recoveryTime21to60Data, 80)
-ggsave(plot = plotRecoveryTime21to60,
-       filename = paste0("plotRecoveryTime21to60",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
-
 
 ######################################################################
 ## Build the plots using a linear recovery                         ##
@@ -545,21 +500,8 @@ linearRecoveryTimeHorizonData <- resLoop(t,
 ## Then plot it.
 plotLinearRecoveryTimeHorizon <- resilienceVersusTimeHorizon(linearRecoveryTimeHorizonData)
 
-ggsave(plot = plotLinearRecoveryTimeHorizon,
-       filename = paste0("plotLinearRecoveryTimeHorizon",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
-
 ## Plot the general performance vs constant need
 linearRecoveryPerformance <- pltPerf(linearRecoveryTimeHorizonData)
-ggsave(plot = linearRecoveryPerformance,
-       filename = paste0("linearRecoveryPerformance",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
 
 ## The plot of resilience versus changing need level. First build the
 ## resilience matrix
@@ -571,12 +513,6 @@ need0to1LinearRecoveryData <- resLoop(t,
 
 ## Then plot it at time = 80 or after the recovery
 plotNeed0to1LinearRecovery <- resilienceVersusNeed(need0to1LinearRecoveryData, 80)
-ggsave(plot = plotNeed0to1LinearRecovery,
-       filename = paste0("plotNeed0to1LinearRecovery",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
 
 ## The plot of changing sigma from 0 to 1 on stepped recovery. First build
 ## the resilience matrix
@@ -589,13 +525,6 @@ sigma0to1LinearRecoveryData <- resLoop(t,
 ## Then plot it at time = 80 or after the recovery
 plotSigma0to1LinearRecovery <- resilienceVersusSigma(sigma0to1LinearRecoveryData,
                                                      80)
-ggsave(plot = plotSigma0to1LinearRecovery,
-       filename = paste0("plotSigma0to1LinearRecovery",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
-
 ######################################################################
 ## Build the plots using no recovery                                ##
 ######################################################################
@@ -611,21 +540,10 @@ noRecoveryTimeToFailData <- resLoop(t,
 
 ## Then plot it.
 plotnoRecoveryTimeToFail <- resilienceVersusTimeToFail(noRecoveryTimeToFailData, 80)
-ggsave(plot = plotnoRecoveryTimeToFail,
-       filename = paste0("plotnoRecoveryTimeToFail",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
+
 ## Plot the general performance vs constant need
 noRecoveryFailTime20 <- filter(noRecoveryTimeToFailData, pRun == 1)
 noRecoveryPerformance <- pltPerf(noRecoveryFailTime20)
-ggsave(plot = noRecoveryPerformance,
-       filename = paste0("noRecoveryPerformance",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
 
 ## Build the data Time horizon data with a failure at 20 and no recovery
 noRecoveryTimeHorizonData <- resLoop(t,
@@ -634,12 +552,7 @@ noRecoveryTimeHorizonData <- resLoop(t,
                                      r)
 ## Then plot it
 plotNoRecoveryTimeHorizon <- resilienceVersusTimeHorizon(noRecoveryTimeHorizonData)
-ggsave(plot = plotNoRecoveryTimeHorizon,
-       filename = paste0("plotNoRecoveryTimeHorizon",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
+
 ## The plot of resilience versus changing need level. First build the
 ## resilience matrix
 
@@ -650,12 +563,7 @@ need0to1NoRecoveryData <- resLoop(t,
 
 ## Then plot it at time = 80 or after the recovery
 plotNeed0to1NoRecovery <- resilienceVersusNeed(need0to1NoRecoveryData, 80)
-ggsave(plot = plotNeed0to1NoRecovery,
-       filename = paste0("plotNeed0to1NoRecovery",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
+
 ## The plot of changing sigma from 0 to 1 on stepped recovery. First build
 ## the resilience matrix
 
@@ -667,47 +575,225 @@ sigma0to1NoRecoveryData <- resLoop(t,
 ## Then plot it at time = 80 or after the recovery
 plotSigma0to1NoRecovery <- resilienceVersusSigma(sigma0to1NoRecoveryData,
                                                      80)
-ggsave(plot = plotSigma0to1NoRecovery,
-       filename = paste0("plotSigma0to1NoRecovery",
-           format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
-       height = 3)
-
 ## The motivating example where there is no failure, but the demand
 ## changes. This results in a shortfall
 ## First, the time horizon plot
 noFailureTimeHorizonData <- resLoop(t, needBump, noFailure, r)
 ## Then plot it
+plotNoFailureTimeHorizon <- resilienceVersusTimeHorizon(noFailureTimeHorizonData)
+
 performanceNoFailureNeedBump <- pltPerf(noFailureTimeHorizonData)
-ggsave(plot = performanceNoFailureNeedBump,
-       filename = paste0("performanceNoFailureNeedBump",
+
+## Now the sigma plot
+noFailureSigma0to1Data <- resLoop(t, needBump, noFailure, rSigmaVary)
+## Then plot it
+plotNoFailureSigma0to1 <- resilienceVersusSigma(noFailureSigma0to1Data, 80)
+
+######################################################################
+## ggsave Bank
+ggsave(plot = plotSteppedRecoveryTimeHorizon,
+       filename = paste0("plotSteppedRecoveryTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 3)
-plotNoFailureTimeHorizon <- resilienceVersusTimeHorizon(noFailureTimeHorizonData)
+       height = 4)
+
+ggsave(plot = steppedRecoveryPerformance,
+       filename = paste0("ShortsteppedRecoveryPerformance",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 2)
+
+ggsave(plot = plotNeed0to1SteppedRecovery,
+       filename = paste0("plotNeed0to1SteppedRecovery",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 2.7,
+       height = 4.0)
+
+ggsave(plot = plotSigma0to1SteppedRecovery,
+       filename = paste0("plotSigma0to1SteppedRecovery",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
+
+ggsave(plot = plotFailLevel0to1,
+       filename = paste0("plotFailLevel0to1",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
+
+
+ggsave(plot = plotRecoveryLevel0to1,
+       filename = paste0("plotRecoveryLevel0to1",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
+
+
+ggsave(plot = plotRecoveryTime21to60,
+       filename = paste0("plotRecoveryTime21to60",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
+
+
+ggsave(plot = plotLinearRecoveryTimeHorizon,
+       filename = paste0("plotLinearRecoveryTimeHorizon",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
+
+
+ggsave(plot = linearRecoveryPerformance,
+       filename = paste0("ShortlinearRecoveryPerformance",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 2)
+
+
+ggsave(plot = plotNeed0to1LinearRecovery,
+       filename = paste0("plotNeed0to1LinearRecovery",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 2.7,
+       height = 4.0)
+
+
+ggsave(plot = plotSigma0to1LinearRecovery,
+       filename = paste0("plotSigma0to1LinearRecovery",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
+
+
+ggsave(plot = plotnoRecoveryTimeToFail,
+       filename = paste0("plotnoRecoveryTimeToFail",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
+
+ggsave(plot = noRecoveryPerformance,
+       filename = paste0("ShortnoRecoveryPerformance",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 2)
+
+
+ggsave(plot = plotNoRecoveryTimeHorizon,
+       filename = paste0("plotNoRecoveryTimeHorizon",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
+
+ggsave(plot = plotNeed0to1NoRecovery,
+       filename = paste0("plotNeed0to1NoRecovery",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 2.7,
+       height = 4)
+
+ggsave(plot = plotSigma0to1NoRecovery,
+       filename = paste0("plotSigma0to1NoRecovery",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 4)
+
+ggsave(plot = plotS)
+
+ggsave(plot = performanceNoFailureNeedBump,
+       filename = paste0("ShortperformanceNoFailureNeedBump",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 3.5,
+       height = 2)
+
 ggsave(plot = plotNoFailureTimeHorizon,
        filename = paste0("plotNoFailureTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 3)
-## Now the sigma plot
-noFailureSigma0to1Data <- resLoop(t, needBump, noFailure, rSigmaVary)
-## Then plot it
-plotNoFailureSigma0to1 <- resilienceVersusSigma(noFailureSigma0to1Data, 80)
+       height = 4)
+
 ggsave(plot = plotNoFailureSigma0to1,
        filename = paste0("plotNoFailureSigma0to1",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 3)
+       height = 4)
 ######################################################################
 ######################################################################
 ## Bank of ggsaves that can be commented out after being saved      ##
 ######################################################################
 ######################################################################
+
+## New Group of Plots. Put all the performance plots into one 7x4 plot
+SR <- steppedRecoveryTimeHorizonData %>%
+    mutate(Profile = "B")
+NF <- noFailureTimeHorizonData %>%
+    mutate(Profile = "D")
+NR <- noRecoveryTimeHorizonData %>%
+    mutate(Profile = "A")
+LR <- linearRecoveryTimeHorizonData %>%
+    mutate(Profile = "C")
+
+allTH <- bind_rows(SR, NF, NR, LR)
+allTH <- allTH %>%
+    select(Time, Need, Performance, Profile) %>%
+        melt(id.vars = c("Time", "Profile")) %>%
+            mutate(Performance = value) %>%
+                select(-value)
+
+## Build a labeller to make the plot proper
+scenarioNames <- list(
+    'A' = 'Step Failure without Recovery',
+    'B' = 'Step Failure with Step Recovery',
+    'C' = 'Step Failure with Linear Recovery',
+    'D' = 'No Failure with Changing Need'
+)
+
+scenLabeller <- function(variable, value){
+    return(scenarioNames[value])
+}
+
+performancePlots <- ggplot(allTH, aes(Time,
+                                      Performance,
+                                      group = variable,
+                                      linetype = variable))
+performancePlots <- performancePlots +
+    geom_line() +
+        facet_wrap(~ Profile,
+                   nrow = 2,
+                   ncol = 2,
+                   labeller = scenLabeller) +
+                       theme_bw(base_size = 12, base_family = "serif") +
+                           theme(legend.position = c(.85, .15),
+                                 legend.title = element_blank()) +
+                                     ylim(0, 1.2)
+performancePlots <- performancePlots +
+    scale_linetype_manual(values=c("dashed",
+                              "solid"),
+                          (name = ""))
+
+ggsave(plot = performancePlots,
+       filename = paste0("performancePlots",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 7,
+       height = 4)
+
 
 ######################################################################\
 ## Calculate values for use in the paper
