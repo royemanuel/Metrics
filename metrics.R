@@ -174,6 +174,19 @@ extQuotRes <- function(tt, sigma){
     ## print(vars)
     return(tt)
 }
+######################################################################
+## Total resilience model - the integral over the time for both     ##
+## Quotient Resilience and Extended Quotient Resilience             ##
+######################################################################
+totalQR <- function(tt){
+    for (t in 1:length(tt$Time)){
+        ttStub <- tt[1:t,]
+        tt$TQR[t] <- trapz(ttStub$Time, ttStub$QR) / (max(ttStub$Time) - min(ttStub$Time))
+        tt$TEQR[t] <- trapz(ttStub$Time, ttStub$EQR) / (max(ttStub$Time) - min(ttStub$Time))
+    }
+    return(tt)
+}
+
 ###################################################################### 
 ## Building the ESDF model                                          ## 
 ######################################################################
@@ -471,6 +484,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                      ## initRecTime = resList$initRecTime,
                      ## finRecTime = resList$finRecTime,
                      decay = resList$decay)
+    resMat <- totalQR(resMat)
     ## print("RF done")
     resMat <- extResFac(tt = resMat,
                         tDelta = resList$tDelta,
