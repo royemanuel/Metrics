@@ -5,6 +5,7 @@ library('dplyr')
 library('reshape2')
 library('ggplot2')
 library('extrafont')
+library('caTools')
 
 ## Function that builds a  time column from 0 to endTime with resolution
 ## size intervals
@@ -418,6 +419,15 @@ intRes <- function(tt, sigma){
     return(tt)
 }
 
+intRes2 <- function(tt, sigma){
+    for (s in 1:length(tt$Time)){
+        tt$SQRes2[s] <- trapz(tt$Time[1:s], tt$Performance[1:s]) /
+            (tt$Performance[1] *
+             (max(tt$Time[1:s]) - min(tt$Time[1:s])))
+    }
+    return(tt)
+}
+
 ## Cleanup the data.frame after running all of the above
 tidyDF <- function(tt){
     tt <- select(tt, -c(perfLag, perfHeight, perfStepArea,
@@ -450,7 +460,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                      stepNeed = mutate(resMat,
                          Need = c(
                              rep(needList$startLevel,
-                                 needList$step1Time),
+                                 needList$stepTime),
                              rep(needList$step1Level,
                                  needList$step2Time - needList$step1Time),
                              rep(needList$step2Level,
@@ -495,6 +505,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
     ## print("ERF done")
     resMat <- intRes(resMat,
                      sigma = resList$sigma)
+    resMat <- intRes2(resMat, sigma = resList$sigma)
     ## print("IntRes done")
     resMat <- tidyDF(resMat)
     return(resMat)
