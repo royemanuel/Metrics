@@ -31,11 +31,11 @@ bigInfRFR <- metricRollup(nameList, need = nMat, resFactors = rMat, 39000)
 ## Writing the .csv. Leave it commented out unless you have new data and
 ## want to make it happen. I would recommend rewriting this part each
 ## time you ahve new data to put into it.
-write.csv(bigInfRFR, "bigInfrastructureRunsForRecord2.csv")
+## write.csv(bigInfRFR, "bigInfrastructureRunsForRecord2.csv")
 
 ## Pull out only the resilience metrics, Infrastructure and scenario
 bigInfResilience <- select(bigInfRFR, QR, EQR, Rho, extRho,
                            statQuoResilience, extResilience, fileName,
                            Infrastructure, Scenario)
 
-write.csv(bigInfResilience, "bigInfrastructureResilience2.csv")
+## write.csv(bigInfResilience, "bigInfrastructureResilience2.csv")

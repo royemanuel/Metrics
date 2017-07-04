@@ -263,7 +263,7 @@ resilienceVersusRecoveryTime <- function(df, time){
                               group = variable)) +
                                   geom_line(aes(linetype = variable)) +
                                       facet_grid(ResType ~ .)
-    plt <- plt +
+    plt <- plt + labs(x = "Recovery Time") +
         ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 12, base_family = "serif") +
             theme(legend.position = "top",

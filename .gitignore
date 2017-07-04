@@ -33,3 +33,12 @@ fail5000singleRunOutput.xlsx
 100percentRecoverysingleRunOutput.xlsx
 20percentFailsingleRunOutput.xlsx
 #infrastructure.R#
+*.pdf
+*.pptx
+Dissertation MARCH 2017/
+*.psd
+*.lnk
+*.R#
+*.org#
+.ipynb_checkpoints/Plotting Notebook-checkpoint.ipynb
+.RDataTmp
