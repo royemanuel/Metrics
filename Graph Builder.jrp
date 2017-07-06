@@ -1,0 +1,212 @@
+﻿New Table( "bigInfrastructureResilience",
+	Add Rows( 35 ),
+	New Script(
+		"Source",
+		Open(
+			"D:\OneDrive\PhD Work\Dissertation\Programming\Metrics\bigInfrastructureResilience.csv",
+			columns(
+				Column( "Column 1", Numeric, "Continuous", Format( "Best", 10 ) ),
+				Column( "QR", Numeric, "Continuous", Format( "Best", 10 ) ),
+				Column( "EQR", Numeric, "Continuous", Format( "Best", 10 ) ),
+				Column( "Rho", Numeric, "Continuous", Format( "Best", 10 ) ),
+				Column( "extRho", Numeric, "Continuous", Format( "Best", 10 ) ),
+				Column(
+					"statQuoResilience",
+					Numeric,
+					"Continuous",
+					Format( "Best", 10 )
+				),
+				Column(
+					"extResilience",
+					Numeric,
+					"Continuous",
+					Format( "Best", 10 )
+				),
+				Column( "Infrastructure", Character, "Nominal" ),
+				Column( "Scenario", Character, "Nominal" )
+			),
+			Import Settings(
+				End Of Line( CRLF, CR, LF ),
+				End Of Field( Comma, CSV( 1 ) ),
+				Strip Quotes( 1 ),
+				Use Apostrophe as Quotation Mark( 0 ),
+				Scan Whole File( 1 ),
+				Treat empty columns as numeric( 0 ),
+				CompressNumericColumns( 0 ),
+				CompressCharacterColumns( 0 ),
+				CompressAllowListCheck( 0 ),
+				Labels( 1 ),
+				Column Names Start( 1 ),
+				Data Starts( 2 ),
+				Lines To Read( "All" ),
+				Year Rule( "20xx" )
+			)
+		)
+	),
+	New Column( "Column 1",
+		Numeric,
+		"Continuous",
+		Format( "Best", 10 ),
+		Set Values(
+			[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+			21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35]
+		)
+	),
+	New Column( "QR",
+		Numeric,
+		"Continuous",
+		Format( "Best", 10 ),
+		Set Values(
+			[0.8, 0.933333333333333, 0.735, 0.5625, 0.891978816, 0.5, 1, 0.8,
+			0.933333333333333, 0.735, 0.5625, 0.8763801031, 0.5, 1, 0.8, 1, 1, 1,
+			0.9427342846, 1, 1, 0.8, 0.885714285714286, 0.735, 0.5625,
+			0.713496555761589, 0.5, 1, 0.8, 0.933333333333333, 0.735, 0.5625,
+			0.8925195171, 0.5, 1]
+		)
+	),
+	New Column( "EQR",
+		Numeric,
+		"Continuous",
+		Format( "Best", 10 ),
+		Set Values(
+			[0.888888888888889, 1, 0.746192893401015, 0.692307692307692,
+			0.969542191304348, 0.833333333333333, 1, 0.888888888888889, 1,
+			0.746192893401015, 0.692307692307692, 0.952587068586957,
+			0.833333333333333, 1, 0.888888888888889, 1, 1, 1, 0.987550931434783, 1,
+			1, 0.888888888888889, 1, 0.746192893401015, 0.692307692307692,
+			0.905361175798319, 0.833333333333333, 1, 0.888888888888889, 1,
+			0.746192893401015, 0.692307692307692, 0.970129909891304,
+			0.833333333333333, 1]
+		)
+	),
+	New Column( "Rho",
+		Numeric,
+		"Continuous",
+		Format( "Best", 10 ),
+		Set Values(
+			[0, 0.384, 0, 0.13, 0, 0, 0, 0, 0.384, 0, 0.13, 0, 0, 0, 0, 0.4, 0, 0.2,
+			0, 0, 0, 0, 0.624, 0, 0.13, 0.5551734812505, 0, 0, 0, 0.384, 0, 0.13,
+			4.03900782268434e-171, 0, 0]
+		)
+	),
+	New Column( "extRho",
+		Numeric,
+		"Continuous",
+		Format( "Best", 10 ),
+		Set Values(
+			[0, 0.5, 0, 0.231111111111111, 0, 0, 0, 0, 0.5, 0, 0.231111111111111, 0,
+			0, 0, 0, 0.5, 0, 0.302222222222222, 0, 0, 0, 0, 0.8125, 0,
+			0.231111111111111, 0.685399359568519, 0, 0, 0, 0.5, 0, 0.231111111111111,
+			4.98642941072141e-171, 0, 0]
+		)
+	),
+	New Column( "statQuoResilience",
+		Numeric,
+		"Continuous",
+		Format( "Best", 10 ),
+		Set Values(
+			[0.576535296818593, 0.738386185972147, 0.405198443853444,
+			0.492991010063462, 0.53784375086932, 0.376966465743493,
+			0.610440439762206, 0.576535296818593, 0.810168664457429,
+			0.499423651287088, 0.550680048347695, 0.642973072014911,
+			0.441060085076673, 0.738649635530285, 0.576535296818593,
+			0.756887675769872, 0.527738802166518, 0.654861986605123,
+			0.561322668703028, 0.608241983720286, 0.610455015951493,
+			0.576535296818593, 0.840453048179344, 0.405203674622831,
+			0.493020163265177, 0.807647596790367, 0.376985005724351,
+			0.610511430300161, 0.576535296818593, 0.876782068218757,
+			0.405218733521841, 0.595505367721177, 0.75326756813163,
+			0.376979373686825, 0.866771350240591]
+		)
+	),
+	New Column( "extResilience",
+		Numeric,
+		"Continuous",
+		Format( "Best", 10 ),
+		Set Values(
+			[0.711958132393037, 0.80449072094087, 0.425986277328368,
+			0.650034881949576, 0.59529365188166, 0.642339079652096,
+			0.677431352109748, 0.711958132393037, 0.868581694287976,
+			0.525170706205888, 0.726953599661887, 0.712104008710094,
+			0.770526318318456, 0.818457035818825, 0.711958132393037,
+			0.804492804939141, 0.547676921039222, 0.773376269361141,
+			0.603817566672842, 0.734902376392133, 0.677447571900767,
+			0.711958132393037, 0.928656316759963, 0.425991783401407,
+			0.650073752885196, 0.885608096414426, 0.64236317639362,
+			0.677504859869867, 0.711958132393037, 0.932636107910101,
+			0.426007634874049, 0.786720692159863, 0.834653448839781,
+			0.64236489553876, 0.959393353846776]
+		)
+	),
+	New Column( "Infrastructure",
+		Character,
+		"Nominal",
+		Set Values(
+			{"Water.Functionality", "Emergency.Services.Functionality",
+			"Critical.Manufacturing.Functionality", "Transportation.Function",
+			"Healthcare.Function", "IT.Function", "Communications.Function",
+			"Water.Functionality", "Emergency.Services.Functionality",
+			"Critical.Manufacturing.Functionality", "Transportation.Function",
+			"Healthcare.Function", "IT.Function", "Communications.Function",
+			"Water.Functionality", "Emergency.Services.Functionality",
+			"Critical.Manufacturing.Functionality", "Transportation.Function",
+			"Healthcare.Function", "IT.Function", "Communications.Function",
+			"Water.Functionality", "Emergency.Services.Functionality",
+			"Critical.Manufacturing.Functionality", "Transportation.Function",
+			"Healthcare.Function", "IT.Function", "Communications.Function",
+			"Water.Functionality", "Emergency.Services.Functionality",
+			"Critical.Manufacturing.Functionality", "Transportation.Function",
+			"Healthcare.Function", "IT.Function", "Communications.Function"}
+		)
+	),
+	New Column( "Scenario",
+		Character,
+		"Nominal",
+		Set Values(
+			{"bigAsIs.csv", "bigAsIs.csv", "bigAsIs.csv", "bigAsIs.csv",
+			"bigAsIs.csv", "bigAsIs.csv", "bigAsIs.csv", "big16kRec.csv",
+			"big16kRec.csv", "big16kRec.csv", "big16kRec.csv", "big16kRec.csv",
+			"big16kRec.csv", "big16kRec.csv", "big100percentRec.csv",
+			"big100percentRec.csv", "big100percentRec.csv", "big100percentRec.csv",
+			"big100percentRec.csv", "big100percentRec.csv", "big100percentRec.csv",
+			"bigRob.csv", "bigRob.csv", "bigRob.csv", "bigRob.csv", "bigRob.csv",
+			"bigRob.csv", "bigRob.csv", "bigStep.csv", "bigStep.csv", "bigStep.csv",
+			"bigStep.csv", "bigStep.csv", "bigStep.csv", "bigStep.csv"}
+		)
+	),
+	Set Row States(
+		[0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0,
+		0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+	)
+);
+Graph Builder(
+	Size( 706, 876 ),
+	Show Control Panel( 0 ),
+	Variables(
+		X( :Scenario ),
+		Y( :QR ),
+		Y( :EQR, Position( 1 ) ),
+		Y( :Rho, Position( 1 ) ),
+		Y( :extRho, Position( 1 ) ),
+		Y( :statQuoResilience, Position( 1 ) ),
+		Y( :extResilience, Position( 1 ) ),
+		Group Y( :Infrastructure )
+	),
+	Elements(
+		Line( X, Y( 1 ), Y( 2 ), Y( 3 ), Y( 4 ), Y( 5 ), Y( 6 ), Legend( 14 ) )
+	),
+	SendToReport(
+		Dispatch(
+			{},
+			"400",
+			ScaleBox,
+			{Legend Model(
+				14,
+				Properties( 2, {Line Style( "Dashed" )} ),
+				Properties( 3, {Line Style( "Dashed" )} ),
+				Properties( 4, {Line Style( "Dotted" )} ),
+				Properties( 5, {Line Style( "Dotted" )} )
+			)}
+		)
+	)
+);

@@ -258,7 +258,6 @@ metricRollup <- function(names, need, resFactors, timeHorizon){
         thisScenario <- bind_rows(wf, es, cmf, tf, hf, itf, commf)
         thisScenario$fileName <- names[csv]
         thisScenario$Scenario <- LETTERS[csv]
-        print(dim(thisScenario))
         ssr <- bind_rows(ssr, thisScenario)
         ## readline(prompt="Press [enter] to continue")
     }
