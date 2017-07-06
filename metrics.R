@@ -183,8 +183,10 @@ totalQR <- function(tt){
     for (t in 1:length(tt$Time)){
         ttStub <- tt[1:t,]
         tt$TQR[t] <- trapz(ttStub$Time, ttStub$QR) / (max(ttStub$Time) - min(ttStub$Time))
-        tt$TEQR[t] <- trapz(ttStub$Time, ttStub$EQR) / (max(ttStub$Time) - min(ttStub$Time))
+        tt$ETQR[t] <- trapz(ttStub$Time, ttStub$EQR) / (max(ttStub$Time) - min(ttStub$Time))
     }
+    tt$TQR[1] <- tt$TQR[2]
+    tt$ETQR[1] <- tt$ETQR[2]
     return(tt)
 }
 
@@ -419,14 +421,6 @@ intRes <- function(tt, sigma){
     return(tt)
 }
 
-intRes2 <- function(tt, sigma){
-    for (s in 1:length(tt$Time)){
-        tt$SQRes2[s] <- trapz(tt$Time[1:s], tt$Performance[1:s]) /
-            (tt$Performance[1] *
-             (max(tt$Time[1:s]) - min(tt$Time[1:s])))
-    }
-    return(tt)
-}
 
 ## Cleanup the data.frame after running all of the above
 tidyDF <- function(tt){
@@ -464,7 +458,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                              rep(needList$step1Level,
                                  needList$step2Time - needList$step1Time),
                              rep(needList$step2Level,
-                                 needList$endTime -needList$ step2Time))),
+                                 needList$endTime -needList$step2Time))),
                      fullDef = mutate(resMat, Need = needList$Need))
     ## print("need done")
     # print( head(resMat))
@@ -505,7 +499,6 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
     ## print("ERF done")
     resMat <- intRes(resMat,
                      sigma = resList$sigma)
-    resMat <- intRes2(resMat, sigma = resList$sigma)
     ## print("IntRes done")
     resMat <- tidyDF(resMat)
     return(resMat)

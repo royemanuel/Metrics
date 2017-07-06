@@ -19,13 +19,19 @@ resilienceVersusNeed <- function(df, time){
                    extRho, statQuoResilience, extResilience)
     workDF <- melt(data = workDF, id = c("Time", "Need"))
     workDF <- workDF %>%
-        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient\nResilience",
-                   ifelse((variable == "Rho" | variable == "extRho"),
-                          "Resilience\nFactor",
-                          ifelse((variable == "statQuoResilience" |
-                                      variable == "extResilience"),
-                                 "Integral\nResilience", 0))))
+        mutate(ResType = ifelse((variable == "QR" |
+                                 variable == "EQR"),
+                                "Quotient\nResilience",
+                         ifelse((variable == "Rho" |
+                                 variable == "extRho"),
+                                "Resilience\nFactor",
+                         ifelse((variable == "statQuoResilience" |
+                                 variable == "extResilience"),
+                                "Integral\nResilience",
+                         ifelse((variable == "TQR" |
+                                 variable == "ETQR"),
+                                 "Total \nQuotient \nResilience",
+                                 0)))))
     ## print(colnames(workDF))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
@@ -52,13 +58,19 @@ resilienceVersusSigma <- function(df, time){
                    extRho, statQuoResilience, extResilience, Sigma)
     workDF <- melt(data = workDF, id = c("Time", "Sigma"))
     workDF <- workDF %>%
-        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient\nResilience",
-                   ifelse((variable == "Rho" | variable == "extRho"),
-                          "Resilience\nFactor",
-                          ifelse((variable == "statQuoResilience" |
-                                      variable == "extResilience"),
-                                 "Integral\nResilience", 0))))
+        mutate(ResType = ifelse((variable == "QR" |
+                                 variable == "EQR"),
+                                "Quotient\nResilience",
+                         ifelse((variable == "Rho" |
+                                 variable == "extRho"),
+                                "Resilience\nFactor",
+                         ifelse((variable == "statQuoResilience" |
+                                 variable == "extResilience"),
+                                "Integral\nResilience",
+                         ifelse((variable == "TQR" |
+                                 variable == "ETQR"),
+                                 "Total \nQuotient \nResilience",
+                                 0)))))
     ## print(colnames(workDF))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
@@ -83,20 +95,26 @@ resilienceVersusSigma <- function(df, time){
 ## Plot resilience as the time horizon changes
 resilienceVersusTimeHorizon <- function(df, title){
     workDF <- df %>%
-         select(Time, QR, EQR, Rho,
+         select(Time, QR, EQR, Rho, TQR, ETQR,
                    extRho, statQuoResilience, extResilience)
     workDF <- melt(data = workDF, id = c("Time"))
     ## Assign a value to the pairings of extended and unextended values
     ## there might be a better way to do this that you might want to
-    ## clear up, but for now, get it on the paper
+    ## clear up ,but for now, get it on the paper
     workDF <- workDF %>%
-        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient\nResilience",
-                   ifelse((variable == "Rho" | variable == "extRho"),
-                          "Resilience\nFactor",
-                          ifelse((variable == "statQuoResilience" |
-                                      variable == "extResilience"),
-                                 "Integral\nResilience", 0))))
+        mutate(ResType = ifelse((variable == "QR" |
+                                 variable == "EQR"),
+                                "Quotient\nResilience",
+                         ifelse((variable == "Rho" |
+                                 variable == "extRho"),
+                                "Resilience\nFactor",
+                         ifelse((variable == "statQuoResilience" |
+                                 variable == "extResilience"),
+                                "Integral\nResilience",
+                         ifelse((variable == "TQR" |
+                                 variable == "ETQR"),
+                                "Total \nQuotient \nResilience",
+                                0)))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
                    "Extended",
@@ -128,13 +146,19 @@ resilienceVersusTimeToFail <- function(df, time){
     ## there might be a better way to do this that you might want to
     ## clear up, but for now, get it on the paper
     workDF <- workDF %>%
-        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient\nResilience",
-                   ifelse((variable == "Rho" | variable == "extRho"),
-                          "Resilience\nFactor",
-                          ifelse((variable == "statQuoResilience" |
-                                      variable == "extResilience"),
-                                 "Integral\nResilience", 0))))
+        mutate(ResType = ifelse((variable == "QR" |
+                                 variable == "EQR"),
+                                "Quotient\nResilience",
+                         ifelse((variable == "Rho" |
+                                 variable == "extRho"),
+                                "Resilience\nFactor",
+                         ifelse((variable == "statQuoResilience" |
+                                 variable == "extResilience"),
+                                "Integral\nResilience",
+                         ifelse((variable == "TQR" |
+                                 variable == "ETQR"),
+                                 "Total \nQuotient \nResilience",
+                                 0)))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
                    "Extended",
@@ -154,10 +178,12 @@ resilienceVersusTimeToFail <- function(df, time){
                   legend.title = element_blank()) + ylim(0, 1.2)
 }
 
+## Build the resilience type
+
 ## Plot resilience as the time horizon changes
 resilienceVersusFailLevel <- function(df, time){
     workDF <- df %>%
-         select(Time, QR, EQR, Rho,
+         select(Time, QR, EQR, Rho, TQR, ETQR,
                 extRho, statQuoResilience, extResilience, pRun) %>%
                     mutate(FailLevel = (pRun - 1) / 100) %>%
                         filter(Time == time) %>%
@@ -167,13 +193,19 @@ resilienceVersusFailLevel <- function(df, time){
     ## there might be a better way to do this that you might want to
     ## clear up, but for now, get it on the paper
     workDF <- workDF %>%
-        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient\nResilience",
-                   ifelse((variable == "Rho" | variable == "extRho"),
-                          "Resilience\nFactor",
-                          ifelse((variable == "statQuoResilience" |
-                                      variable == "extResilience"),
-                                 "Integral\nResilience", 0))))
+        mutate(ResType = ifelse((variable == "QR" |
+                                 variable == "EQR"),
+                                "Quotient\nResilience",
+                         ifelse((variable == "Rho" |
+                                 variable == "extRho"),
+                                "Resilience\nFactor",
+                         ifelse((variable == "statQuoResilience" |
+                                 variable == "extResilience"),
+                                "Integral\nResilience",
+                         ifelse((variable == "TQR" |
+                                 variable == "ETQR"),
+                                 "Total \nQuotient \nResilience",
+                                 0)))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
                    "Extended",
@@ -206,13 +238,19 @@ resilienceVersusRecoveryLevel <- function(df, time){
     ## there might be a better way to do this that you might want to
     ## clear up, but for now, get it on the paper
     workDF <- workDF %>%
-        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient\nResilience",
-                   ifelse((variable == "Rho" | variable == "extRho"),
-                          "Resilience\nFactor",
-                          ifelse((variable == "statQuoResilience" |
-                                      variable == "extResilience"),
-                                 "Integral\nResilience", 0))))
+        mutate(ResType = ifelse((variable == "QR" |
+                                 variable == "EQR"),
+                                "Quotient\nResilience",
+                         ifelse((variable == "Rho" |
+                                 variable == "extRho"),
+                                "Resilience\nFactor",
+                         ifelse((variable == "statQuoResilience" |
+                                 variable == "extResilience"),
+                                "Integral\nResilience",
+                         ifelse((variable == "TQR" |
+                                 variable == "ETQR"),
+                                 "Total \nQuotient \nResilience",
+                                 0)))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
                    "Extended",
@@ -244,13 +282,19 @@ resilienceVersusRecoveryTime <- function(df, time){
     ## there might be a better way to do this that you might want to
     ## clear up, but for now, get it on the paper
     workDF <- workDF %>%
-        mutate(ResType = ifelse((variable == "QR" | variable == "EQR"),
-                   "Quotient\nResilience",
-                   ifelse((variable == "Rho" | variable == "extRho"),
-                          "Resilience\nFactor",
-                          ifelse((variable == "statQuoResilience" |
-                                      variable == "extResilience"),
-                                 "Integral\nResilience", 0))))
+        mutate(ResType = ifelse((variable == "QR" |
+                                 variable == "EQR"),
+                                "Quotient\nResilience",
+                         ifelse((variable == "Rho" |
+                                 variable == "extRho"),
+                                "Resilience\nFactor",
+                         ifelse((variable == "statQuoResilience" |
+                                 variable == "extResilience"),
+                                "Integral\nResilience",
+                         ifelse((variable == "TQR" |
+                                 variable == "ETQR"),
+                                 "Total \nQuotient \nResilience",
+                                 0)))))
     workDF <- workDF %>%
         mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
                    "Extended",
@@ -424,6 +468,7 @@ rSigmaVary <- data.frame(tDelta = 30,
 
 ## The time horizon plot for the stepped recovery. First build the
 ## resilience matrix
+print("sRTHD")
 steppedRecoveryTimeHorizonData <- resLoop(t,
                                           needConstant,
                                           steppedRecovery,
@@ -438,6 +483,7 @@ steppedRecoveryPerformance <- pltPerf(steppedRecoveryTimeHorizonData)
 ## The plot of resilience versus changing need level. First build the
 ## resilience matrix
 
+print("n0t1")
 need0to1SteppedRecoveryData <- resLoop(t,
                                        nLinearVary,
                                        steppedRecovery,
@@ -448,7 +494,7 @@ plotNeed0to1SteppedRecovery <- resilienceVersusNeed(need0to1SteppedRecoveryData,
 
 ## The plot of changing sigma from 0 to 1 on stepped recovery. First build
 ## the resilience matrix
-
+print("s0t1")
 sigma0to1SteppedRecoveryData <- resLoop(t,
                                         needConstant,
                                         steppedRecovery,
@@ -458,6 +504,7 @@ sigma0to1SteppedRecoveryData <- resLoop(t,
 plotSigma0to1SteppedRecovery <- resilienceVersusSigma(sigma0to1SteppedRecoveryData,
                                                       80)
 ## Build a stepped recovery where the fail level varies from 0 to 1
+print("fl0t1")
 failLevel0to1Data <- resLoop(t,
                              needConstant,
                              steppedRecoveryVaryFailLevel,
@@ -467,6 +514,7 @@ failLevel0to1Data <- resLoop(t,
 
 plotFailLevel0to1 <- resilienceVersusFailLevel(failLevel0to1Data, 80)
 ## Build a stepped recovery where the recovery level varies from 0.1 to 1.2
+print("rl0t1")
 recoveryLevel0to1Data <- resLoop(t,
                              needConstant,
                              steppedRecoveryVaryRecoveryLevel,
@@ -492,6 +540,7 @@ plotRecoveryTime21to60 <- resilienceVersusRecoveryTime(recoveryTime21to60Data, 8
 
 ## The time horizon plot for the stepped recovery. First build the
 ## resilience matrix
+print("lRTH")
 linearRecoveryTimeHorizonData <- resLoop(t,
                                           needConstant,
                                           linearRecovery,
@@ -505,7 +554,7 @@ linearRecoveryPerformance <- pltPerf(linearRecoveryTimeHorizonData)
 
 ## The plot of resilience versus changing need level. First build the
 ## resilience matrix
-
+print("n0t1LR")
 need0to1LinearRecoveryData <- resLoop(t,
                                        nLinearVary,
                                        linearRecovery,
@@ -516,7 +565,7 @@ plotNeed0to1LinearRecovery <- resilienceVersusNeed(need0to1LinearRecoveryData, 8
 
 ## The plot of changing sigma from 0 to 1 on stepped recovery. First build
 ## the resilience matrix
-
+print("s0t1LR")
 sigma0to1LinearRecoveryData <- resLoop(t,
                                         needConstant,
                                         linearRecovery,
@@ -532,7 +581,7 @@ plotSigma0to1LinearRecovery <- resilienceVersusSigma(sigma0to1LinearRecoveryData
 ## This one is different from the previous. First we need to plot
 ## Resilience against failtime varying from 20 to 59. To make my code
 ## work, I cheated and made recovery tiny-tiny-tiny. This is close enough
-
+print("nRTF")
 noRecoveryTimeToFailData <- resLoop(t,
                                     needConstant,
                                     varyTimeToFail,
@@ -546,6 +595,7 @@ noRecoveryFailTime20 <- filter(noRecoveryTimeToFailData, pRun == 1)
 noRecoveryPerformance <- pltPerf(noRecoveryFailTime20)
 
 ## Build the data Time horizon data with a failure at 20 and no recovery
+print("nRTH")
 noRecoveryTimeHorizonData <- resLoop(t,
                                      needConstant,
                                      noRecovery,
@@ -555,7 +605,7 @@ plotNoRecoveryTimeHorizon <- resilienceVersusTimeHorizon(noRecoveryTimeHorizonDa
 
 ## The plot of resilience versus changing need level. First build the
 ## resilience matrix
-
+print("n0t1NR")
 need0to1NoRecoveryData <- resLoop(t,
                                   nLinearVary,
                                   noRecovery,
@@ -566,7 +616,7 @@ plotNeed0to1NoRecovery <- resilienceVersusNeed(need0to1NoRecoveryData, 80)
 
 ## The plot of changing sigma from 0 to 1 on stepped recovery. First build
 ## the resilience matrix
-
+print("sig0t1NR")
 sigma0to1NoRecoveryData <- resLoop(t,
                                    needConstant,
                                    noRecovery,
@@ -578,6 +628,7 @@ plotSigma0to1NoRecovery <- resilienceVersusSigma(sigma0to1NoRecoveryData,
 ## The motivating example where there is no failure, but the demand
 ## changes. This results in a shortfall
 ## First, the time horizon plot
+print("nFTH")
 noFailureTimeHorizonData <- resLoop(t, needBump, noFailure, r)
 ## Then plot it
 plotNoFailureTimeHorizon <- resilienceVersusTimeHorizon(noFailureTimeHorizonData)
@@ -585,6 +636,7 @@ plotNoFailureTimeHorizon <- resilienceVersusTimeHorizon(noFailureTimeHorizonData
 performanceNoFailureNeedBump <- pltPerf(noFailureTimeHorizonData)
 
 ## Now the sigma plot
+print("nFs0t1")
 noFailureSigma0to1Data <- resLoop(t, needBump, noFailure, rSigmaVary)
 ## Then plot it
 plotNoFailureSigma0to1 <- resilienceVersusSigma(noFailureSigma0to1Data, 80)
