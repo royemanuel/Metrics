@@ -42,3 +42,4 @@ Dissertation MARCH 2017/
 *.org#
 .ipynb_checkpoints/Plotting Notebook-checkpoint.ipynb
 .RDataTmp
+*.docx

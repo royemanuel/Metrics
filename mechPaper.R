@@ -763,7 +763,9 @@ ggsave(plot = plotSigma0to1NoRecovery,
        width = 3.5,
        height = 4)
 
-ggsave(plot = plotS)
+plotNoFailureTimeHorizon <- resilienceVersusTimeHorizon(noFailureTimeHorizonData)
+
+performanceNoFailureNeedBump <- pltPerf(noFailureTimeHorizonData)
 
 ggsave(plot = performanceNoFailureNeedBump,
        filename = paste0("ShortperformanceNoFailureNeedBump",

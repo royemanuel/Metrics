@@ -24,16 +24,28 @@ timeColumn <- function(endTime, resolution){
 ## reclevel = level of the system after recovery
 stepFailRecover <- function(tt, failTime, recoverTime, preLevel,
                             failLevel, recLevel){
-    preFail <- tt %>%
-        filter(Time < failTime) %>%
-            mutate(Performance = preLevel)
-    postFail <- tt %>%
-        filter(Time >= failTime & Time < recoverTime) %>%
-            mutate(Performance = failLevel)
-    postRec <- tt %>%
-        filter(Time >= recoverTime) %>%
-            mutate(Performance = recLevel)
-    timeAndPerf <- rbind(preFail, postFail, postRec)
+    if(failTime > max(tt$Time)) {
+        timeAndPerf <- tt %>% mutate(Performance = preLevel)
+    } else if(recoverTime  > max(tt$Time)){
+        preFail <- tt %>%
+            filter(Time < failTime) %>%
+                mutate(Performance = preLevel)
+        postFail <- tt %>%
+            filter(Time >= failTime) %>%
+                mutate(Performance = failLevel)
+        timeAndPerf <- rbind(preFail, postFail)
+    } else {
+        preFail <- tt %>%
+            filter(Time < failTime) %>%
+                mutate(Performance = preLevel)
+        postFail <- tt %>%
+            filter(Time >= failTime & Time < recoverTime) %>%
+                mutate(Performance = failLevel)
+        postRec <- tt %>%
+            filter(Time >= recoverTime) %>%
+                mutate(Performance = recLevel)
+        timeAndPerf <- rbind(preFail, postFail, postRec)
+    }
     return(timeAndPerf)
 }
 ## This is a performance profile with step failure and linear recovery
@@ -430,6 +442,11 @@ tidyDF <- function(tt){
                         extResStep, extResArea))
 }
 
+extraTidyDF <- function(tt){
+    tt <- tt %>% select(Time, Need, Performance, QR, EQR, Rho, extRho,
+                        TQR, ETQR, extResilience, statQuoResilience)
+}
+
 
 
 ## Build the entire resilience matrix. This needs to include all of the
@@ -454,7 +471,7 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
                      stepNeed = mutate(resMat,
                          Need = c(
                              rep(needList$startLevel,
-                                 needList$stepTime),
+                                 needList$step1Time),
                              rep(needList$step1Level,
                                  needList$step2Time - needList$step1Time),
                              rep(needList$step2Level,
@@ -500,7 +517,11 @@ buildResMatrix <- function(timeList, needList, perfList, resList){
     resMat <- intRes(resMat,
                      sigma = resList$sigma)
     ## print("IntRes done")
-    resMat <- tidyDF(resMat)
+    ## resMat <- tidyDF(resMat)
+    ## Seemed like we were carrying a lot more info than we needed,
+    ## so I cut out a bunch of stuff. I kept the tidyDF function in
+    ## case I do need it.
+    resMat <- extraTidyDF(resMat)
     return(resMat)
 }
 
