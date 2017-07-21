@@ -15,7 +15,7 @@ source("metrics.R")
 resilienceVersusNeed <- function(df, time){
     workDF <- df %>%
         filter(Time == time) %>%
-            select(Time, Need, QR, EQR, Rho,
+            select(Time, Need, QR, EQR, Rho, TQR, ETQR,
                    extRho, statQuoResilience, extResilience)
     workDF <- melt(data = workDF, id = c("Time", "Need"))
     workDF <- workDF %>%
@@ -54,7 +54,7 @@ resilienceVersusNeed <- function(df, time){
 resilienceVersusSigma <- function(df, time){
     workDF <- df %>%
         filter(Time == time) %>%
-        select(Time, QR, EQR, Rho,
+        select(Time, QR, EQR, Rho, TQR, ETQR,
                    extRho, statQuoResilience, extResilience, Sigma)
     workDF <- melt(data = workDF, id = c("Time", "Sigma"))
     workDF <- workDF %>%
@@ -136,7 +136,7 @@ resilienceVersusTimeHorizon <- function(df, title){
 ## Plot resilience as the time to fail changes
 resilienceVersusTimeToFail <- function(df, time){
     workDF <- df %>%
-         select(Time, QR, EQR, Rho,
+         select(Time, QR, EQR, Rho, TQR, ETQR,
                 extRho, statQuoResilience, extResilience, pRun) %>%
                     mutate(FailTime = pRun + 19) %>%
                         filter(Time == time) %>%
@@ -228,7 +228,7 @@ resilienceVersusFailLevel <- function(df, time){
 ## Plot resilience as the recovery level changes
 resilienceVersusRecoveryLevel <- function(df, time){
     workDF <- df %>%
-         select(Time, QR, EQR, Rho,
+         select(Time, QR, EQR, Rho, TQR, ETQR,
                 extRho, statQuoResilience, extResilience, pRun) %>%
                     mutate(RecoveryLevel = (((pRun - 1) / 100) + 0.1)) %>%
                         filter(Time == time) %>%
@@ -272,7 +272,7 @@ resilienceVersusRecoveryLevel <- function(df, time){
 ## Plot resilience as the recovery time changes
 resilienceVersusRecoveryTime <- function(df, time){
     workDF <- df %>%
-         select(Time, QR, EQR, Rho,
+         select(Time, QR, EQR, Rho, TQR, ETQR,
                 extRho, statQuoResilience, extResilience, pRun) %>%
                     mutate(RecoveryTime = (pRun + 20)) %>%
                         filter(Time == time) %>%
@@ -642,151 +642,181 @@ noFailureSigma0to1Data <- resLoop(t, needBump, noFailure, rSigmaVary)
 plotNoFailureSigma0to1 <- resilienceVersusSigma(noFailureSigma0to1Data, 80)
 
 ######################################################################
+## Build a plot for all the time horizon Data so I don't have to
+## Photoshop every one
+######################################################################
+
+noFailureTimeHorizonData <- mutate(noFailureTimeHorizonData,
+                                   dataSet = "(d) No Failure with Changing Need")
+noRecoveryTimeHorizonData <- mutate(noRecoveryTimeHorizonData,
+                                    dataSet = "(a) Step Failure without Recovery")
+linearRecoveryTimeHorizonData <- mutate(linearRecoveryTimeHorizonData,
+                                        dataSet = "(c) Step Failure with Linear Recovery")
+steppedRecoveryTimeHorizonData <- mutate(steppedRecoveryTimeHorizonData,
+                                         dataSet = "(b) Step Failure with Step Recovery")
+
+allTimeHor <- bind_rows(noFailureTimeHorizonData,
+                        noRecoveryTimeHorizonData,
+                        linearRecoveryTimeHorizonData,
+                        steppedRecoveryTimeHorizonData)
+allTimeHor <- allTimeHor %>%
+    select(Time, QR, EQR, Rho, TQR, ETQR, extRho, statQuoResilience,
+           extResilience, dataSet)
+allTimeHor <- melt(data = allTimeHor, id = c("Time", "dataSet"))
+allTimeHor <- allTimeHor %>%
+    mutate(ResType = ifelse((variable == "QR" |
+                             variable == "EQR"),
+                             "Quotient\nResilience",
+                     ifelse((variable == "Rho" |
+                             variable == "extRho"),
+                             "Resilience\nFactor",
+                     ifelse((variable == "statQuoResilience" |
+                             variable == "extResilience"),
+                             "Integral\nResilience",
+                     ifelse((variable == "TQR" |
+                             variable == "ETQR"),
+                             "Total Quotient \nResilience",
+                            0))))) %>%
+    mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
+               "Extended",
+               "Original")) %>%
+                   mutate(Resilience = value) %>%
+    select(-value)
+
+thPlot <- ggplot(allTimeHor, aes(Time, Resilience, group = variable)) +
+    geom_line(aes(linetype = variable)) +
+        facet_grid(ResType ~ dataSet) +
+        ## scale_linetype_discrete(name = "Metrics") +
+            theme_bw(base_size = 11, base_family = "serif") +
+                theme(legend.margin=margin(t = 0, unit = 'cm'),
+                      legend.position = "top",
+                      legend.title = element_blank()) + ylim(0, 1.2)
+ggsave(plot = thPlot,
+       filename = paste0("TimeHorizon",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 9,
+       height = 5.2)
+
+######################################################################
 ## ggsave Bank
 ggsave(plot = plotSteppedRecoveryTimeHorizon,
        filename = paste0("plotSteppedRecoveryTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
-
+       height = 5)
 ggsave(plot = steppedRecoveryPerformance,
        filename = paste0("ShortsteppedRecoveryPerformance",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
        height = 2)
-
 ggsave(plot = plotNeed0to1SteppedRecovery,
        filename = paste0("plotNeed0to1SteppedRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
-       width = 2.7,
-       height = 4.0)
-
+       width = 3.5,
+       height = 5.0)
 ggsave(plot = plotSigma0to1SteppedRecovery,
        filename = paste0("plotSigma0to1SteppedRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
-
+       height = 5)
 ggsave(plot = plotFailLevel0to1,
        filename = paste0("plotFailLevel0to1",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
-
-
+       height = 5)
 ggsave(plot = plotRecoveryLevel0to1,
        filename = paste0("plotRecoveryLevel0to1",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
-
-
+       height = 5)
 ggsave(plot = plotRecoveryTime21to60,
        filename = paste0("plotRecoveryTime21to60",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
-
-
+       height = 5)
 ggsave(plot = plotLinearRecoveryTimeHorizon,
        filename = paste0("plotLinearRecoveryTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
-
-
+       height = 5)
 ggsave(plot = linearRecoveryPerformance,
        filename = paste0("ShortlinearRecoveryPerformance",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
        height = 2)
-
-
 ggsave(plot = plotNeed0to1LinearRecovery,
        filename = paste0("plotNeed0to1LinearRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
-       width = 2.7,
-       height = 4.0)
-
-
+       width = 3.5,
+       height = 5.0)
 ggsave(plot = plotSigma0to1LinearRecovery,
        filename = paste0("plotSigma0to1LinearRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
-
-
+       height = 5)
 ggsave(plot = plotnoRecoveryTimeToFail,
        filename = paste0("plotnoRecoveryTimeToFail",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
-
+       height = 5)
 ggsave(plot = noRecoveryPerformance,
        filename = paste0("ShortnoRecoveryPerformance",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
        height = 2)
-
-
 ggsave(plot = plotNoRecoveryTimeHorizon,
        filename = paste0("plotNoRecoveryTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
-
+       height = 5)
 ggsave(plot = plotNeed0to1NoRecovery,
        filename = paste0("plotNeed0to1NoRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
-       width = 2.7,
-       height = 4)
-
+       width = 3.5,
+       height = 5)
 ggsave(plot = plotSigma0to1NoRecovery,
        filename = paste0("plotSigma0to1NoRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
-
+       height = 5)
 plotNoFailureTimeHorizon <- resilienceVersusTimeHorizon(noFailureTimeHorizonData)
-
 performanceNoFailureNeedBump <- pltPerf(noFailureTimeHorizonData)
-
 ggsave(plot = performanceNoFailureNeedBump,
        filename = paste0("ShortperformanceNoFailureNeedBump",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
        height = 2)
-
 ggsave(plot = plotNoFailureTimeHorizon,
        filename = paste0("plotNoFailureTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
-
+       height = 5)
 ggsave(plot = plotNoFailureSigma0to1,
        filename = paste0("plotNoFailureSigma0to1",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 4)
+       height = 5)
+
 ######################################################################
 ######################################################################
 ## Bank of ggsaves that can be commented out after being saved      ##
@@ -846,7 +876,7 @@ ggsave(plot = performancePlots,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 7,
-       height = 4)
+       height = 5)
 
 
 ######################################################################\
