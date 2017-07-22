@@ -326,11 +326,11 @@ pltPerf <- function(df){
                       linetype = variable)) +
                           geom_line(size=1) +
                               scale_linetype_manual(values=c("solid",
-                                                        "dotted"),
+                                                        "dashed"),
                                                     (name = ""))+
         theme_bw(base_size = 12, base_family = "serif") +
             ## scale_linetype_discrete(name = "") +
-                theme(legend.position = c(.85, .25)) +
+                theme(legend.position = "top") +
                     labs(y = "Performance") + ylim(0, 1.2)
 }
 
@@ -888,7 +888,7 @@ ggsave(plot = noRecoveryPerformance,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 2)
+       height = 3)
 ggsave(plot = plotNoRecoveryTimeHorizon,
        filename = paste0("plotNoRecoveryTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
