@@ -330,7 +330,8 @@ pltPerf <- function(df){
                                                     (name = ""))+
         theme_bw(base_size = 12, base_family = "serif") +
             ## scale_linetype_discrete(name = "") +
-                theme(legend.position = "top") +
+        theme(legend.position = "top",
+              legend.key.width = unit(1, "cm")) +
                     labs(y = "Performance") + ylim(0, 1.2)
 }
 
@@ -822,7 +823,7 @@ ggsave(plot = steppedRecoveryPerformance,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 2)
+       height = 3)
 ggsave(plot = plotNeed0to1SteppedRecovery,
        filename = paste0("plotNeed0to1SteppedRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
@@ -864,7 +865,7 @@ ggsave(plot = linearRecoveryPerformance,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 2)
+       height = 3)
 ggsave(plot = plotNeed0to1LinearRecovery,
        filename = paste0("plotNeed0to1LinearRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
@@ -914,7 +915,7 @@ ggsave(plot = performanceNoFailureNeedBump,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 3.5,
-       height = 2)
+       height = 3)
 ggsave(plot = plotNoFailureTimeHorizon,
        filename = paste0("plotNoFailureTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
