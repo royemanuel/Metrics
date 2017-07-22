@@ -698,6 +698,117 @@ ggsave(plot = thPlot,
        width = 9,
        height = 5.2)
 
+
+######################################################################
+## Grouped plots for Need
+
+
+need0to1NoRecoveryData <- mutate(need0to1NoRecoveryData,
+                                    dataSet = "(a) Step Failure without Recovery")
+need0to1LinearRecoveryData <- mutate(need0to1LinearRecoveryData,
+                                        dataSet = "(c) Step Failure with Linear Recovery")
+need0to1SteppedRecoveryData <- mutate(need0to1SteppedRecoveryData,
+                                         dataSet = "(b) Step Failure with Step Recovery")
+allNeed <- bind_rows(need0to1LinearRecoveryData,
+                     need0to1NoRecoveryData,
+                     need0to1SteppedRecoveryData)
+allNeed <- allNeed %>%
+    select(Time, QR, EQR, Rho, TQR, ETQR, extRho, statQuoResilience,
+           extResilience, dataSet, Need)
+allNeed <- melt(data = allNeed, id = c("Time", "Need", "dataSet"))
+allNeed <- allNeed %>%
+    ## Note that the time is hard coded to 80 here
+    filter(Time == 80) %>%
+    mutate(ResType = ifelse((variable == "QR" |
+                             variable == "EQR"),
+                             "Quotient\nResilience",
+                     ifelse((variable == "Rho" |
+                             variable == "extRho"),
+                             "Resilience\nFactor",
+                     ifelse((variable == "statQuoResilience" |
+                             variable == "extResilience"),
+                             "Integral\nResilience",
+                     ifelse((variable == "TQR" |
+                             variable == "ETQR"),
+                             "Total Quotient \nResilience",
+                            0))))) %>%
+    mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
+               "Extended",
+               "Original")) %>%
+                   mutate(Resilience = value) %>%
+    select(-value)
+
+needPlot <- ggplot(allNeed, aes(Need, Resilience, group = variable)) +
+    geom_line(aes(linetype = variable)) +
+        facet_grid(ResType ~ dataSet) +
+        ## scale_linetype_discrete(name = "Metrics") +
+            theme_bw(base_size = 11, base_family = "serif") +
+                theme(legend.margin=margin(t = 0, unit = 'cm'),
+                      legend.position = "top",
+                      legend.title = element_blank()) + ylim(0, 1.2)
+ggsave(plot = needPlot,
+       filename = paste0("Need",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 9,
+       height = 5.2)
+######################################################################
+## Grouped plots for Sigma
+
+
+sigma0to1NoRecoveryData <- mutate(sigma0to1NoRecoveryData,
+                                    dataSet = "(a) Step Failure without Recovery")
+sigma0to1LinearRecoveryData <- mutate(sigma0to1LinearRecoveryData,
+                                        dataSet = "(c) Step Failure with Linear Recovery")
+sigma0to1SteppedRecoveryData <- mutate(sigma0to1SteppedRecoveryData,
+                                       dataSet = "(b) Step Failure with Step Recovery")
+sigma0to1NoFailureData <- mutate(noFailureSigma0to1Data,
+                                 dataSet = "(d) No Failure with Changing Need")
+allSigma <- bind_rows(sigma0to1LinearRecoveryData,
+                     sigma0to1NoRecoveryData,
+                      sigma0to1SteppedRecoveryData,
+                      sigma0to1NoFailureData)
+allSigma <- allSigma %>%
+    select(Time, QR, EQR, Rho, TQR, ETQR, extRho, statQuoResilience,
+           extResilience, dataSet, Sigma)
+allSigma <- melt(data = allSigma, id = c("Time", "Sigma", "dataSet"))
+allSigma <- allSigma %>%
+    ## Note that the time is hard coded to 80 here
+    filter(Time == 80) %>%
+    mutate(ResType = ifelse((variable == "QR" |
+                             variable == "EQR"),
+                             "Quotient\nResilience",
+                     ifelse((variable == "Rho" |
+                             variable == "extRho"),
+                             "Resilience\nFactor",
+                     ifelse((variable == "statQuoResilience" |
+                             variable == "extResilience"),
+                             "Integral\nResilience",
+                     ifelse((variable == "TQR" |
+                             variable == "ETQR"),
+                             "Total Quotient \nResilience",
+                            0))))) %>%
+    mutate(variable = ifelse(tolower(substr(variable, 1, 1)) == "e",
+               "Extended",
+               "Original")) %>%
+                   mutate(Resilience = value) %>%
+    select(-value)
+
+sigmaPlot <- ggplot(allSigma, aes(Sigma, Resilience, group = variable)) +
+    geom_line(aes(linetype = variable)) +
+        facet_grid(ResType ~ dataSet) +
+        ## scale_linetype_discrete(name = "Metrics") +
+            theme_bw(base_size = 11, base_family = "serif") +
+                theme(legend.margin=margin(t = 0, unit = 'cm'),
+                      legend.position = "top",
+                      legend.title = element_blank()) + ylim(0, 1.2)
+ggsave(plot = sigmaPlot,
+       filename = paste0("Sigma",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 9,
+       height = 5.2)
+
 ######################################################################
 ## ggsave Bank
 ggsave(plot = plotSteppedRecoveryTimeHorizon,
