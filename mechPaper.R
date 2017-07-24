@@ -322,7 +322,7 @@ pltPerf <- function(df){
         select(Time, Performance, Need) %>%
                 melt(id = "Time")
     plt <- ggplot(data = df, aes(Time, value,
-                                 group = variable,
+                                 group = variable, 
                       linetype = variable)) +
                           geom_line(size=1) +
                               scale_linetype_manual(values=c("solid",
