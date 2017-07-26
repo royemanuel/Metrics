@@ -931,9 +931,25 @@ ggsave(plot = plotNoFailureSigma0to1,
 
 ######################################################################
 ######################################################################
-## Bank of ggsaves that can be commented out after being saved      ##
+## END Bank of ggsaves that can be commented out after being saved  ##
 ######################################################################
 ######################################################################
+
+## This should be commented out most of the time. Only uncomment if
+## you want to save new .csv with the information
+## write.csv(steppedRecoveryTimeHorizonData, "steppedRecoveryTimeHorizonData.csv")
+## write.csv(need0to1SteppedRecoveryData, "need0to1SteppedRecoveryData.csv")
+## write.csv(sigma0to1SteppedRecoveryData, "sigma0to1SteppedRecoveryData.csv")
+## write.csv(failLevel0to1Data, "failLevel0to1Data.csv")
+## write.csv(recoveryLevel0to1Data, "recoveryLevel0to1Data.csv")
+## write.csv(recoveryTime21to60Data, "recoveryTime21to60Data.csv")
+## write.csv(linearRecoveryTimeHorizonData, "linearRecoveryTimeHorizonData.csv")
+## write.csv(need0to1LinearRecoveryData, "need0to1LinearRecoveryData.csv")
+## write.csv(sigma0to1LinearRecoveryData, "sigma0to1LinearRecoveryData.csv")
+
+
+
+
 
 ## New Group of Plots. Put all the performance plots into one 7x4 plot
 SR <- steppedRecoveryTimeHorizonData %>%
