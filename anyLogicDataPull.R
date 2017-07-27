@@ -59,6 +59,10 @@ resilienceFromData <- function(TPmatrix, needList, resFactors){
     }
     resMat <- quotRes(TPmatrix)
     resMat <- extQuotRes(resMat, sigma = resFactors$sigma)
+    t <- proc.time()
+    print(t)
+    resMat <- totalQR(resMat)
+    print(proc.time-t)
     resMat <- resFac(resMat,
                      tDelta = resFactors$tDelta,
                      decay = resFactors$decay)

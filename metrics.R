@@ -194,8 +194,13 @@ extQuotRes <- function(tt, sigma){
 totalQR <- function(tt){
     for (t in 1:length(tt$Time)){
         ttStub <- tt[1:t,]
+        t1 <- proc.time()
+        print(t1)
         tt$TQR[t] <- trapz(ttStub$Time, ttStub$QR) / (max(ttStub$Time) - min(ttStub$Time))
+        t2 <- proc.time()
+        print(t2-t1)
         tt$ETQR[t] <- trapz(ttStub$Time, ttStub$EQR) / (max(ttStub$Time) - min(ttStub$Time))
+        print(proc.time()-t2)
     }
     tt$TQR[1] <- tt$TQR[2]
     tt$ETQR[1] <- tt$ETQR[2]
