@@ -51,7 +51,7 @@
 ##     }
 ##     return(ssr)
 ## }
-
+source("metrics.R")
 nameList <- c("bigAsIs.csv", "big16kRec.csv", "big100percentRec.csv",
               "bigRob.csv", "bigStep.csv")
 
@@ -80,7 +80,7 @@ rMat <-data.frame(tDelta = 30,
 bigInfRFR <- metricRollup(nameList, need = nMat, resFactors = rMat, 39000)
 
 ## Writing the .csv. Leave it commented out unless you have new data and
-## want to make it happen. I would recommend rewriting this part each
+## want to make it happen. I would recommend rewriting this part eachf
 ## time you ahve new data to put into it.
 ## write.csv(bigInfRFR, "bigInfrastructureRunsForRecord.csv")
 
