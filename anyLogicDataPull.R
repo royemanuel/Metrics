@@ -42,7 +42,8 @@ cleanAnyLogic <- function(fileNames){
 }
 
 
-resilienceFromData <- function(TPmatrix, needList, resFactors){
+resilienceFromData <- function(TPmatrix, needList, resFactors,
+                               timeHorizon){
     ## add the Need column to the whole thing
     if (!is.null(dim(needList))){
         TPmatrix <- switch(as.character(needList$func),
@@ -59,10 +60,10 @@ resilienceFromData <- function(TPmatrix, needList, resFactors){
     }
     resMat <- quotRes(TPmatrix)
     resMat <- extQuotRes(resMat, sigma = resFactors$sigma)
-    t <- proc.time()
-    print(t)
-    resMat <- totalQR(resMat)
-    print(proc.time-t)
+    ## t <- proc.time()
+    ## print(t)
+    resMat <- totalQR(resMat, TH = timeHorizon)
+    ## print(proc.time-t)
     resMat <- resFac(resMat,
                      tDelta = resFactors$tDelta,
                      decay = resFactors$decay)
@@ -74,52 +75,55 @@ resilienceFromData <- function(TPmatrix, needList, resFactors){
     resMat <- tidyDF(resMat)
     return(resMat)
 }
-
-multInfrastructure <- function(cleanData, need, resFactors){
-    resMat <- data.frame()
-    ## if this isn't a list of infrastructure, build a function list
-    ## so it runs.
-    if (is.null(unique(cleanData$variable))){
-        cleanData <- cleanData %>% mutate(variable = "One List")
-    }
-    funList <- unique(cleanData$variable)
-    ## print(funList)
-    ## if need is already part of the cleanData, build a need data.frame
-    ## so it will run
-    if (is.null(dim(need)[1])){
-        need <- data.frame(0)
-    }
-    needStep <- dim(need)[1]
-    resStep <- dim(resFactors)[1]
-    for (fun in 1:length(funList)){
-        TPmatrix <- cleanData %>%
-            filter(variable == funList[fun]) %>%
-                select(-variable, Performance = value)
-        print(dim(TPmatrix))
-        for (needRun in 1:needStep){
-            for (resRun in 1:resStep){
-                print(paste0("NR = ", needRun, ", ",
-                             "RR = ", resRun, ", ",
-                             "Infrastructure = ", funList[fun]))
-                k <- resilienceFromData(TPmatrix,
-                                   need[needRun,],
-                                   resFactors[resRun,])
-                k <- cbind(k,
-                           nRun = needRun,
-                           rRun = resRun,
-                           Infrastructure = funList[fun],
-                           Decay = resFactors$decay[resRun],
-                           Sigma = resFactors$sigma[resRun])
-                resMat <- rbind(resMat, k)
-            }
-        }
-    }
-    return(resMat)
-}
+## Able to comment out the old multInfrastructure and the multScenario
+## because I discovered optional arguments. With a default value for
+## Time horizon, I can put it in the code, and make it fiture out whether
+## it wants to go "fast" or not with an if(!is.null(timeHorizon)) statement
+## multInfrastructure <- function(cleanData, need, resFactors){
+##     resMat <- data.frame()
+##     ## if this isn't a list of infrastructure, build a function list
+##     ## so it runs.
+##     if (is.null(unique(cleanData$variable))){
+##         cleanData <- cleanData %>% mutate(variable = "One List")
+##     }
+##     funList <- unique(cleanData$variable)
+##     ## print(funList)
+##     ## if need is already part of the cleanData, build a need data.frame
+##     ## so it will run
+##     if (is.null(dim(need)[1])){
+##         need <- data.frame(0)
+##     }
+##     needStep <- dim(need)[1]
+##     resStep <- dim(resFactors)[1]
+##     for (fun in 1:length(funList)){
+##         TPmatrix <- cleanData %>%
+##             filter(variable == funList[fun]) %>%
+##                 select(-variable, Performance = value)
+##         print(dim(TPmatrix))
+##         for (needRun in 1:needStep){
+##             for (resRun in 1:resStep){
+##                 print(paste0("NR = ", needRun, ", ",
+##                              "RR = ", resRun, ", ",
+##                              "Infrastructure = ", funList[fun]))
+##                 k <- resilienceFromData(TPmatrix,
+##                                    need[needRun,],
+##                                    resFactors[resRun,])
+##                 k <- cbind(k,
+##                            nRun = needRun,
+##                            rRun = resRun,
+##                            Infrastructure = funList[fun],
+##                            Decay = resFactors$decay[resRun],
+##                            Sigma = resFactors$sigma[resRun])
+##                 resMat <- rbind(resMat, k)
+##             }
+##         }
+##     }
+##     return(resMat)
+## }
 ## Same as above, but you need to specify the time that you want to
 ## pull the resilience. MUCH faster. Use the one above when you need
 ## make a time plot of the resilience. 
-multInfrastructureFast <- function(cleanData, need, resFactors, timeHorizon){
+multInfrastructureFast <- function(cleanData, need, resFactors, timeHorizon=NULL){
     resMat <- data.frame()
     ## if this isn't a list of infrastructure, build a function list
     ## so it runs.
@@ -147,14 +151,17 @@ multInfrastructureFast <- function(cleanData, need, resFactors, timeHorizon){
                              "Infrastructure = ", funList[fun]))
                 k <- resilienceFromData(TPmatrix,
                                    need[needRun,],
-                                   resFactors[resRun,])
+                                        resFactors[resRun,],
+                                        timeHorizon)
                 k <- cbind(k,
                            nRun = needRun,
                            rRun = resRun,
                            Infrastructure = funList[fun],
                            Decay = resFactors$decay[resRun],
                            Sigma = resFactors$sigma[resRun])
-                k <- filter(k, Time == timeHorizon)
+                if (!is.null(timeHorizon)){
+                    k <- filter(k, Time == timeHorizon)
+                }
                 resMat <- rbind(resMat, k)
             }
         }
@@ -163,19 +170,19 @@ multInfrastructureFast <- function(cleanData, need, resFactors, timeHorizon){
 }
 
 ## Now we run this through multiple files for all times
-multScenario <- function(fileNames, N, R){
-    scenarioResilience <- data.frame()
-    for (f in 1:length(fileNames)){
-        cleanData <- cleanAnyLogic(fileNames[f])
-        singleInf <- multInfrastructure(cleanData,
-                                        need = N,
-                                        resFactors = R)
-        scenarioResilience <- bind_rows(scenarioResilience, singleInf)
-    }
-    return(scenarioResilience)
-}
+## multScenario <- function(fileNames, N, R){
+##     scenarioResilience <- data.frame()
+##     for (f in 1:length(fileNames)){
+##         cleanData <- cleanAnyLogic(fileNames[f])
+##         singleInf <- multInfrastructure(cleanData,
+##                                         need = N,
+##                                         resFactors = R)
+##         scenarioResilience <- bind_rows(scenarioResilience, singleInf)
+##     }
+##     return(scenarioResilience)
+## }
 ## Now we run this through multiple files for one time horizon
-multScenarioFast<- function(fileNames, N, R, TH){
+multScenarioFast<- function(fileNames, N, R, TH=NULL){
     scenarioResilience <- data.frame()
     for (f in 1:length(fileNames)){
         cd <- cleanAnyLogic(fileNames[f])
