@@ -191,20 +191,40 @@ extQuotRes <- function(tt, sigma){
 ## Total resilience model - the integral over the time for both     ##
 ## Quotient Resilience and Extended Quotient Resilience             ##
 ######################################################################
-totalQR <- function(tt){
-    for (t in 1:length(tt$Time)){
-        ttStub <- tt[1:t,]
-        t1 <- proc.time()
-        print(t1)
-        tt$TQR[t] <- trapz(ttStub$Time, ttStub$QR) / (max(ttStub$Time) - min(ttStub$Time))
-        t2 <- proc.time()
-        print(t2-t1)
-        tt$ETQR[t] <- trapz(ttStub$Time, ttStub$EQR) / (max(ttStub$Time) - min(ttStub$Time))
-        print(proc.time()-t2)
+totalQR <- function(tt, TH){
+    if (!is.null(TH)){
+        ttTimeHorizon <- tt[1:TH,]
+        tt$TQR <- trapz(ttTimeHorizon$Time, ttTimeHorizon$QR) /
+            (TH - min(ttTimeHorizon$Time))
+        tt$ETQR <- trapz(ttTimeHorizon$Time, ttTimeHorizon$EQR) /
+            (TH - min(ttTimeHorizon$Time))
+        return(tt)
+    } else {
+        for (t in 1:length(tt$Time)){
+            ttStub <- tt[1:t,]
+            t1 <- proc.time()
+            ## print(t1)
+            tt$TQR[t] <- trapz(ttStub$Time, ttStub$QR) / (max(ttStub$Time) - min(ttStub$Time))
+            ## t2 <- proc.time()
+            ## print(t2-t1)
+            tt$ETQR[t] <- trapz(ttStub$Time, ttStub$EQR) / (max(ttStub$Time) - min(ttStub$Time))
+            ## print(proc.time()-t2)
+        }
+        return(tt)
     }
     tt$TQR[1] <- tt$TQR[2]
     tt$ETQR[1] <- tt$ETQR[2]
     return(tt)
+}
+
+######################################################################
+## The totalQR function above calculates TQR for every time. This seems
+## to take VERY long for a large model. What we need is a version That
+## calculates it at the time horizon. This is what the TQRTimeHorizon
+## calculates
+###################################################################### 
+TQRTimeHorizon <- function(tt, time){
+    
 }
 
 ###################################################################### 
