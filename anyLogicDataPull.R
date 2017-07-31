@@ -29,19 +29,35 @@ cleanAnyLogic <- function(fileNames){
         print(fileNames[f])
         DF <- read.csv(fileNames[f])
         dfCol <- colnames(DF)
-        dfCol[1] <- "Time"
+        if ("Time" %in% dfCol){
+        } else{
+            dfCol[1] <- "Time"
+        }
         colnames(DF) <- dfCol
-        DF <- DF %>% select(1:10) %>%
-            select(-Electric.Degrade) %>%
+        if ("Run" %in% dfCol){
+        } else {
+            mutate(DF, Run = 1)
+        }
+        DF <- DF %>% select(Time,
+                            Run,
+                            Electricity.Availability,
+                            Communications.Function,
+                            IT.Function,
+                            Healthcare.Function,
+                            Transportation.Function,
+                            Emergency.Services.Functionality,
+                            Critical.Manufacturing.Functionality,
+                            Water.Functionality) %>%
                 mutate(Time = Time - 40)
         DF$Scenario <- fileNames[f]
-        DF <- melt(DF, id.vars = c("Time", "Scenario"))
+        DF <- melt(DF, id.vars = c("Time", "Scenario", "Run"))
         allDF <- bind_rows(allDF, DF)
     }
     return(allDF)
 }
 
-
+## This function calculates the resilience for a timeseries of performance
+## for each infrastructure
 resilienceFromData <- function(TPmatrix, needList, resFactors,
                                timeHorizon){
     ## add the Need column to the whole thing
@@ -123,7 +139,8 @@ resilienceFromData <- function(TPmatrix, needList, resFactors,
 ## Same as above, but you need to specify the time that you want to
 ## pull the resilience. MUCH faster. Use the one above when you need
 ## make a time plot of the resilience. 
-multInfrastructureFast <- function(cleanData, need, resFactors, timeHorizon=NULL){
+multInfrastructureFast <- function(cleanData, simRun, need, resFactors,
+                                   timeHorizon=NULL){
     resMat <- data.frame()
     ## if this isn't a list of infrastructure, build a function list
     ## so it runs.
@@ -143,10 +160,10 @@ multInfrastructureFast <- function(cleanData, need, resFactors, timeHorizon=NULL
         TPmatrix <- cleanData %>%
             filter(variable == funList[fun]) %>%
             select(-variable, Performance = value)
-        print(dim(TPmatrix))
         for (needRun in 1:needStep){
             for (resRun in 1:resStep){
-                print(paste0("NR = ", needRun, ", ",
+                print(paste0("SR = ", simRun, ", ",
+                             "NR = ", needRun, ", ",
                              "RR = ", resRun, ", ",
                              "Infrastructure = ", funList[fun]))
                 k <- resilienceFromData(TPmatrix,
@@ -162,11 +179,12 @@ multInfrastructureFast <- function(cleanData, need, resFactors, timeHorizon=NULL
                 if (!is.null(timeHorizon)){
                     k <- filter(k, Time == timeHorizon)
                 }
+                ##ifelse(dim(resMat)[1] == 0, break,)
                 resMat <- rbind(resMat, k)
             }
         }
     }
-    resMat
+    return(resMat)
 }
 
 ## Now we run this through multiple files for all times
@@ -186,11 +204,26 @@ multScenarioFast<- function(fileNames, N, R, TH=NULL){
     scenarioResilience <- data.frame()
     for (f in 1:length(fileNames)){
         cd <- cleanAnyLogic(fileNames[f])
-        singleInf <- multInfrastructureFast(cleanData = cd,
-                                            need = N,
-                                            resFactors = R,
-                                            timeHorizon = TH)
-        scenarioResilience <- bind_rows(scenarioResilience, singleInf)
+        if(TH > max(cd$Time)){
+            stop("Time horizon is greater than simulation time.")
+        }
+        simResilience <- data.frame()
+        for (sim in 1:max(cd$Run)){
+            cdSim <- cd %>%
+                filter(Run == sim)
+            head(cdSim)
+            cdSim <- select(cdSim, -Run)
+            singleInf <- multInfrastructureFast(cleanData = cdSim,
+                                                simRun = sim,
+                                                need = N,
+                                                resFactors = R,
+                                                timeHorizon = TH)
+            singleInf <- mutate(singleInf, sRun = sim)
+            simResilience <- bind_rows(simResilience, singleInf)
+        }
+        scenarioResilience <- bind_rows(scenarioResilience,
+                                        simResilience)
     }
     return(scenarioResilience)
 }
+    

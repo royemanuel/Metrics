@@ -64,6 +64,8 @@ waterPerformance <- cleanAnyLogic(waterNameList) %>%
                           Time = Time / 1440)
 
 ## Plot of the electric availability inputs and the water outputs
+## Need to clean u pthe legend and such, but about the 80% solution right
+## Now
 waterElecPerfPlot <- ggplot(waterPerformance, aes(Time,
                                    value,
                                    group = variable,
