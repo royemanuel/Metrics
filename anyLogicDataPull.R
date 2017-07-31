@@ -29,15 +29,17 @@ cleanAnyLogic <- function(fileNames){
         print(fileNames[f])
         DF <- read.csv(fileNames[f])
         dfCol <- colnames(DF)
+        print(dfCol)
         if ("Time" %in% dfCol){
         } else{
             dfCol[1] <- "Time"
         }
+        print(paste("#1, ", dfCol))
         colnames(DF) <- dfCol
-        if ("Run" %in% dfCol){
-        } else {
-            mutate(DF, Run = 1)
+        if (!("Run" %in% colnames(DF))){
+            DF <- mutate(DF, Run = 1)
         }
+        print(paste("#2", colnames(DF)))
         DF <- DF %>% select(Time,
                             Run,
                             Electricity.Availability,
