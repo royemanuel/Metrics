@@ -75,7 +75,6 @@ resilienceFromData <- function(TPmatrix, needList, resFactors,
                          ## vector
                          fullDef = cbind(fullDef, resMat))
     }
-    print(needList)
     resMat <- quotRes(TPmatrix)
     resMat <- extQuotRes(resMat, sigma = resFactors$sigma)
     ## t <- proc.time()
