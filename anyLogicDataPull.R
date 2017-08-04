@@ -37,17 +37,19 @@ cleanAnyLogic <- function(fileNames){
         if (!("Run" %in% colnames(DF))){
             DF <- mutate(DF, Run = 1)
         }
-        DF <- DF %>% select(Time,
-                            Run,
-                            Electricity.Availability,
+        DFtimerun <- DF %>% select(Time,
+                            Run) %>%
+                                mutate(Time = (Time - 40)/1440)
+        DFperf <- DF %>% select( Electricity.Availability,
                             Communications.Function,
                             IT.Function,
                             Healthcare.Function,
                             Transportation.Function,
                             Emergency.Services.Functionality,
                             Critical.Manufacturing.Functionality,
-                            Water.Functionality) %>%
-                mutate(Time = Time - 40)
+                                Water.Functionality)
+        DFperf <- DFperf / 100
+        DF <- cbind(DFtimerun, DFperf)
         DF$Scenario <- fileNames[f]
         DF <- melt(DF, id.vars = c("Time", "Scenario", "Run"))
         allDF <- bind_rows(allDF, DF)
@@ -63,7 +65,7 @@ resilienceFromData <- function(TPmatrix, needList, resFactors,
     if (!is.null(dim(needList))){
         TPmatrix <- switch(as.character(needList$func),
                          constantNeed = constantNeed(TPmatrix,
-                                                     needList$cLevel),
+                                                     Need = needList$cLevel),
                          linearNeed = linearNeed(
                              resMat,
                              needList$cLevel,
@@ -73,6 +75,7 @@ resilienceFromData <- function(TPmatrix, needList, resFactors,
                          ## vector
                          fullDef = cbind(fullDef, resMat))
     }
+    print(needList)
     resMat <- quotRes(TPmatrix)
     resMat <- extQuotRes(resMat, sigma = resFactors$sigma)
     ## t <- proc.time()
@@ -203,8 +206,10 @@ multScenarioFast<- function(fileNames, N, R, TH=NULL){
     scenarioResilience <- data.frame()
     for (f in 1:length(fileNames)){
         cd <- cleanAnyLogic(fileNames[f])
-        if(TH > max(cd$Time)){
-            stop("Time horizon is greater than simulation time.")
+        if(!is.null(TH)){
+            if(TH > max(cd$Time)){
+                stop("Time horizon is greater than simulation time.")
+            }
         }
         simResilience <- data.frame()
         for (sim in 1:max(cd$Run)){

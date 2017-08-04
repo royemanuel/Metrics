@@ -191,7 +191,7 @@ extQuotRes <- function(tt, sigma){
 ## Total resilience model - the integral over the time for both     ##
 ## Quotient Resilience and Extended Quotient Resilience             ##
 ######################################################################
-totalQR <- function(tt, TH){
+totalQR <- function(tt, TH=NULL){
     if (!is.null(TH)){
         ttTimeHorizon <- tt[1:TH,]
         tt$TQR <- trapz(ttTimeHorizon$Time, ttTimeHorizon$QR) /
@@ -457,6 +457,33 @@ intRes <- function(tt, sigma){
     tt$extResilience[1] <- tt$extResilience[2]
     return(tt)
 }
+## intResTrapz <- function(tt,sigma){
+##     if (!is.null(TH)){
+##         ttTimeHorizon <- tt[1:TH,]
+##         tt$IRT <- trapz(ttTimeHorizon$Time, ttTimeHorizon$Performance) / TH)
+##         tt$ETQR <- trapz(ttTimeHorizon$Time, ttTimeHorizon$EQR) /
+##             (TH - min(ttTimeHorizon$Time))
+##         return(tt)
+##     } else {
+##         for (t in 1:length(tt$Time)){
+##             ttStub <- tt[1:t,]
+##             t1 <- proc.time()
+##             ## print(t1)
+##             tt$TQR[t] <- trapz(ttStub$Time, ttStub$QR) / (max(ttStub$Time) - min(ttStub$Time))
+##             ## t2 <- proc.time()
+##             ## print(t2-t1)
+##             tt$ETQR[t] <- trapz(ttStub$Time, ttStub$EQR) / (max(ttStub$Time) - min(ttStub$Time))
+##             ## print(proc.time()-t2)
+##         }
+##         return(tt)
+##     }
+##     tt$TQR[1] <- tt$TQR[2]
+##     tt$ETQR[1] <- tt$ETQR[2]
+##     return(tt)
+## }
+## 
+## 
+## }
 
 
 ## Cleanup the data.frame after running all of the above
