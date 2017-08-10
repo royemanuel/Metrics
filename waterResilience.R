@@ -36,7 +36,7 @@ if ("waterResilience7" %in% ls()){
                                         N = waterNeed,
                                         R = waterSigma,
                                         TH = (20200 -40) / 1440) # Note the time can
-                                                    # be changed
+                                        # be changed, changed to a days value here    
 }
 
 waterResilienceClean7 <- waterResilience7 %>%
@@ -44,22 +44,62 @@ waterResilienceClean7 <- waterResilience7 %>%
                 mutate(Preference = ifelse(Need == fireNeed, "FireFighting",
                    ifelse(Need == generalNeed, "Non-Potable",
                           ifelse(Need == potableNeed, "Potable",
-                                 ifelse(Need == 0.01, "Low", "StatusQuo"))))) #%>%
-                                     # filter(waterResilience7, Infrastructure == "Water.Functionality")  
+                                 ifelse(Need == 0.01, "Low", "StatusQuo"))))) %>%
+                                     filter(Infrastructure == "Water.Functionality")
+waterResFile <- waterResilienceClean7 %>%
+    select(Scenario, QR, EQR, TQR, ETQR, Rho, extRho,
+           statQuoResilience, extResilience, Preference, Infrastructure)
+
+write.csv(waterResFile, "waterResFile.csv")
+
 
 waterResilienceMelt7 <- waterResilienceClean7 %>%
     select(Scenario, QR, EQR, TQR, ETQR, Rho, extRho,
            statQuoResilience, extResilience, Preference, Infrastructure) %>%
-               melt(id.vars = c("Scenario", "Preference", "Infrastructure"))
+           melt(id.vars = c("Scenario", "Preference", "Infrastructure")) %>%
+           mutate(O.or.E = ifelse(tolower(substr(variable, 1, 1)) == "e",
+                      "Extended",
+                      "Original")) %>%
+           mutate(ResType = ifelse((variable == "QR" |
+                                    variable == "EQR"),
+                                    "Quotient Resilience",
+                              ifelse((variable == "Rho" |
+                                      variable == "extRho"),
+                                                  "Resilience Factor",
+                                ifelse((variable == "statQuoResilience" |
+                                        variable == "extResilience"),
+                                                    "Integral Resilience",
+                                  ifelse((variable == "TQR" |
+                                          variable == "ETQR"),
+                                                      "Total\nQuotient Resilience",
+                                         0))))) %>%
+                                    mutate(Resilience = value) %>%
+                                        select(-value)
+waterResilienceMelt7$Scenario <- sub("AsIs2Week.csv", "A", waterResilienceMelt7$Scenario)
+waterResilienceMelt7$Scenario <- sub("RobustOnly.csv", "B", waterResilienceMelt7$Scenario)
+waterResilienceMelt7$Scenario <- sub("TTR.csv", "C", waterResilienceMelt7$Scenario)
+waterResilienceMelt7$Scenario <- sub("RecLevel.csv", "D", waterResilienceMelt7$Scenario)
 
-waterResilienceMeltonlyinRes <- waterResilienceClean7 %>%
-    select(Scenario, statQuoResilience, extResilience, Preference, Infrastructure) %>%
-               melt(id.vars = c("Scenario", "Preference", "Infrastructure"))
-                       
-## Plot of  the resilience values at time 20160
+## Plot all resilience values at time 2160
+waterResPointPlot <- ggplot(waterResilienceMelt7, aes(Scenario, Resilience)) +
+    facet_grid(Preference ~ ResType) +
+        geom_point(aes(shape = factor(O.or.E)), size = 2.5, color = "grey50") +
+            geom_point(color = "white", size = 1, aes(shape = O.or.E)) +
+                theme_bw(base_size = 12, base_family = "serif") +
+                    theme(legend.position = "top",
+                          legend.margin = margin(t = 0, unit = "cm"),
+                          legend.title = element_blank())
+
+ggsave(plot = waterResPointPlot,
+       filename = paste0("waterResPointPlot.png",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 6.5, height = 6)
+
+## Plot of  the integral resilience values at time 20160
 waterResPointPlotintres <- ggplot(waterResilienceMeltonlyinRes, aes(Scenario, value)) +
     facet_grid(Preference ~ Infrastructure) +
-        geom_point(aes(color = variable))
+        geom_point(aes(color = variable)) 
 
 waterPerformance <- cleanAnyLogic(waterNameList)# %>%
 ##     filter(variable == "Water.Functionality" |
