@@ -160,29 +160,29 @@ multInfrastructureFast <- function(cleanData, simRun, need, resFactors,
     for (fun in 1:length(funList)){
         TPmatrix <- cleanData %>%
             filter(variable == funList[fun]) %>%
-            select(-variable, Performance = value)
+                select(-variable, Performance = value)
+        if (needStep != resStep){
+            print("You do not have your Needs and Sigmas matched up!!!")
+            break          
+        }
         for (needRun in 1:needStep){
-            for (resRun in 1:resStep){
-                print(paste0("SR = ", simRun, ", ",
-                             "NR = ", needRun, ", ",
-                             "RR = ", resRun, ", ",
-                             "Infrastructure = ", funList[fun]))
-                k <- resilienceFromData(TPmatrix,
-                                   need[needRun,],
-                                        resFactors[resRun,],
-                                        timeHorizon)
-                k <- cbind(k,
-                           nRun = needRun,
-                           rRun = resRun,
-                           Infrastructure = funList[fun],
-                           Decay = resFactors$decay[resRun],
-                           Sigma = resFactors$sigma[resRun])
-                if (!is.null(timeHorizon)){
-                    k <- filter(k, Time == timeHorizon)
-                }
-                ##ifelse(dim(resMat)[1] == 0, break,)
-                resMat <- rbind(resMat, k)
+            print(paste0("SR = ", simRun, ", ",
+                         "NR = ", needRun, ", ",
+                         "Infrastructure = ", funList[fun]))
+            k <- resilienceFromData(TPmatrix,
+                                    need[needRun,],
+                                    resFactors[needRun,],
+                                    timeHorizon)
+            k <- cbind(k,
+                       nRun = needRun,
+                       Infrastructure = funList[fun],
+                       Decay = resFactors$decay[needRun],
+                       Sigma = resFactors$sigma[needRun])
+            if (!is.null(timeHorizon)){
+                k <- filter(k, Time == timeHorizon)
             }
+            ##ifelse(dim(resMat)[1] == 0, break,)
+            resMat <- rbind(resMat, k)
         }
     }
     return(resMat)
