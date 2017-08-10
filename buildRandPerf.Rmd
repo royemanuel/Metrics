@@ -58,7 +58,8 @@ needConstant <- data.frame(func = "constantNeed",
 TTFresilience <- resLoop(time = baseTime,
                             need = needConstant,
                             performance = TTFdf,
-                            resFactors = r)
+                         resFactors = r,
+                         TH = NULL)
 dim(TTFresilience)
 
 pltData <- randomResilience %>%
