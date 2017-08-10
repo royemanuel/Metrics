@@ -77,9 +77,9 @@ resilienceFromData <- function(TPmatrix, needList, resFactors,
     }
     resMat <- quotRes(TPmatrix)
     resMat <- extQuotRes(resMat, sigma = resFactors$sigma)
+    resMat <- totalQR(resMat, TH = timeHorizon)
     ## t <- proc.time()
     ## print(t)
-    resMat <- totalQR(resMat, TH = timeHorizon)
     ## print(proc.time-t)
     resMat <- resFac(resMat,
                      tDelta = resFactors$tDelta,
@@ -214,7 +214,6 @@ multScenarioFast<- function(fileNames, N, R, TH=NULL){
         for (sim in 1:max(cd$Run)){
             cdSim <- cd %>%
                 filter(Run == sim)
-            head(cdSim)
             cdSim <- select(cdSim, -Run)
             singleInf <- multInfrastructureFast(cleanData = cdSim,
                                                 simRun = sim,

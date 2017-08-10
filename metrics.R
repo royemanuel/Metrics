@@ -193,7 +193,7 @@ extQuotRes <- function(tt, sigma){
 ######################################################################
 totalQR <- function(tt, TH=NULL){
     if (!is.null(TH)){
-        ttTimeHorizon <- tt[1:TH,]
+        ttTimeHorizon <- filter(tt, Time <= TH)
         tt$TQR <- trapz(ttTimeHorizon$Time, ttTimeHorizon$QR) /
             (TH - min(ttTimeHorizon$Time))
         tt$ETQR <- trapz(ttTimeHorizon$Time, ttTimeHorizon$EQR) /
