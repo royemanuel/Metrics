@@ -30,7 +30,7 @@ waterSigma <- data.frame(tDelta = 30,
                          sigma = c(fireSigma,generalSigma, potableSigma))
 
 ## Calculate the resilience for all combinations
-if ("waterResilience5" %in% ls()){
+if ("waterResilience7" %in% ls()){
 } else {
     waterResilience7 <- multScenarioFast(fileNames = waterNameList,
                                         N = waterNeed,
@@ -45,8 +45,7 @@ waterResilienceClean7 <- waterResilience7 %>%
                    ifelse(Need == generalNeed, "Non-Potable",
                           ifelse(Need == potableNeed, "Potable",
                                  ifelse(Need == 0.01, "Low", "StatusQuo"))))) #%>%
-                                     filter(waterResilience7, Infrastructure == "Water.Functionality")  
-print(colnames(waterResilienceClean))
+                                     # filter(waterResilience7, Infrastructure == "Water.Functionality")  
 
 waterResilienceMelt7 <- waterResilienceClean7 %>%
     select(Scenario, QR, EQR, TQR, ETQR, Rho, extRho,
@@ -63,11 +62,11 @@ waterResPointPlotintres <- ggplot(waterResilienceMeltonlyinRes, aes(Scenario, va
         geom_point(aes(color = variable))
 
 waterPerformance <- cleanAnyLogic(waterNameList)# %>%
-    filter(variable == "Water.Functionality" |
-               variable == "Electricity.Availability") %>%
-                   mutate(value = value / 100,
-                          Time = Time / 1440)
-
+##     filter(variable == "Water.Functionality" |
+##                variable == "Electricity.Availability") %>%
+##                    mutate(value = value / 100,
+##                           Time = Time / 1440)
+## 
 ## Plot of the electric availability inputs and the water outputs
 ## Need to clean u pthe legend and such, but about the 80% solution right
 ## Now
@@ -87,7 +86,7 @@ waterElecPerfPlot <- ggplot(waterPerformance, aes(Time,
 ######################################################################
 ## Working out what is going on with integral resilience
 
-electricResilienceClean <- waterResilience %>%
+electricResilienceClean <- waterResilience7 %>%
     filter(nRun == rRun ) %>%
         mutate(Performance = Performance / 100,
                Preference = ifelse(Need == fireNeed, "FireFighting",
