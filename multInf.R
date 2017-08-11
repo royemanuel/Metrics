@@ -99,3 +99,27 @@ ggsave(plot = infResPointPlot,
        width = 6.5, height = 9)
 
 
+## Plot of the electric availability inputs and the water outputs
+## Need to clean u pthe legend and such, but about the 80% solution right
+## Now
+infPerformance <- cleanAnyLogic(infNameList)
+
+elecPerfPlot <- ggplot(infPerformance, aes(Time,
+                                   value,
+                                   group = variable,
+                                   linetype = variable)) +
+    geom_line() +
+        facet_grid(variable ~ Scenario) +
+                theme_bw(base_size = 12, base_family = "serif") +
+                    theme(legend.position = "top",
+                          legend.margin = margin(t = 0, unit = "cm"),
+                          legend.title = element_blank())
+
+ggsave(plot = ElecPerfPlot,
+       filename = paste0("ElecPefPlot.png",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 6.5, height = 28)
+
+
+

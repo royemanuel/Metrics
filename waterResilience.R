@@ -96,11 +96,11 @@ ggsave(plot = waterResPointPlot,
        width = 6.5, height = 6)
 
 ## Plot of  the integral resilience values at time 20160
-waterResPointPlotintres <- ggplot(waterResilienceMeltonlyinRes, aes(Scenario, value)) +
-    facet_grid(Preference ~ Infrastructure) +
-        geom_point(aes(color = variable)) 
-
-waterPerformance <- cleanAnyLogic(waterNameList)# %>%
+## waterResPointPlotintres <- ggplot(waterResilienceMeltonlyinRes, aes(Scenario, value)) +
+##     facet_grid(Preference ~ Infrastructure) +
+##         geom_point(aes(color = variable)) 
+## 
+## waterPerformance <- cleanAnyLogic(waterNameList)# %>%
 ##     filter(variable == "Water.Functionality" |
 ##                variable == "Electricity.Availability") %>%
 ##                    mutate(value = value / 100,
