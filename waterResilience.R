@@ -11,8 +11,8 @@ waterNameList <- c("AsIs2Week.csv", "RobustOnly.csv", "TTR.csv",
 
 ## The needs for the stakeholder
 fireNeed <- 0.3
-generalNeed <- .9
-potableNeed <- 0.7
+generalNeed <- .7
+potableNeed <- 0.9
 
 
 waterNeed <- data.frame(func = "constantNeed",
@@ -23,7 +23,7 @@ waterNeed <- data.frame(func = "constantNeed",
 ## The sigma for the stakeholder
 fireSigma <- 0.0
 generalSigma <- 0.2
-potableSigma <- 1
+potableSigma <- 0.5
 
 waterSigma <- data.frame(tDelta = 30,
                          decay = 0,
@@ -40,7 +40,6 @@ if ("waterResilience7" %in% ls()){
 }
 
 waterResilienceClean7 <- waterResilience7 %>%
-    filter(nRun == rRun ) %>%
                 mutate(Preference = ifelse(Need == fireNeed, "FireFighting",
                    ifelse(Need == generalNeed, "Non-Potable",
                           ifelse(Need == potableNeed, "Potable",
@@ -127,12 +126,10 @@ waterElecPerfPlot <- ggplot(waterPerformance, aes(Time,
 ## Working out what is going on with integral resilience
 
 electricResilienceClean <- waterResilience7 %>%
-    filter(nRun == rRun ) %>%
-        mutate(Performance = Performance / 100,
-               Preference = ifelse(Need == fireNeed, "FireFighting",
-                   ifelse(Need == generalNeed, "Non-Potable",
-                          "Potable"))) %>%
-                              filter(Infrastructure == "Electricity.Availability")  
+    mutate(Preference = ifelse(Need == fireNeed, "FireFighting",
+               ifelse(Need == generalNeed, "Non-Potable",
+                      "Potable"))) %>%
+                          filter(Infrastructure == "Electricity.Availability")  
 
 electricResilienceMelt <- electricResilienceClean %>%
     select(Scenario, QR, EQR, TQR, ETQR, Rho, extRho,
