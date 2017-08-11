@@ -145,3 +145,9 @@ electricResPointPlot <- ggplot(electricResilienceMelt, aes(Scenario, value)) +
     facet_grid(Preference ~ variable) +
         geom_point()
 
+## Build the .csv with the resilience values grouped by infrastructure,
+## metric and in order of most resilient to least resilient
+wrFactor <- waterResilienceMelt7 %>% group_by(variable, Infrastructure) %>%
+    arrange(Preference, variable, -Resilience)
+wrFactor$Resilience <- round(wrFactor$Resilience, 3)
+## write.csv(wrFactor, "waterRes.csv")

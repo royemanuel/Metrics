@@ -122,3 +122,7 @@ ggsave(plot = elecPerfPlot,
        width = 6.5, height = 8)
 
 
+## Build the .csv with the resilience values grouped by infrastructure,
+## metric and in order of most resilient to least resilient
+arrInfFactor <- infFactor %>% group_by(variable, Infrastructure) %>% arrange(Infrastructure, variable, -Resilience)
+arrInfFactor$Resilience <- round(arrInfFactor$Resilience, 3)
