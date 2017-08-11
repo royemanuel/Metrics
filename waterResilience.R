@@ -100,12 +100,10 @@ ggsave(plot = waterResPointPlot,
 ##     facet_grid(Preference ~ Infrastructure) +
 ##         geom_point(aes(color = variable)) 
 ## 
-## waterPerformance <- cleanAnyLogic(waterNameList)# %>%
-##     filter(variable == "Water.Functionality" |
-##                variable == "Electricity.Availability") %>%
-##                    mutate(value = value / 100,
-##                           Time = Time / 1440)
-## 
+waterPerformance <- cleanAnyLogic(waterNameList) %>%
+    filter(variable == "Water.Functionality" |
+               variable == "Electricity.Availability") 
+
 ## Plot of the electric availability inputs and the water outputs
 ## Need to clean u pthe legend and such, but about the 80% solution right
 ## Now
@@ -120,6 +118,12 @@ waterElecPerfPlot <- ggplot(waterPerformance, aes(Time,
                     theme(legend.position = "top",
                           legend.margin = margin(t = 0, unit = "cm"),
                           legend.title = element_blank())
+
+ggsave(plot = waterElecPerfPlot,
+       filename = paste0("waterElecPefPlot.png",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 6.5, height = 28)
 
 
 ######################################################################

@@ -115,11 +115,10 @@ elecPerfPlot <- ggplot(infPerformance, aes(Time,
                           legend.margin = margin(t = 0, unit = "cm"),
                           legend.title = element_blank())
 
-ggsave(plot = ElecPerfPlot,
+ggsave(plot = elecPerfPlot,
        filename = paste0("ElecPefPlot.png",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
-       width = 6.5, height = 28)
-
+       width = 6.5, height = 8)
 
 
