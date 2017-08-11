@@ -3,8 +3,8 @@ source("anyLogicDataPull.R")
 
 infNameList <-  c("AsIs2Week.csv", "RobustOnly.csv", "TTR.csv",
                   "RecLevel.csv")
-nl <- c(.9, .5, .3, .9, .75, .95, .8, .9)
-sl <- c(.0, .0, .0, .05, .2, .0, .0, .2)
+nl <- c(.9, .5, .3, .9, .75, .95, .8, .3)
+sl <- c(.0, .0, .0, .05, .2, .0, .0, 0)
 
 ## build the need data.frame for input into infraResAll
 nMat <- data.frame(func = "constantNeed",
@@ -102,24 +102,51 @@ ggsave(plot = infResPointPlot,
 ## Plot of the electric availability inputs and the water outputs
 ## Need to clean u pthe legend and such, but about the 80% solution right
 ## Now
-infPerformance <- cleanAnyLogic(infNameList)
+infPerformance <- cleanAnyLogic(infNameList) %>%
+    mutate(Resilience = value) %>% select(-value)
+infPerformance$Scenario <- sub("AsIs2Week.csv", "A", infPerformance$Scenario)
+infPerformance$Scenario <- sub("RobustOnly.csv", "B", infPerformance$Scenario)
+infPerformance$Scenario <- sub("TTR.csv", "C", infPerformance$Scenario)
+infPerformance$Scenario <- sub("RecLevel.csv", "D", infPerformance$Scenario)
+infPerformance$variable <- sub("Electricity.Availability",
+                                "Energy",
+                                infPerformance$variable)
+infPerformance$variable <- sub("Communications.Function",
+                                "Communications",
+                                infPerformance$variable)
+infPerformance$variable <- sub("IT.Function",
+                                "IT",
+                                infPerformance$variable)
+infPerformance$variable <- sub("Healthcare.Function",
+                                "Healthcare",
+                                infPerformance$variable)
+infPerformance$variable <- sub("Transportation.Function",
+                                "Transportation",
+                                infPerformance$variable)
+infPerformance$variable <- sub("Critical.Manufacturing.Functionality",
+                                "Critical\nManufacturing",
+                                infPerformance$variable)
+infPerformance$variable <- sub("Emergency.Services.Functionality",
+                                "Emergency\nServices",
+                                infPerformance$variable)
+infPerformance$variable <- sub("Water.Functionality",
+                                "Water",
+                                infPerformance$variable)
 
 elecPerfPlot <- ggplot(infPerformance, aes(Time,
-                                   value,
+                                   Resilience,
                                    group = variable,
                                    linetype = variable)) +
     geom_line() +
         facet_grid(variable ~ Scenario) +
-                theme_bw(base_size = 12, base_family = "serif") +
-                    theme(legend.position = "top",
-                          legend.margin = margin(t = 0, unit = "cm"),
-                          legend.title = element_blank())
+                theme_bw(base_size = 11, base_family = "serif") +
+                    theme(legend.position = "none")
 
 ggsave(plot = elecPerfPlot,
        filename = paste0("ElecPefPlot.png",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
-       width = 6.5, height = 8)
+       width = 6.5, height = 8.5)
 
 
 ## Build the .csv with the resilience values grouped by infrastructure,

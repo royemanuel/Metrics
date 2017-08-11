@@ -102,28 +102,39 @@ ggsave(plot = waterResPointPlot,
 ## 
 waterPerformance <- cleanAnyLogic(waterNameList) %>%
     filter(variable == "Water.Functionality" |
-               variable == "Electricity.Availability") 
+               variable == "Electricity.Availability") %>%
+                   mutate(Resilience = value) %>%
+                       select(-value)
+waterPerformance$Scenario <- sub("AsIs2Week.csv", "(A) Current System", waterPerformance$Scenario)
+waterPerformance$Scenario <- sub("RobustOnly.csv", "(B) Improved\nRobustness", waterPerformance$Scenario)
+waterPerformance$Scenario <- sub("TTR.csv", "(C) Improved Time\nto Recover", waterPerformance$Scenario)
+waterPerformance$Scenario <- sub("RecLevel.csv", "(D) Improved Recovery\nPerformance", waterPerformance$Scenario)
+waterPerformance$variable <- sub("Electricity.Availability",
+                                       "Energy",
+                                       waterPerformance$variable)
+waterPerformance$variable <- sub("Water.Functionality",
+                                       "Water",
+                                       waterPerformance$variable)
+
 
 ## Plot of the electric availability inputs and the water outputs
 ## Need to clean u pthe legend and such, but about the 80% solution right
 ## Now
 waterElecPerfPlot <- ggplot(waterPerformance, aes(Time,
-                                   value,
+                                   Resilience,
                                    group = variable,
                                    linetype = variable)) +
     geom_line() +
         facet_grid(variable ~ Scenario) +
             #scale_linetype_manual(values = c("dashed", "solid")) +
                 theme_bw(base_size = 12, base_family = "serif") +
-                    theme(legend.position = "top",
-                          legend.margin = margin(t = 0, unit = "cm"),
-                          legend.title = element_blank())
+                    theme(legend.position = "none")
 
 ggsave(plot = waterElecPerfPlot,
        filename = paste0("waterElecPefPlot.png",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
-       width = 6.5, height = 28)
+       width = 6.5, height = 4)
 
 
 ######################################################################
