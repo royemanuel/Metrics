@@ -215,7 +215,7 @@ class Aircrew(object):
         self.flightDF = self.flightDF.append({"Stud ID": self.ID,
                                               "Flight Time": fltTime,
                                               "Aircraft": ac,
-                                              "Result":
+                                              ## "Result": , 
                                               "Takeoff Time": env.now},
                                              ignore_index=True)
 
