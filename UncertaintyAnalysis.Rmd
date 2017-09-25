@@ -11,7 +11,19 @@ bibliography: mendeley.bib
 ## Quotient resilience and total quotient resilience
 ## Expected System Degradation Function (ESDF) and resilience factor
 ## Integral resilience
+For simplicity we will start out with just the extended integral
+resilience metric becaus I think this is the one that matters. We have
+shown with the simple stories that they are not viable for these
+situations. Trying to rebuild the situation from the
+anyLogicDataPull.R file.
+```{r}
+uncScenFast <- function(data, simRun, need, resFactors, timeHorizon=NULL){
+    resMat <- data.frame()
+    needStep <- dim(need)[1]
+    resStep <- dim(resFactors)[1]
 
+}
+```
 # Uncertainty Communication
 
 The focus of this section is to build the format for working through
@@ -26,16 +38,14 @@ Simplest is the Homogeneous Poisson process (HPP). Actually, no, what
 I want to do is use the exponential distribution, and sample from it
 until the time runs out. 
 
+scenarioBuild builds a data frame that produces failure and recovery
+events that accumulate until the timehorizon is surpassed. These
+are used by performance build to build a performance profile that
+can fit into the resilience metric calculators
 ```{r}
 library("plyr")
 library("dplyr")
-TTFexp <- data.frame(failures = ceiling(rexp(n=100, rate = 1/300)))
-TTFexp$cuTime <- cumsum(TTFexp$failures)
-head(TTFexp)
-## scenarioBuild builds a data frame that produces failure and recovery
-## events that accumulate until the timehorizon is surpassed. These
-## are used by performance build to build a performance profile that
-## can fit into the resilience metric calculators
+set.seed(8541984)
 scenarioBuild <- function(lambda, timeHorizon, numScen){
     outDF <- data.frame()
     for(s in 1:numScen){
@@ -65,9 +75,11 @@ scenarioBuild <- function(lambda, timeHorizon, numScen){
     }
     return(outDF)
 }
+```
 
-## performanceBuild takes the built scenarios and makes time-sereis
-## data that is ingested by the resilience calculators
+performanceBuild takes the built scenarios and makes time-sereis
+data that is ingested by the resilience calculators
+```{r}
 performanceBuild <- function(buildDF, timeHorizon, perfInit){
     allDF <- data.frame()
     for (s in 1:max(buildDF$scenario)){
@@ -87,14 +99,19 @@ performanceBuild <- function(buildDF, timeHorizon, perfInit){
             p <- workDF$Level[r]
             scenDF <- bind_rows(scenDF, eventDF)
         }
-        allDF <- bind_rows(allDF, scenDF)
+        scenDF <- filter(scenDF, Time <= timeHorizon)
+        outList <- c(func = "custom",
+                        Performance = scenDF$Performance)
     }
-    allDF <- filter(allDF, Time <= timeHorizon)
-    return(allDF)
+
+    return(outList)
 }
 
-TTFscenario <- scenarioBuild(TTFexp, 1000)
-
+g <- scenarioBuild(1/10, 100, 3)
+h <- performanceBuild(g, 100, 1)
+print(head(g))
+print(head(h, 50))
+print(dim(h))
 ```
 
 ### NHPP
