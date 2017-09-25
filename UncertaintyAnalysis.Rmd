@@ -2,11 +2,15 @@
 title: "Resilience Model Uncertainty Analysis"
 author: "Roy Emanuel II"
 output:
-    md_document:
-        variant: markdown_github
+    html_document
+    # md_document:
+        #variant: markdown_github
+bibliography: mendeley.bib
 ---
 # Resilience Models
 ## Quotient resilience and total quotient resilience
+    Extended Quotient resilience [@GamaDessavre2016] is 
+    $$R_{EQR}= \frac{\Phi(t) - Phi(t_d)}{\Phi(t_0) - \Phi(t_d)}$$
 ## Expected System Degradation Function (ESDF) and resilience factor
 ## Integral resilience
 # Uncertainty Communication
