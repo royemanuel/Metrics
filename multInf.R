@@ -58,13 +58,13 @@ infFactor$Scenario <- sub("RobustOnly.csv", "B", infFactor$Scenario)
 infFactor$Scenario <- sub("TTR.csv", "C", infFactor$Scenario)
 infFactor$Scenario <- sub("RecLevel.csv", "D", infFactor$Scenario)
 infFactor$Infrastructure <- sub("Electricity.Availability",
-                                "Energy",
+                                "Electricity",
                                 infFactor$Infrastructure)
 infFactor$Infrastructure <- sub("Communications.Function",
                                 "Communications",
                                 infFactor$Infrastructure)
 infFactor$Infrastructure <- sub("IT.Function",
-                                "IT",
+                                "Information\nTechnology",
                                 infFactor$Infrastructure)
 infFactor$Infrastructure <- sub("Healthcare.Function",
                                 "Healthcare",
@@ -81,13 +81,15 @@ infFactor$Infrastructure <- sub("Emergency.Services.Functionality",
 infFactor$Infrastructure <- sub("Water.Functionality",
                                 "Water",
                                 infFactor$Infrastructure)
-
+infFactor$Infrastructure <- as.factor(infFactor$Infrastructure)
+infFactor$Infrastructure <- fct_relevel(infFactor$Infrastructure,
+                                        "Electricity")
                
 infResPointPlot <- ggplot(infFactor, aes(Scenario, Resilience)) +
     facet_grid(Infrastructure ~ ResType) +
         geom_point(aes(shape = factor(O.or.E)), size = 2.5, color = "grey50") +
             geom_point(color = "white", size = 1, aes(shape = O.or.E)) +
-                theme_bw(base_size = 12, base_family = "serif") +
+                theme_bw(base_size = 11, base_family = "serif") +
                     theme(legend.position = "top",
                           legend.margin = margin(t = 0, unit = "cm"),
                           legend.title = element_blank())
@@ -98,24 +100,39 @@ ggsave(plot = infResPointPlot,
            ".png"),
        width = 6.5, height = 9)
 
+infResPointPlotPres <- ggplot(infFactor, aes(Scenario, Resilience)) +
+    facet_grid(ResType ~ Infrastructure) +
+        geom_point(aes(shape = factor(O.or.E)), size = 2.5, color = "grey50") +
+            geom_point(color = "white", size = 1, aes(shape = O.or.E)) +
+                theme_bw(base_size = 11, base_family = "serif") +
+                    theme(legend.position = "top",
+                          legend.margin = margin(t = 0, unit = "cm"),
+                          legend.title = element_blank())
+
+ggsave(plot = infResPointPlotPres,
+       filename = paste0("infFactResPointPlotPres",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 9, height = 6)
+
 
 ## Plot of the electric availability inputs and the water outputs
 ## Need to clean u pthe legend and such, but about the 80% solution right
 ## Now
 infPerformance <- cleanAnyLogic(infNameList) %>%
     mutate(Resilience = value) %>% select(-value)
-infPerformance$Scenario <- sub("AsIs2Week.csv", "A", infPerformance$Scenario)
-infPerformance$Scenario <- sub("RobustOnly.csv", "B", infPerformance$Scenario)
-infPerformance$Scenario <- sub("TTR.csv", "C", infPerformance$Scenario)
-infPerformance$Scenario <- sub("RecLevel.csv", "D", infPerformance$Scenario)
+infPerformance$Scenario <- sub("AsIs2Week.csv", "(A) Current System", infPerformance$Scenario)
+infPerformance$Scenario <- sub("RobustOnly.csv", "(B) Improved\nRobustness", infPerformance$Scenario)
+infPerformance$Scenario <- sub("TTR.csv", "(C) Improved Time\nto Recover", infPerformance$Scenario)
+infPerformance$Scenario <- sub("RecLevel.csv", "(D) Full Recovery", infPerformance$Scenario)
 infPerformance$variable <- sub("Electricity.Availability",
-                                "Energy",
+                                "Electricity",
                                 infPerformance$variable)
 infPerformance$variable <- sub("Communications.Function",
                                 "Communications",
                                 infPerformance$variable)
 infPerformance$variable <- sub("IT.Function",
-                                "IT",
+                                "Information\nTechnology",
                                 infPerformance$variable)
 infPerformance$variable <- sub("Healthcare.Function",
                                 "Healthcare",
@@ -132,6 +149,9 @@ infPerformance$variable <- sub("Emergency.Services.Functionality",
 infPerformance$variable <- sub("Water.Functionality",
                                 "Water",
                                 infPerformance$variable)
+infPerformance$variable <- as.factor(infPerformance$variable)
+infPerformance$variable <- fct_relevel(infPerformance$variable,
+                                        "Electricity")
 
 elecPerfPlot <- ggplot(infPerformance, aes(Time,
                                    Resilience,
@@ -147,6 +167,21 @@ ggsave(plot = elecPerfPlot,
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 6.5, height = 8.5)
+
+elecPerfPlotPres <- ggplot(infPerformance, aes(Time,
+                                   Resilience,
+                                   group = variable,
+                                   linetype = variable)) +
+    geom_line() +
+        facet_grid(Scenario ~ variable) +
+                theme_bw(base_size = 11, base_family = "serif") +
+                    theme(legend.position = "none")
+
+ggsave(plot = elecPerfPlotPres,
+       filename = paste0("ElecPefPlotPres",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 11, height = 5.5 )
 
 
 ## Build the .csv with the resilience values grouped by infrastructure,

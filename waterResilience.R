@@ -40,7 +40,7 @@ if ("waterResilience7" %in% ls()){
 }
 
 waterResilienceClean7 <- waterResilience7 %>%
-                mutate(Preference = ifelse(Need == fireNeed, "FireFighting",
+                mutate(Preference = ifelse(Need == fireNeed, "Fire Fighting",
                    ifelse(Need == generalNeed, "Non-Potable",
                           ifelse(Need == potableNeed, "Potable",
                                  ifelse(Need == 0.01, "Low", "StatusQuo"))))) %>%
@@ -108,9 +108,9 @@ waterPerformance <- cleanAnyLogic(waterNameList) %>%
 waterPerformance$Scenario <- sub("AsIs2Week.csv", "(A) Current System", waterPerformance$Scenario)
 waterPerformance$Scenario <- sub("RobustOnly.csv", "(B) Improved\nRobustness", waterPerformance$Scenario)
 waterPerformance$Scenario <- sub("TTR.csv", "(C) Improved Time\nto Recover", waterPerformance$Scenario)
-waterPerformance$Scenario <- sub("RecLevel.csv", "(D) Improved Recovery\nPerformance", waterPerformance$Scenario)
+waterPerformance$Scenario <- sub("RecLevel.csv", "(D) Full Recovery", waterPerformance$Scenario)
 waterPerformance$variable <- sub("Electricity.Availability",
-                                       "Energy",
+                                       "Electricity",
                                        waterPerformance$variable)
 waterPerformance$variable <- sub("Water.Functionality",
                                        "Water",
@@ -141,7 +141,7 @@ ggsave(plot = waterElecPerfPlot,
 ## Working out what is going on with integral resilience
 
 electricResilienceClean <- waterResilience7 %>%
-    mutate(Preference = ifelse(Need == fireNeed, "FireFighting",
+    mutate(Preference = ifelse(Need == fireNeed, "Fire Fighting",
                ifelse(Need == generalNeed, "Non-Potable",
                       "Potable"))) %>%
                           filter(Infrastructure == "Electricity.Availability")  

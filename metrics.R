@@ -6,7 +6,7 @@ library('reshape2')
 library('ggplot2')
 library('extrafont')
 library('caTools')
-
+library('forcats')
 ## Function that builds a  time column from 0 to endTime with resolution
 ## size intervals
 timeColumn <- function(endTime, resolution){

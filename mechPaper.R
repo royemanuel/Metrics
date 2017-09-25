@@ -92,7 +92,7 @@ resilienceVersusSigma <- function(df, time){
                       legend.position = "top",
                       legend.title = element_blank()) + ylim(0, 1.2)
 }
-## Plot resilience as the time horizon changes
+## Plot resilience as the time horizon changes landscape
 resilienceVersusTimeHorizon <- function(df, title){
     workDF <- df %>%
          select(Time, QR, EQR, Rho, TQR, ETQR,
@@ -133,6 +133,8 @@ resilienceVersusTimeHorizon <- function(df, title){
             theme(legend.position = "top",
                   legend.title = element_blank()) + ylim(0, 1.2)
 }
+
+## Build resilience versus time horizon appropriate for 
 ## Plot resilience as the time to fail changes
 resilienceVersusTimeToFail <- function(df, time){
     workDF <- df %>%
@@ -648,13 +650,13 @@ plotNoFailureSigma0to1 <- resilienceVersusSigma(noFailureSigma0to1Data, 80)
 ######################################################################
 
 noFailureTimeHorizonData <- mutate(noFailureTimeHorizonData,
-                                   dataSet = "(d) No Failure with Changing Need")
+                                   dataSet = "(d) No Failure\nwith Changing Need")
 noRecoveryTimeHorizonData <- mutate(noRecoveryTimeHorizonData,
-                                    dataSet = "(a) Step Failure without Recovery")
+                                    dataSet = "(a) Step Failure\nwithout Recovery")
 linearRecoveryTimeHorizonData <- mutate(linearRecoveryTimeHorizonData,
-                                        dataSet = "(c) Step Failure with Linear Recovery")
+                                        dataSet = "(c) Step Failure\nwith Linear Recovery")
 steppedRecoveryTimeHorizonData <- mutate(steppedRecoveryTimeHorizonData,
-                                         dataSet = "(b) Step Failure with Step Recovery")
+                                         dataSet = "(b) Step Failure\nwith Step Recovery")
 
 allTimeHor <- bind_rows(noFailureTimeHorizonData,
                         noRecoveryTimeHorizonData,
@@ -699,17 +701,23 @@ ggsave(plot = thPlot,
        width = 9,
        height = 5.2)
 
+ggsave(plot = thPlot,
+       filename = paste0("TimeHorizonPortrait",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 6,
+       height = 5.2)
 
 ######################################################################
 ## Grouped plots for Need
 
 
 need0to1NoRecoveryData <- mutate(need0to1NoRecoveryData,
-                                    dataSet = "(a) Step Failure without Recovery")
+                                    dataSet = "(a) Step Failure\nwithout Recovery")
 need0to1LinearRecoveryData <- mutate(need0to1LinearRecoveryData,
-                                        dataSet = "(c) Step Failure with Linear Recovery")
+                                        dataSet = "(c) Step Failure\nwith Linear Recovery")
 need0to1SteppedRecoveryData <- mutate(need0to1SteppedRecoveryData,
-                                         dataSet = "(b) Step Failure with Step Recovery")
+                                         dataSet = "(b) Step Failure\nwith Step Recovery")
 allNeed <- bind_rows(need0to1LinearRecoveryData,
                      need0to1NoRecoveryData,
                      need0to1SteppedRecoveryData)
@@ -747,24 +755,32 @@ needPlot <- ggplot(allNeed, aes(Need, Resilience, group = variable)) +
                 theme(legend.margin=margin(t = 0, unit = 'cm'),
                       legend.position = "top",
                       legend.title = element_blank()) + ylim(0, 1.2)
+
 ggsave(plot = needPlot,
        filename = paste0("Need",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 9,
        height = 5.2)
+
+ggsave(plot = needPlot,
+       filename = paste0("NeedPortrait",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 6,
+       height = 5.2)
 ######################################################################
 ## Grouped plots for Sigma
 
 
 sigma0to1NoRecoveryData <- mutate(sigma0to1NoRecoveryData,
-                                    dataSet = "(a) Step Failure without Recovery")
+                                    dataSet = "(a) Step Failure\nwithout Recovery")
 sigma0to1LinearRecoveryData <- mutate(sigma0to1LinearRecoveryData,
-                                        dataSet = "(c) Step Failure with Linear Recovery")
+                                        dataSet = "(c) Step Failure\nwith Linear Recovery")
 sigma0to1SteppedRecoveryData <- mutate(sigma0to1SteppedRecoveryData,
-                                       dataSet = "(b) Step Failure with Step Recovery")
+                                       dataSet = "(b) Step Failure\nwith Step Recovery")
 sigma0to1NoFailureData <- mutate(noFailureSigma0to1Data,
-                                 dataSet = "(d) No Failure with Changing Need")
+                                 dataSet = "(d) No Failure\nwith Changing Need")
 allSigma <- bind_rows(sigma0to1LinearRecoveryData,
                      sigma0to1NoRecoveryData,
                       sigma0to1SteppedRecoveryData,
@@ -803,11 +819,19 @@ sigmaPlot <- ggplot(allSigma, aes(Sigma, Resilience, group = variable)) +
                 theme(legend.margin=margin(t = 0, unit = 'cm'),
                       legend.position = "top",
                       legend.title = element_blank()) + ylim(0, 1.2)
+
 ggsave(plot = sigmaPlot,
        filename = paste0("Sigma",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
            ".png"),
        width = 9,
+       height = 5.2)
+
+ggsave(plot = sigmaPlot,
+       filename = paste0("SigmaPortrait",
+           format(Sys.time(), "%Y-%m-%d-%I-%M"),
+           ".png"),
+       width = 6,
        height = 5.2)
 
 ######################################################################
@@ -970,10 +994,10 @@ allTH <- allTH %>%
 
 ## Build a labeller to make the plot proper
 scenarioNames <- list(
-    'A' = 'Step Failure without Recovery',
-    'B' = 'Step Failure with Step Recovery',
-    'C' = 'Step Failure with Linear Recovery',
-    'D' = 'No Failure with Changing Need'
+    'A' = '(a) Step Failure without Recovery',
+    'B' = '(b) Step Failure with Step Recovery',
+    'C' = '(c) Step Failure with Linear Recovery',
+    'D' = '(d) No Failure with Changing Need'
 )
 
 scenLabeller <- function(variable, value){
