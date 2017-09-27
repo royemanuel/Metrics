@@ -103,7 +103,7 @@ ggsave(plot = waterResPointPlot,
 waterPerformance <- cleanAnyLogic(waterNameList) %>%
     filter(variable == "Water.Functionality" |
                variable == "Electricity.Availability") %>%
-                   mutate(Resilience = value) %>%
+                   mutate(Performance = value) %>%
                        select(-value)
 waterPerformance$Scenario <- sub("AsIs2Week.csv", "(A) Current System", waterPerformance$Scenario)
 waterPerformance$Scenario <- sub("RobustOnly.csv", "(B) Improved\nRobustness", waterPerformance$Scenario)
@@ -121,7 +121,7 @@ waterPerformance$variable <- sub("Water.Functionality",
 ## Need to clean u pthe legend and such, but about the 80% solution right
 ## Now
 waterElecPerfPlot <- ggplot(waterPerformance, aes(Time,
-                                   Resilience,
+                                   Performance,
                                    group = variable,
                                    linetype = variable)) +
     geom_line() +
