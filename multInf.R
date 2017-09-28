@@ -120,7 +120,7 @@ ggsave(plot = infResPointPlotPres,
 ## Need to clean u pthe legend and such, but about the 80% solution right
 ## Now
 infPerformance <- cleanAnyLogic(infNameList) %>%
-    mutate(Resilience = value) %>% select(-value)
+    mutate(Performance = value) %>% select(-value)
 infPerformance$Scenario <- sub("AsIs2Week.csv", "(A) Current System", infPerformance$Scenario)
 infPerformance$Scenario <- sub("RobustOnly.csv", "(B) Improved\nRobustness", infPerformance$Scenario)
 infPerformance$Scenario <- sub("TTR.csv", "(C) Improved Time\nto Recover", infPerformance$Scenario)
@@ -154,7 +154,7 @@ infPerformance$variable <- fct_relevel(infPerformance$variable,
                                         "Electricity")
 
 elecPerfPlot <- ggplot(infPerformance, aes(Time,
-                                   Resilience,
+                                   Performance,
                                    group = variable,
                                    linetype = variable)) +
     geom_line() +
@@ -169,7 +169,7 @@ ggsave(plot = elecPerfPlot,
        width = 6.5, height = 8.5)
 
 elecPerfPlotPres <- ggplot(infPerformance, aes(Time,
-                                   Resilience,
+                                   Performance,
                                    group = variable,
                                    linetype = variable)) +
     geom_line() +
