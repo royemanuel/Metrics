@@ -1040,3 +1040,20 @@ compareNoRecovery <- noRecoveryTimeHorizonData %>%
 ESDFcompNoRecovery <- compareNoRecovery$extRho - compareNoRecovery$Rho
 intRescompNoRecovery <- compareNoRecovery$extResilience -
     compareNoRecovery$statQuoResilience
+
+
+######################################################################
+## Consolidate the metric responses to one plot
+
+
+## recoveryLevel0to1Data$EXP <- "(4) Recovery Level"
+## recoveryTime21to60Data$EXP <- "(3) Recovery Time"
+## failLevel0to1Data$EXP <- "(2) Robustness"
+## noRecoveryTimeToFailData$EXP <- "(1) Fail Time"
+## 
+## paramExp <- bind_rows(recoveryLevel0to1Data,
+##                       recoveryTime21to60Data,
+##                       failLevel0to1Data,
+##                       noRecoveryTimeToFailData)
+## 
+## combinedExp <- ggplot(paramExp, aes())
