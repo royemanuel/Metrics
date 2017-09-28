@@ -5,7 +5,7 @@ output:
     html_document
     # md_document:
         #variant: markdown_github
-bibliography: mendeley.bib
+
 ---
 # Resilience Models
 ## Quotient resilience and total quotient resilience
@@ -82,6 +82,9 @@ data that is ingested by the resilience calculators
 ```{r}
 performanceBuild <- function(buildDF, timeHorizon, perfInit){
     allDF <- data.frame()
+    fileExport <- paste0("performance",
+                                format(Sys.time(), "%Y-%m-%d-%I-%M"),
+                                ".csv")
     for (s in 1:max(buildDF$scenario)){
         workDF <- filter(buildDF, scenario == s)
         p <- perfInit
@@ -99,20 +102,24 @@ performanceBuild <- function(buildDF, timeHorizon, perfInit){
             p <- workDF$Level[r]
             scenDF <- bind_rows(scenDF, eventDF)
         }
-        scenDF <- filter(scenDF, Time <= timeHorizon)
-        outList <- c(func = "custom",
-                        Performance = scenDF$Performance)
+        allDF <- bind_rows(allDF, scenDF)
     }
-
-    return(outList)
+    write.csv(allDF, file = fileExport)
 }
 
 g <- scenarioBuild(1/10, 100, 3)
-h <- performanceBuild(g, 100, 1)
+performanceBuild(g, 100, 1)
 print(head(g))
 print(head(h, 50))
 print(dim(h))
 ```
+##Next step
+
+My next step is to build it soe the integral resilience metric is
+applied. This is non-trivial. I will also need to generate stakeholder
+preferences from probabilistic and possibilistic methods and append
+them to the performance profile before I can calculate resilience.
+
 
 ### NHPP
 Next is the Nonhomogeneous Poisson process (NHPP)
