@@ -48,7 +48,6 @@ performanceBuild takes the built scenarios and makes time-sereis
 data that is ingested by the resilience calculators
 
 ```{r Performance Profile Building}
-library("plyr")
 library("dplyr")
 library("caTools")
 set.seed(8541984)
@@ -109,8 +108,8 @@ performanceBuild <- function(buildDF, timeHorizon, perfInit){
     return(fileExport)
 }
 
-g <- scenarioBuild(1/10, 100, 3)
-currentFile <- performanceBuild(g, 100, 1)
+g <- scenarioBuild(1/10, 120, 3)
+currentFile <- performanceBuild(g, 120, 1)
 print(head(g))
 h <- read.csv(currentFile)
 print(head(h, 50))
@@ -200,24 +199,38 @@ assignGroup <- function(DF){
 
 buildPPDF <- function(performanceDF, preferDF){
     ppDF <- data.frame()
-    for (s in 1:max(performanceDF$Scenario)){
-        workDF <- workDF %>% filter(performanceDF$Scenario == s) %>%
-            filter(Time =< max(preferDF$Time)) %>%
-                       bind_cols(workDF, preferDF)
-        workDF <- assignGroup(workDF)
-        ppDF <- bind_rows(ppDF, workDF)
+    for (t in 1:nrow(preferDF)){
+        pref <- buildPref(preferDF[t,], t)
+        for (s in 1:max(performanceDF$Scenario)){
+            workDF <- performanceDF %>% filter(Scenario == s) %>%
+                filter(Time <= preferDF$TimeHorizon[t])
+            ## print(tail(pref))
+            ## print(tail(workDF))
+            workDF <- inner_join(workDF, pref)
+            workDF <- assignGroup(workDF)
+            ppDF <- bind_rows(ppDF, workDF)
+        }
     }
     return(ppDF)
 }
 
-buildPref <- function(preferList){
-    for (t in 1:nrow(preferList)){
-        
-    }
+buildPref <- function(preferList, t){
+    perfDF <- data.frame()
+    DF <- data.frame(Time = seq(0, preferList$TimeHorizon, 1),
+                     Preference = preferList$NeedLevel,
+                     PerfScenario = t)
+    return(DF)
 }
 
-singleResilience <- function(perf, stake){
-    
+IR <- function(DF){
+    DFg <- DF %>%
+        group_by(Scenario, PerfScenario, Grp) %>%
+            summarize(grpInt = (trapz(Time, Performance) /
+                                    trapz(Time, Preference)) *
+                                        (max(X) - min(Time)),
+                      grpTime = max(Time))
+    DFg <- DFg %>% summarize(IntegralResilience = sum(grpInt) / max(grpTime))
+
 }
 
 ```
