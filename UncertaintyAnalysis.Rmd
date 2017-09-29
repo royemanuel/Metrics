@@ -218,20 +218,66 @@ buildPref <- function(preferList, t){
     perfDF <- data.frame()
     DF <- data.frame(Time = seq(0, preferList$TimeHorizon, 1),
                      Preference = preferList$NeedLevel,
-                     PerfScenario = t)
+                     PreferenceScenario = t)
     return(DF)
 }
 
 IR <- function(DF){
     DFg <- DF %>%
-        group_by(Scenario, PerfScenario, Grp) %>%
+        group_by(Scenario, PreferenceScenario, Grp) %>%
             summarize(grpInt = (trapz(Time, Performance) /
-                                    trapz(Time, Preference)) *
-                                        (max(X) - min(Time)),
-                      grpTime = max(Time))
-    DFg <- DFg %>% summarize(IntegralResilience = sum(grpInt) / max(grpTime))
-
+                                    trapz(Time, Preference)) * n(),
+                                        ## (max(Time) - min(Time)),
+                      grpTime = n())
+    DFg <- DFg %>% summarize(IntegralResilience = sum(grpInt) / sum(grpTime))
+    return(DFg)
 }
+
+## oldResWay <- function(DF, chi){
+##     resultDF <- data.frame()
+##     for(u in 1:length(unique(DF$Scenario))){
+##         workDF <- DF %>% filter(Scenario == u) %>%
+##             mutate(Need = Preference)
+##         for(v in 1:length(unique(DF$PreferenceScenario))){
+##             workDF <- workDF %>% filter(workDF$PreferenceScenario == v)
+##             intDF <- intRes(workDF, chi)
+##             resultDF <- bind_rows(resultDF, intDF)
+##         }
+##     }
+## }
+
+```
+# Test Cases
+Build a study of 10 time ticks with the Preference and Performance at
+1
+```{r Test 1}
+test1 <- data.frame(Time = seq(0, 10, 1), Performance = 1, Preference = 1,
+                    Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
+
+newTest1 <- IR(test1)
+oldTest1 <- intRes(test1,1)
+
+test2 <- data.frame(Time = seq(0, 10, 1),
+                    Performance = .5,
+                    Preference = 1,
+                    Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
+newTest2 <- IR(test2)
+oldTest2 <- intRes(test2,1)
+
+test3 <- data.frame(Time = seq(0, 10, 1),
+                    Performance = 
+                        Preference = 1,
+                        Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
+newTest3 <- IR(test3)
+oldTest3 <- intRes(test3,1)
+
+test5 <- data.frame(Time = seq(0, 10, 1),
+                    Performance = c(rep(.5, 5), rep(1, 6)),
+                        Preference = c(rep(.5, 5), rep(.8,6)),
+                    Scenario = 1, PreferenceScenario = 1, Grp = 1,
+                    Need =  c(rep(.5, 5), rep(.8,6)))
+newTest5 <- IR(test5)
+oldTest5 <- intRes(test5,1)
 
 ```
 ### NHPP
