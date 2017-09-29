@@ -42,9 +42,15 @@ scenarioBuild builds a data frame that produces failure and recovery
 events that accumulate until the timehorizon is surpassed. These
 are used by performance build to build a performance profile that
 can fit into the resilience metric calculators
-```{r}
+
+
+performanceBuild takes the built scenarios and makes time-sereis
+data that is ingested by the resilience calculators
+
+```{r Performance Profile Building}
 library("plyr")
 library("dplyr")
+library("caTools")
 set.seed(8541984)
 scenarioBuild <- function(lambda, timeHorizon, numScen){
     outDF <- data.frame()
@@ -75,11 +81,6 @@ scenarioBuild <- function(lambda, timeHorizon, numScen){
     }
     return(outDF)
 }
-```
-
-performanceBuild takes the built scenarios and makes time-sereis
-data that is ingested by the resilience calculators
-```{r}
 performanceBuild <- function(buildDF, timeHorizon, perfInit){
     allDF <- data.frame()
     fileExport <- paste0("performance",
@@ -105,22 +106,107 @@ performanceBuild <- function(buildDF, timeHorizon, perfInit){
         allDF <- bind_rows(allDF, scenDF)
     }
     write.csv(allDF, file = fileExport)
+    return(fileExport)
 }
 
 g <- scenarioBuild(1/10, 100, 3)
-performanceBuild(g, 100, 1)
+currentFile <- performanceBuild(g, 100, 1)
 print(head(g))
+h <- read.csv(currentFile)
 print(head(h, 50))
 print(dim(h))
 ```
-##Next step
+## Build Stakeholder Preferences
 
 My next step is to build it soe the integral resilience metric is
 applied. This is non-trivial. I will also need to generate stakeholder
 preferences from probabilistic and possibilistic methods and append
-them to the performance profile before I can calculate resilience.
+them to the performance profile before I can calculate resilience. 
+Let's build a framework that can take the stakeholder preference and
+assign random steps? a linear trajectory? I'm not sure. OK, why not
+both?
+First, the simplest - assume constant need, but it may be distributed
+triangularly.
+
+# How the performance preference profiles will be generated.
+Build a list of the parameters I want it to have. Looking at the
+inputs to the current resilience for the infrastructure problem:
+multScenarioFast 
+fileNames
+Need list
+Resilience list
+Time Horizon
+Calls:
+cleanAnylogic - list of filenames
+multInfrastructureFast - all inputs provided by multScenarioFast
+ 
+
+## Build constant stakeholder need profiles
+Here is an attempt to split up multiple performance and preference
+profiles. In order to incorporate a time-dependent sigma we will
+need a column of those as well.
+
+```{r Preference Building}
+
+library("triangle")
+minTH <- 85
+maxTH <- 115
+modeTH <- 105
+numScenTH <- 5
+timeHorList <- ceiling(
+    rtriangle(n = numScenTH,
+              a = minTH,
+              b = maxTH,
+              c = modeTH))
+minNeed <- .7
+maxNeed <- 1.05
+modeNeed <- .9
+numScenN <- 10
+cnstNeedList <- rtriangle(n = numScenN,
+                          a = minNeed,
+                          b = maxNeed,
+                          c = modeNeed)
+
+preferenceParams <- expand.grid(TimeHorizon = timeHorList,
+                                 NeedLevel = cnstNeedList)
 
 
+```
+   
+# Extended Integral Resilience
+Build extended integral resilience value from what we have. 
+1. Split the data.frame up by perf > Need
+2. for Need > perf -> trapz perf / trapz need
+3. for per > need -> 1 + chi(trapz perf / trapz need
+4. R_EIR = sum of 1 & 2 / T_h
+
+```{r Extended Integral Resilience}
+assignGroup <- function(DF){
+    i <- sign(DF$diff[1])
+    grp <- 1
+    DF$Grp <- 1
+    for (r in 2:nrow(DF)){
+        if (sign(i) == sign(DF$diff[r])){
+            DF$Grp[r] <- grp
+        } else {
+            grp <- grp + 1
+            i <- sign(DF$diff[r])
+            DF$Grp[r] <- grp
+        }
+    }
+}
+
+perfPrefDF <- function(performanceDF, preferDF){
+    for (s in 1:max(performanceDF$Scenario)){
+        workDF <- filter(performanceDF$Scenario == s)
+    }
+}
+
+singleResilience <- function(perf, stake){
+    
+}
+
+```
 ### NHPP
 Next is the Nonhomogeneous Poisson process (NHPP)
 
