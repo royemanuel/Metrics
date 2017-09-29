@@ -15,7 +15,7 @@ For simplicity we will start out with just the extended integral
 resilience metric becaus I think this is the one that matters. We have
 shown with the simple stories that they are not viable for these
 situations. Trying to rebuild the situation from the
-anyLogicDataPull.R file.
+anyLogicDataPull.R file. Small change
 ```{r}
 uncScenFast <- function(data, simRun, need, resFactors, timeHorizon=NULL){
     resMat <- data.frame()
