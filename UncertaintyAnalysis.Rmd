@@ -182,6 +182,7 @@ Build extended integral resilience value from what we have.
 
 ```{r Extended Integral Resilience}
 assignGroup <- function(DF){
+    DF <- DF %>% mutate(diff = Performance - Preference)
     i <- sign(DF$diff[1])
     grp <- 1
     DF$Grp <- 1
@@ -194,11 +195,24 @@ assignGroup <- function(DF){
             DF$Grp[r] <- grp
         }
     }
+    return(DF)
 }
 
-perfPrefDF <- function(performanceDF, preferDF){
+buildPPDF <- function(performanceDF, preferDF){
+    ppDF <- data.frame()
     for (s in 1:max(performanceDF$Scenario)){
-        workDF <- filter(performanceDF$Scenario == s)
+        workDF <- workDF %>% filter(performanceDF$Scenario == s) %>%
+            filter(Time =< max(preferDF$Time)) %>%
+                       bind_cols(workDF, preferDF)
+        workDF <- assignGroup(workDF)
+        ppDF <- bind_rows(ppDF, workDF)
+    }
+    return(ppDF)
+}
+
+buildPref <- function(preferList){
+    for (t in 1:nrow(preferList)){
+        
     }
 }
 
