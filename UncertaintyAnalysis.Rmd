@@ -253,8 +253,8 @@ Build a study of 10 time ticks with the Preference and Performance at
 ```{r Test 1}
 test1 <- data.frame(Time = seq(0, 10, 1), Performance = 1, Preference = 1,
                     Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
-
-newTest1 <- IR(test1)
+newTest1a <- IR(test1)
+newTest1b <- newTest1a %>% summarize(IntegralResilience = sum(grpInt) / sum(grpTime))
 oldTest1 <- intRes(test1,1)
 
 test2 <- data.frame(Time = seq(0, 10, 1),
@@ -274,10 +274,20 @@ oldTest3 <- intRes(test3,1)
 test5 <- data.frame(Time = seq(0, 10, 1),
                     Performance = c(rep(.5, 5), rep(1, 6)),
                         Preference = c(rep(.5, 5), rep(.8,6)),
-                    Scenario = 1, PreferenceScenario = 1, Grp = 1,
+                    Scenario = 1, PreferenceScenario = 1,
+                    Grp = c(rep(1, 5), rep(2,6)),
                     Need =  c(rep(.5, 5), rep(.8,6)))
 newTest5 <- IR(test5)
 oldTest5 <- intRes(test5,1)
+
+test6 <- data.frame(Time = seq(0, 10000, 1),
+                    Performance = c(rep(.5, 5001), rep(1, 5000)),
+                        Preference = c(rep(.5, 5001), rep(.8,5000)),
+                    Scenario = 1, PreferenceScenario = 1,
+                    Grp = c(rep(1, 5001), rep(2, 5000)),
+                    Need =  c(rep(.5, 5001), rep(.8,5000)))
+newTest6 <- IR(test6)
+oldTest6 <- intRes(test6,1)
 
 ```
 ### NHPP
