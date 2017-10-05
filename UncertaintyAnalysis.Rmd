@@ -23,6 +23,7 @@ uncScenFast <- function(data, simRun, need, resFactors, timeHorizon=NULL){
     resStep <- dim(resFactors)[1]
 
 }
+source("metrics.R")
 ```
 # Uncertainty Communication
 
@@ -178,8 +179,8 @@ Build extended integral resilience value from what we have.
 2. for Need > perf -> trapz perf / trapz need
 3. for per > need -> 1 + chi(trapz perf / trapz need
 4. R_EIR = sum of 1 & 2 / T_h
-
-```{r Extended Integral Resilience}
+## Build Original Integral Resilience
+```{r Integral Resilience}
 assignGroup <- function(DF){
     DF <- DF %>% mutate(diff = Performance - Preference)
     i <- sign(DF$diff[1])
@@ -226,9 +227,10 @@ IR <- function(DF){
     DFg <- DF %>%
         group_by(Scenario, PreferenceScenario, Grp) %>%
             summarize(grpInt = (trapz(Time, Performance) /
-                                    trapz(Time, Preference)) * n(),
-                                        ## (max(Time) - min(Time)),
-                      grpTime = n())
+                                    trapz(Time, Preference)) * 
+                                         (max(Time) - min(Time) + 1),
+                      grpTime = max(Time) - min(Time) + 1)
+                      ## grpTime = n())
     DFg <- DFg %>% summarize(IntegralResilience = sum(grpInt) / sum(grpTime))
     return(DFg)
 }
@@ -247,14 +249,14 @@ IR <- function(DF){
 ## }
 
 ```
-# Test Cases
+# Test Cases for the original integral resilience
 Build a study of 10 time ticks with the Preference and Performance at
 1
 ```{r Test 1}
 test1 <- data.frame(Time = seq(0, 10, 1), Performance = 1, Preference = 1,
                     Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
 newTest1a <- IR(test1)
-newTest1b <- newTest1a %>% summarize(IntegralResilience = sum(grpInt) / sum(grpTime))
+## newTest1b <- newTest1a %>% summarize(IntegralResilience = sum(grpInt) / sum(grpTime))
 oldTest1 <- intRes(test1,1)
 
 test2 <- data.frame(Time = seq(0, 10, 1),
@@ -264,12 +266,12 @@ test2 <- data.frame(Time = seq(0, 10, 1),
 newTest2 <- IR(test2)
 oldTest2 <- intRes(test2,1)
 
-test3 <- data.frame(Time = seq(0, 10, 1),
-                    Performance = 
-                        Preference = 1,
-                        Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
-newTest3 <- IR(test3)
-oldTest3 <- intRes(test3,1)
+## test3 <- data.frame(Time = seq(0, 10, 1),
+##                     Performance = ,
+##                         Preference = 1,
+##                         Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
+## newTest3 <- IR(test3)
+## oldTest3 <- intRes(test3,1)
 
 test5 <- data.frame(Time = seq(0, 10, 1),
                     Performance = c(rep(.5, 5), rep(1, 6)),
@@ -290,6 +292,26 @@ newTest6 <- IR(test6)
 oldTest6 <- intRes(test6,1)
 
 ```
+## Build the Extended integral resilience
+```{r Extended Integral Resilience}
+
+EIR <- function(DF, chi){
+    DFg <- DF %>%
+        group_by(Scenario, PreferenceScenario, Grp) %>%
+            summarize(grpInt = (trapz(Time, Performance) /
+                                    trapz(Time, Preference)) * 
+                                         (max(Time) - min(Time) + 1),
+                      grpTime = max(Time) - min(Time) + 1)
+    DFg <- DFg %>% summarize(ExtendedIntegralResilience =
+                                 ifelse(sum(grpInt) / sum(grpTime) < 1,
+                                        sum(grpInt) / sum(grpTime),
+                                        1 + chi *
+                                        (sum(grpInt) / sum(grpTime) - 1)))
+    return(DFg)
+}
+
+```
+
 ### NHPP
 Next is the Nonhomogeneous Poisson process (NHPP)
 
