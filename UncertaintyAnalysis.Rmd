@@ -48,18 +48,18 @@ can fit into the resilience metric calculators
 performanceBuild takes the built scenarios and makes time-sereis
 data that is ingested by the resilience calculators
 
-```{r Performance Profile Building}
+```{r Performance_Profile_Building}
 library("dplyr")
 library("caTools")
 set.seed(8541984)
-scenarioBuild <- function(lambda, timeHorizon, numScen){
+scenarioBuild <- function(lambda, timeHorizon, numScen, failPar, recPar){
     outDF <- data.frame()
     for(s in 1:numScen){
         DF <- data.frame()
         t <- 0
         while(t < timeHorizon){
             f <- ceiling(rexp(n = 1, lambda))
-            fLev <- rbeta(n = 1, shape1 = 1, shape2 = 5)
+            fLev <- rbeta(n = 1, shape1 = failPar[1], shape2 = failPar[2])
             fDF <- data.frame(time = f,
                               event = "Fail",
                               scenario = s,
@@ -68,7 +68,7 @@ scenarioBuild <- function(lambda, timeHorizon, numScen){
             t <- t + f
             if(t > timeHorizon){break}
             r <- ceiling(rexp(n = 1, lambda))
-            rLev <- rbeta(n = 1, shape1 = 5, shape2 = 1)
+            rLev <- rbeta(n = 1, shape1 = recPar[1], shape2 = recPar[2])
             rDF <- data.frame(time = r,
                               event = "Recover",
                               scenario = s,
@@ -109,7 +109,7 @@ performanceBuild <- function(buildDF, timeHorizon, perfInit){
     return(fileExport)
 }
 
-g <- scenarioBuild(1/10, 120, 3)
+g <- scenarioBuild(1/10, 120, 3, c(1,5), c(5,1))
 currentFile <- performanceBuild(g, 120, 1)
 print(head(g))
 h <- read.csv(currentFile)
@@ -146,7 +146,7 @@ Here is an attempt to split up multiple performance and preference
 profiles. In order to incorporate a time-dependent sigma we will
 need a column of those as well.
 
-```{r Preference Building}
+```{r Preference_Building}
 
 library("triangle")
 minTH <- 85
@@ -180,7 +180,7 @@ Build extended integral resilience value from what we have.
 3. for per > need -> 1 + chi(trapz perf / trapz need
 4. R_EIR = sum of 1 & 2 / T_h
 ## Build Original Integral Resilience
-```{r Integral Resilience}
+```{r Integral_Resilience}
 assignGroup <- function(DF){
     DF <- DF %>% mutate(diff = Performance - Preference)
     i <- sign(DF$diff[1])
@@ -252,7 +252,7 @@ IR <- function(DF){
 # Test Cases for the original integral resilience
 Build a study of 10 time ticks with the Preference and Performance at
 1
-```{r Test 1}
+```{r Test_1}
 test1 <- data.frame(Time = seq(0, 10, 1), Performance = 1, Preference = 1,
                     Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
 newTest1a <- IR(test1)
@@ -293,7 +293,7 @@ oldTest6 <- intRes(test6,1)
 
 ```
 ## Build the Extended integral resilience
-```{r Extended Integral Resilience}
+```{r Extended_Integral_Resilience}
 
 EIR <- function(DF, chi){
     DFg <- DF %>%
@@ -328,9 +328,9 @@ The  point is to build an experiment of multiple options for
 solutions. We will build two scenarios first. Let's just look at
 varying the time to failure.
 
-```{r Time to failure experiment}
-exp1a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20)
-exp2a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20)
+```{r Time_to_failure_experiment, echo=FALSE}
+exp1a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
+exp2a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
 exp1b <- performanceBuild(exp1a, 250, 1)
 exp2b <- performanceBuild(exp2a, 250, 1)
 exp1c <- read.csv(exp1b)
@@ -366,6 +366,27 @@ expER1$Experiment <- 1
 expER2$Experiment <- 2
 exprmnt <- bind_rows(expER1, expER2)
 ```
+# Experiment changing the levels
+
+```{R Changing_need_and_fail_levels, echo=FALSE}
+exp3a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,4), c(7,1))
+exp4a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,3.5), c(4,1))
+exp3b <- performanceBuild(exp3a, 250, 1)
+exp4b <- performanceBuild(exp4a, 250, 1)
+exp3c <- read.csv(exp3b)
+exp4c <- read.csv(exp4b)
+expDF3 <- buildPPDF(exp3c, expPref)
+expDF4 <- buildPPDF(exp4c, expPref)
+
+expER3 <- EIR(expDF3, 0)
+expER4 <- EIR(expDF4, 0)
+expER3$Experiment <- 3
+expER4$Experiment <- 4
+exprmnt <- bind_rows(expER3, expER4, exprmnt)
+
+```
+
+
 ### NHPP
 Next is the Nonhomogeneous Poisson process (NHPP)
 
