@@ -84,7 +84,7 @@ scenarioBuild <- function(lambda, timeHorizon, numScen){
 performanceBuild <- function(buildDF, timeHorizon, perfInit){
     allDF <- data.frame()
     fileExport <- paste0("performance",
-                                format(Sys.time(), "%Y-%m-%d-%I-%M"),
+                                runif(1),
                                 ".csv")
     for (s in 1:max(buildDF$scenario)){
         workDF <- filter(buildDF, scenario == s)
@@ -309,9 +309,63 @@ EIR <- function(DF, chi){
                                         (sum(grpInt) / sum(grpTime) - 1)))
     return(DFg)
 }
+oldTest6Ext0 <- intRes(test6, 0)
+oldTest6Ext.5 <- intRes(test6, .5)
+oldTest6Ext1 <- intRes(test6, 1)
+newTest6Ext0 <- EIR(test6, 0)
+newTest6Ext.5 <- EIR(test6, .5)
+newTest6Ext1 <- EIR(test6, 1)
+
+print(c(oldTest6Ext0$extResilience[10001], newTest6Ext0))
+print(c(oldTest6Ext.5$extResilience[10001], newTest6Ext.5))
+print(c(oldTest6Ext1$extResilience[10001], newTest6Ext1))
 
 ```
 
+# First Experiment Time to Failure
+
+The  point is to build an experiment of multiple options for
+solutions. We will build two scenarios first. Let's just look at
+varying the time to failure.
+
+```{r Time to failure experiment}
+exp1a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20)
+exp2a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20)
+exp1b <- performanceBuild(exp1a, 250, 1)
+exp2b <- performanceBuild(exp2a, 250, 1)
+exp1c <- read.csv(exp1b)
+exp2c <- read.csv(exp2b)
+
+expminTH <- 180
+expmaxTH <- 250
+expmodeTH <- 200
+expnumScenTH <- 10
+exptimeHorList <- ceiling(
+    rtriangle(n = numScenTH,
+              a = minTH,
+              b = maxTH,
+              c = modeTH))
+expminNeed <- .7
+expmaxNeed <- 1.05
+expmodeNeed <- .9
+expnumScenN <- 10
+expcnstNeedList <- rtriangle(n = numScenN,
+                          a = minNeed,
+                          b = maxNeed,
+                          c = modeNeed)
+
+expPref <- expand.grid(TimeHorizon = timeHorList,
+                       NeedLevel = cnstNeedList)
+
+expDF1 <- buildPPDF(exp1c, expPref)
+expDF2 <- buildPPDF(exp2c, expPref)
+
+expER1 <- EIR(expDF1, 0)
+expER2 <- EIR(expDF2, 0)
+expER1$Experiment <- 1
+expER2$Experiment <- 2
+exprmnt <- bind_rows(expER1, expER2)
+```
 ### NHPP
 Next is the Nonhomogeneous Poisson process (NHPP)
 
