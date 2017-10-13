@@ -328,7 +328,7 @@ The  point is to build an experiment of multiple options for
 solutions. We will build two scenarios first. Let's just look at
 varying the time to failure.
 
-```{r Time_to_failure_experiment, echo=FALSE}
+```{r Time_to_failure_experiment, echo=FALSE, message=FALSE, error=FALSE}
 exp1a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
 exp2a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
 exp1b <- performanceBuild(exp1a, 250, 1)
@@ -368,7 +368,7 @@ exprmnt <- bind_rows(expER1, expER2)
 ```
 # Experiment changing the levels
 
-```{R Changing_need_and_fail_levels, echo=FALSE}
+```{R Changing_need_and_fail_levels, echo=FALSE, message=FALSE, error=FALSE}
 exp3a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,4), c(7,1))
 exp4a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,3.5), c(4,1))
 exp3b <- performanceBuild(exp3a, 250, 1)
@@ -384,8 +384,35 @@ expER3$Experiment <- 3
 expER4$Experiment <- 4
 exprmnt <- bind_rows(expER3, expER4, exprmnt)
 
+expPlot <- ggplot(exprmnt, aes(Experiment, ExtendedIntegralResilience, group=Experiment)) +
+    geom_boxplot()
 ```
+# Multiple Resilience Models
+Up to this point the focus has been upon integral resilience. This
+chunk of R will incorporate the quotient, total quotient, and
+resilience factor models as well as the non-extended integral
+resilience model.
 
+```{r All_models, messages=FALSE}
+resilienceDo <- function(DF, sigma, Td, dec){
+    DF <- DF %>% mutate(Need = Preference)
+    DF <- DF %>% group_by(Experiment, Scenario, PreferenceScenario)
+    DF <- DF %>% do(., quotRes(.))
+    print("QR")
+    DF <- DF %>% do(., extQuotRes(., sigma))
+    print("EQR")
+    DF <- DF %>% do(., totalQR(., TH = max(.$Time)))
+    print("TQR")
+    ## DF <- DF %>% do(., resFac(., Td, dec))
+    ## print("RF")
+    ## DF <- DF %>% do(., extResFac(., Td, dec, sigma))
+    ## print("ERF")
+    DF <- DF %>% do(., intRes(., sigma))
+    print("IR & EIR")
+    return(DF)
+}
+
+```
 
 ### NHPP
 Next is the Nonhomogeneous Poisson process (NHPP)
