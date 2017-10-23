@@ -205,9 +205,9 @@ buildPPDF <- function(performanceDF, preferDF){
         for (s in 1:max(performanceDF$Scenario)){
             workDF <- performanceDF %>% filter(Scenario == s) %>%
                 filter(Time <= preferDF$TimeHorizon[t])
-            ## print(tail(pref))
-            ## print(tail(workDF))
-            workDF <- inner_join(workDF, pref)
+            ## Goal: define the columns to do th inner_join by. This may
+            ## speed things up. 
+            workDF <- suppressMessages(inner_join(workDF, pref))
             workDF <- assignGroup(workDF)
             ppDF <- bind_rows(ppDF, workDF)
         }
@@ -328,7 +328,7 @@ The  point is to build an experiment of multiple options for
 solutions. We will build two scenarios first. Let's just look at
 varying the time to failure.
 
-```{r Time_to_failure_experiment, echo=FALSE, message=FALSE, error=FALSE}
+```{r Time_to_failure_experiment, message=FALSE, error=FALSE}
 exp1a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
 exp2a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
 exp1b <- performanceBuild(exp1a, 250, 1)
@@ -368,7 +368,7 @@ exprmnt <- bind_rows(expER1, expER2)
 ```
 # Experiment changing the levels
 
-```{R Changing_need_and_fail_levels, echo=FALSE, message=FALSE, error=FALSE}
+```{R Changing_need_and_fail_levels, message=FALSE, error=FALSE, warning=FALSE}
 exp3a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,4), c(7,1))
 exp4a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,3.5), c(4,1))
 exp3b <- performanceBuild(exp3a, 250, 1)
@@ -393,7 +393,7 @@ chunk of R will incorporate the quotient, total quotient, and
 resilience factor models as well as the non-extended integral
 resilience model.
 
-```{r All_models, messages=FALSE}
+```{r All_models, messages=FALSE, warnings=FALSE}
 resilienceDo <- function(DF, sigma, Td, dec){
     DF <- DF %>% mutate(Need = Preference)
     DF <- DF %>% group_by(Experiment, Scenario, PreferenceScenario)
@@ -411,6 +411,38 @@ resilienceDo <- function(DF, sigma, Td, dec){
     print("IR & EIR")
     return(DF)
 }
+
+expDF1$Experiment <- 1
+expDF2$Experiment <- 2
+expDF3$Experiment <- 3
+expDF4$Experiment <- 4
+wholeShebang <- bind_rows(expDF1, expDF2, expDF3, expDF4)
+aa <- resilienceDo(wholeShebang, 0, 20, 0)
+aaCol <- aa %>% select(Time,
+                       Experiment,
+                       QR,
+                       EQR,
+                       TQR,
+                       ETQR,
+                       statQuoResilience,
+                       extResilience,
+                       Scenario,
+                       PreferenceScenario) %>%
+                           filter(Time == max(Time))
+tidyaaCol <- melt(aaCol, id.vars = c("Experiment",
+                             "Scenario",
+                             "PreferenceScenario",
+                             "Time"))
+nh <- ggplot(tidyaaCol, aes(Experiment, value, group=Experiment)) +
+    geom_jitter() + facet_wrap(~ variable)
+nh
+
+aaExtInt <- tidyaaCol %>% filter(variable == "extResilience")
+aei <- ggplot(aaExtInt, aes(Experiment, value, group=Experiment)) +
+    geom_boxplot() + 
+        facet_wrap(~ Scenario)
+aei
+
 
 ```
 
