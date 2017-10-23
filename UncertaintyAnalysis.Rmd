@@ -328,14 +328,8 @@ The  point is to build an experiment of multiple options for
 solutions. We will build two scenarios first. Let's just look at
 varying the time to failure.
 
+## Overall settings for the experiment
 ```{r Time_to_failure_experiment, message=FALSE, error=FALSE}
-exp1a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
-exp2a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
-exp1b <- performanceBuild(exp1a, 250, 1)
-exp2b <- performanceBuild(exp2a, 250, 1)
-exp1c <- read.csv(exp1b)
-exp2c <- read.csv(exp2b)
-
 expminTH <- 180
 expmaxTH <- 250
 expmodeTH <- 200
@@ -357,36 +351,63 @@ expcnstNeedList <- rtriangle(n = numScenN,
 expPref <- expand.grid(TimeHorizon = timeHorList,
                        NeedLevel = cnstNeedList)
 
+```
+## Experiment 1
+```{r Experiment_1, message=FALSE, error=FALSE}
+
+set.seed(8541984)
+exp1a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
+exp1b <- performanceBuild(exp1a, 250, 1)
+exp1c <- read.csv(exp1b)
 expDF1 <- buildPPDF(exp1c, expPref)
+expER1 <- EIR(expDF1, 0)
+expER1$Experiment <- 1
+
+```
+# Experiment 2
+
+```{r Experiment_2, message=FALSE, error=FALSE}
+set.seed(8541984)
+exp2a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
+exp2b <- performanceBuild(exp2a, 250, 1)
+exp2c <- read.csv(exp2b)
 expDF2 <- buildPPDF(exp2c, expPref)
 
-expER1 <- EIR(expDF1, 0)
 expER2 <- EIR(expDF2, 0)
-expER1$Experiment <- 1
 expER2$Experiment <- 2
 exprmnt <- bind_rows(expER1, expER2)
 ```
-# Experiment changing the levels
+# Experiment 3
 
 ```{R Changing_need_and_fail_levels, message=FALSE, error=FALSE, warning=FALSE}
+set.seed(8541984)
+
 exp3a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,4), c(7,1))
-exp4a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,3.5), c(4,1))
 exp3b <- performanceBuild(exp3a, 250, 1)
-exp4b <- performanceBuild(exp4a, 250, 1)
 exp3c <- read.csv(exp3b)
-exp4c <- read.csv(exp4b)
 expDF3 <- buildPPDF(exp3c, expPref)
-expDF4 <- buildPPDF(exp4c, expPref)
 
 expER3 <- EIR(expDF3, 0)
-expER4 <- EIR(expDF4, 0)
 expER3$Experiment <- 3
+```
+# Experiment 4
+
+```{r Experiment_4, message=FALSE, error=FALSE}
+set.seed(8541984)
+
+exp4a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,3.5), c(4,1))
+exp4b <- performanceBuild(exp4a, 250, 1)
+exp4c <- read.csv(exp4b)
+expDF4 <- buildPPDF(exp4c, expPref)
+expER4 <- EIR(expDF4, 0)
 expER4$Experiment <- 4
-exprmnt <- bind_rows(expER3, expER4, exprmnt)
+exprmnt <- bind_rows(expER3, expER4, expER1, expER2)
 
 expPlot <- ggplot(exprmnt, aes(Experiment, ExtendedIntegralResilience, group=Experiment)) +
     geom_boxplot()
+
 ```
+
 # Multiple Resilience Models
 Up to this point the focus has been upon integral resilience. This
 chunk of R will incorporate the quotient, total quotient, and
