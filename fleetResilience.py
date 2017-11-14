@@ -1,3 +1,4 @@
+
 # Simulate the behavior of a fleet of aircraft. Begin by
 # importing what we need.
 
@@ -186,13 +187,16 @@ class Aircraft(object):
             # print("Plane broke dick")
         stud.hours = stud.hours + fltTime
         inst.hours = inst.hours + fltTime
-        stud.flightLog(env, fltTime, self.BuNo)
-        inst.flightLog(env, fltTime, self.BuNo)
+        inst.flightLog(env, fltTime, self.BuNo, "NA")
         env.process(self.updateBlueBook(env, fltTime))
+        # add the event to the student's flight log with the result
         if self.status is True:
-            grading(env, stud, attrit)
+            grading(self, env, stud, attrit, fltTime)
             stud.checkAttrite(env)
             stud.checkGraduate(env)
+        else:
+            stud.flightLog(env, fltTime, self.BuNo, "Incomplete")
+
 
 
 ######################################################################
@@ -210,13 +214,14 @@ class Aircrew(object):
         self.flightDF = pd.DataFrame()
 
 
-    def flightLog(self, env, fltTime, ac):
+    def flightLog(self, env, fltTime, ac, result):
         # print("Updating Flight Log")
         self.flightDF = self.flightDF.append({"Aircrew ID": self.ID,
                                               "Flight Time": fltTime,
                                               "Aircraft": ac,
                                               ## "Result": , 
-                                              "Takeoff Time": env.now},
+                                              "Takeoff Time": env.now,
+                                              "Outcome": result},
                                              ignore_index=True)
 
 
@@ -229,13 +234,16 @@ class Student(Aircrew):
         self.syllabus = 0
         self.downs = 0
         self.graduated = False
+        self.gradDate = "learning, yo"
         self.attrited = False
 
     def checkGraduate(self, env):
         if self.syllabus > 15:
             self.graduated = True
+            self.gradDate = env.now
             print("I'm going to TOPGUN!!")
             gradStuds.append(self.ID)
+            # gradStuds[self.ID] = env.now()
 
     def checkAttrite(self, env):
         if self.downs > 4:
@@ -288,6 +296,7 @@ class AvMech(Maintainer):
 def flight(env, ac, stud, inst):
     if ac.status:
         ft = np.random.randint(low=5, high=20, size=1) / 10
+        ft = ft[0]
         ac.flyAircraft(env, ft, stud, inst)
         # print(inst.ID, "and", stud.ID, "tempted death again in aircraft",
         #       ac.BuNo, "at time", env.now, "for", ft, "hours!")
@@ -298,12 +307,14 @@ def flight(env, ac, stud, inst):
     yield env.timeout(3)
 
 
-def grading(env, stud, attrit):
+def grading(self, env, stud, attrit, fltTime):
     grade = np.random.random(1)
     if (grade > attrit):
         stud.syllabus += 1
+        stud.flightLog(env, fltTime, self.BuNo, "Pass")
     else:
         stud.downs += 1
+        stud.flightLog(env, fltTime, self.BuNo, "Down")
 
 
 class Scheduler(object):
@@ -432,7 +443,7 @@ instList = {0: Instructor(env, 10, 10),
             8: Instructor(env, 18, 10),
             9: Instructor(env, 19, 10)}
 sked = Scheduler(env, flightLine, studList, instList)
-env.run(until=1000)
+env.run(until=2000)
 
 ######################################################################
 #                    Data Collection                                 #
