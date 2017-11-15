@@ -36,6 +36,7 @@ class Part(object):
         # hardcoding this in to demo failtTime
         self.endtime = 25
         self.fltFail = self.failTime(env, **{"endTime": self.endtime})
+        
 
     # Define a fail time for the particular part.
     def failTime(self, env, **kwargs):
@@ -80,9 +81,9 @@ class Airframe(Part):
         self.ageFail = 100
         # This needs to be a call to a method for part. ID the parameters
         # in the particular part
-        self.fltFail = np.random.randint(1, 25 + 1) 
+        self.fltFail = np.random.randint(1, 25 + 1)
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
-
+        
 
 # Avionics and Propusion behave the same. They will just draw from
 # different distributions and be party to different updates / Tech
@@ -118,6 +119,7 @@ class Aircraft(object):
         self.status = self.af.status & self.av.status & self.puls.status
         self.bornDate = env.now
         self.blueBook = pd.DataFrame()
+        self.lifeTime = 100
 
     def updateBlueBook(self, env, fltTime):
         # print("Updating Blue Book")
@@ -161,6 +163,7 @@ class Aircraft(object):
                                                   "RepairTime": repTime},
                                                  ignore_index=True)
 
+            
     def flyAircraft(self, env, fltTime, stud, inst):
         # Check to see if any of the parts failed in flight
         attrit = .2
@@ -333,9 +336,9 @@ class Scheduler(object):
         numClass = np.random.randint(minSize, maxSize)
         print("Adding " + str(numClass) + " more idiots.")
         lastStud = max(self.studList.keys())
-        for n in range(lastStud + 1, lastStud + numClass + 1):
-            self.studList[n] = Student(env, n)
-            print(studList)## I need to add the new class to the way this does the work.
+        self.studList.update({x: Student(env, x) for
+                              x in range(lastStud + 1,
+                                         lastStud + numClass + 1)})
             
 
 # Goals for this. Pick out a student. Assign an instructor from top of
@@ -354,8 +357,13 @@ class Scheduler(object):
                     # print("Yup "+ str(fltStud.ID))
                     fltInst = self.instList[np.random.randint(0, len(instList))]
                     # print("getting ac")
-                    acPull = np.random.randint(0, len(flightLine))
-                    ac = self.flightLine[acPull]
+                    # acPull = np.random.randint(0, len(flightLine))
+                    # ac = self.flightLine[acPull]
+                    ## modifying the above acPull to use popitem()
+                    tmpFL = self.flightLine.copy()
+                    print(tmpFL)
+                    print(self.flightLine)
+                    ac = tmpFL.popitem()[1]
                     # print("got ac" + ac.BuNo)
                     # self.acList[np.random.random_integers(0, len(self.acList) - 1)]
                     # print("Stud Vars ")
@@ -366,6 +374,13 @@ class Scheduler(object):
                                                   ac,
                                                   fltStud,
                                                   fltInst))
+                    ## Check to see if the aircraft has used up its lifetime. If it
+                    ## has, it is placed in the boneYard list and removed from the
+                    ## flightLine list
+                    if (ac.lifeTime < env.now - ac.bornDate):
+                        boneYard.update({int(ac.BuNo[2:]):
+                                         self.flightLine.pop(int(ac.BuNo[2:]))})
+                        print("Aircraft " + str(ac.BuNo) + " is off to Davis-Monthan")
                     # self.flightLine.append(ac)
                     # self.studList.extend([fltStud])
                     # print(str(self.studList[0].ID) + str(self.studList[1].ID))
@@ -439,6 +454,7 @@ np.random.seed([RANDOM_SEED])
 # def repair(env, ac)
 env = simpy.Environment()
 flightLine = {}
+boneYard = {}
 buildAC(env, NUM_AIRCRAFT, flightLine)
 studList = {0: Student(env, 0),
             1: Student(env, 1),
