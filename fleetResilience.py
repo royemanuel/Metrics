@@ -318,12 +318,13 @@ def grading(self, env, stud, attrit, fltTime):
 
 
 class Scheduler(object):
-    def __init__(self, env, fl, studList, instList):
+    def __init__(self, env, fl, studList, instList, indocPeriod):
         self.env = env
         self.studList = studList
         self.flightLine = fl
         self.instList = instList
         self.action = env.process(self.dailyFlightSked())
+        self.nextIndoc = indocPeriod
 
 
         
@@ -374,8 +375,9 @@ class Scheduler(object):
             if (outOfPipeline == len(studList)):
                 print("There is no one left to teach" + str(env.now))
                 yield env.timeout(10)
-                if (env.now > 1600):
+                if (env.now > indocPeriod):
                     self.fltClassIndoc(env, 3, 10)
+                    self.nextIndoc = env.now + indocPeriod
 
 
 
@@ -448,7 +450,7 @@ studList = {0: Student(env, 0),
             7: Student(env, 7),
             8: Student(env, 8),
             9: Student(env, 9)}
-
+indocPeriod = 600
 
 gradStuds = []
 attritStuds = []
@@ -462,7 +464,7 @@ instList = {0: Instructor(env, 10, 10),
             7: Instructor(env, 17, 10),
             8: Instructor(env, 18, 10),
             9: Instructor(env, 19, 10)}
-sked = Scheduler(env, flightLine, studList, instList)
+sked = Scheduler(env, flightLine, studList, instList, indocPeriod)
 env.run(until=2000)
 
 ######################################################################
