@@ -80,7 +80,7 @@ class Airframe(Part):
         self.ageFail = 100
         # This needs to be a call to a method for part. ID the parameters
         # in the particular part
-        self.fltFail = np.random.random_integers(1, 25) 
+        self.fltFail = np.random.randint(1, 25 + 1) 
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -93,7 +93,7 @@ class Avionics(Part):
         self.obj = "Avionics"
         super().__init__(env, ID)
         self.ageFail = 10
-        self.fltFail = np.random.random_integers(1, 25) 
+        self.fltFail = np.random.randint(1, 25 + 1) 
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -103,7 +103,7 @@ class Propulsion(Part):
         self.obj = "Propulsion"
         super().__init__(env, ID)
         self.ageFail = 10
-        self.fltFail = np.random.random_integers(1, 25) 
+        self.fltFail = np.random.randint(1, 25 + 1) 
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -325,6 +325,18 @@ class Scheduler(object):
         self.instList = instList
         self.action = env.process(self.dailyFlightSked())
 
+
+        
+    # Build a class of students to start flight training
+    def fltClassIndoc(self, env, minSize, maxSize):
+        numClass = np.random.randint(minSize, maxSize)
+        print("Adding " + str(numClass) + " more idiots.")
+        lastStud = max(self.studList.keys())
+        for n in range(lastStud + 1, lastStud + numClass + 1):
+            self.studList[n] = Student(env, n)
+            print(studList)## I need to add the new class to the way this does the work.
+            
+
 # Goals for this. Pick out a student. Assign an instructor from top of
 # the instructor list. Pick an aircraft at random from the aircraft
 # list. The aircraft list should contain aircraft where status is True
@@ -339,7 +351,7 @@ class Scheduler(object):
                         fltStud.attrited == False):
                     # fltStud = self.studList.pop(0)
                     # print("Yup "+ str(fltStud.ID))
-                    fltInst = self.instList[flt]
+                    fltInst = self.instList[np.random.randint(0, len(instList))]
                     # print("getting ac")
                     acPull = np.random.randint(0, len(flightLine))
                     ac = self.flightLine[acPull]
@@ -360,8 +372,14 @@ class Scheduler(object):
                     # print(str(self.instList[0].ID) + str(self.instList[1].ID))
             outOfPipeline = len(gradStuds) + len(attritStuds)
             if (outOfPipeline == len(studList)):
-                print("There is no one left to teach")
+                print("There is no one left to teach" + str(env.now))
                 yield env.timeout(10)
+                if (env.now > 1600):
+                    self.fltClassIndoc(env, 3, 10)
+
+
+
+    
 
 
 
@@ -430,6 +448,8 @@ studList = {0: Student(env, 0),
             7: Student(env, 7),
             8: Student(env, 8),
             9: Student(env, 9)}
+
+
 gradStuds = []
 attritStuds = []
 instList = {0: Instructor(env, 10, 10),
