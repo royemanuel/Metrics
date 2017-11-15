@@ -352,15 +352,27 @@ class Scheduler(object):
             ## this for-loop is intended to get the entire flightLine
             ## in the air. We can make it a percentage
             ## This is the start of the day
-            availStuds = studList.copy()
+            availStuds = self.studList.copy()
+            availInst = self.instList.copy()
+            availAC = self.flightLine.copy()
+            if (len(availStuds) == 0 or
+                len(availInst) == 0 or
+                len(availAC) == 0):
+                yield env.timeout(1)
             for flt in range(len(self.flightLine)):
-                fltStud = self.studList[flt]
+                if (len(availStuds) == 0):
+                    print("All the students are flying")
+                    break
+                elif (len(availInst) == 0):
+                    print("No one is left to teach!")
+                    break
+                elif (len(availAC) == 0):
+                    print("Nothing to fly!")
+                fltStud = availStuds.popitem()[1]
                 if (fltStud.graduated == False and
                         fltStud.attrited == False):
-                    # fltStud = self.studList.pop(0)
-                    # print("Yup "+ str(fltStud.ID))
                     fltInst = self.instList[np.random.randint(0, len(instList))]
-                    # print("getting ac")
+                    fltInst = availInst.popitem()[1]
                     # acPull = np.random.randint(0, len(flightLine))
                     # ac = self.flightLine[acPull]
                     ## modifying the above acPull to use popitem()
@@ -390,6 +402,8 @@ class Scheduler(object):
                     # print(str(self.studList[0].ID) + str(self.studList[1].ID))
                     # self.instList.extend([fltInst])
                     # print(str(self.instList[0].ID) + str(self.instList[1].ID))
+            nextEvent = env.now % 3
+            env.timeout(nextEvent)
             outOfPipeline = len(gradStuds) + len(attritStuds)
             if (outOfPipeline == len(studList)):
                 print("There is no one left to teach" + str(env.now))
@@ -397,6 +411,7 @@ class Scheduler(object):
                 if (env.now > indocPeriod):
                     self.fltClassIndoc(env, 3, 10)
                     self.nextIndoc = env.now + indocPeriod
+            
 
 
 
@@ -443,7 +458,7 @@ def buildAC(env, numAC, fl):
 ######################################################################
 
 RANDOM_SEED = 42
-NUM_AIRCRAFT = 5
+NUM_AIRCRAFT = 20
 NUM_STUDENT = 1
 NUM_INSTRUCTOR = 1
 
