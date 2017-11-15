@@ -104,7 +104,7 @@ class Propulsion(Part):
         self.obj = "Propulsion"
         super().__init__(env, ID)
         self.ageFail = 10
-        self.fltFail = np.random.randint(1, 25 + 1) 
+        self.fltFail = np.random.randint(1, 25 + 1)
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -328,7 +328,7 @@ class Scheduler(object):
         self.instList = instList
         self.action = env.process(self.dailyFlightSked())
         self.nextIndoc = indocPeriod
-
+        self.eventsPerDay = 4
 
         
     # Build a class of students to start flight training
@@ -349,7 +349,11 @@ class Scheduler(object):
             # numStuds = len(self.studList)
             # numAC = len(self.flightLine)
             # num = numStuds if numStuds <= numAC else numAC
-            for flt in range(len(self.studList)):
+            ## this for-loop is intended to get the entire flightLine
+            ## in the air. We can make it a percentage
+            ## This is the start of the day
+            availStuds = studList.copy()
+            for flt in range(len(self.flightLine)):
                 fltStud = self.studList[flt]
                 if (fltStud.graduated == False and
                         fltStud.attrited == False):
