@@ -218,13 +218,12 @@ class Aircrew(object):
         self.dailyFlights = 0
         self.flightDF = pd.DataFrame()
 
-
     def flightLog(self, env, fltTime, ac, result):
         # print("Updating Flight Log")
         self.flightDF = self.flightDF.append({"Aircrew ID": self.ID,
                                               "Flight Time": fltTime,
                                               "Aircraft": ac,
-                                              ## "Result": , 
+                                              # "Result":,
                                               "Takeoff Time": env.now,
                                               "Outcome": result},
                                              ignore_index=True)
@@ -326,6 +325,7 @@ class Scheduler(object):
     def __init__(self, env, fl, studList, instList, indocPeriod):
         self.env = env
         self.studList = studList
+        self.nextStudNo = max(self.studList.keys())
         self.flightLine = fl
         self.instList = instList
         self.action = env.process(self.dailyFlightSked())
@@ -333,16 +333,14 @@ class Scheduler(object):
         self.nextIndoc = indocPeriod
         self.eventsPerDay = 4
 
-        
     # Build a class of students to start flight training
     def fltClassIndoc(self, env, minSize, maxSize):
         numClass = np.random.randint(minSize, maxSize)
         print("Adding " + str(numClass) + " more idiots.")
-        lastStud = max(self.studList.keys())
         self.studList.update({x: Student(env, x) for
-                              x in range(lastStud + 1,
-                                         lastStud + numClass + 1)})
-            
+                              x in range(self.nextStudNo + 1,
+                                         self.nextStudNo + numClass + 1)})
+        self.nextStudNo = max(self.studList.keys())
 
 # Goals for this. Pick out a student. Assign an instructor from top of
 # the instructor list. Pick an aircraft at random from the aircraft
@@ -353,9 +351,9 @@ class Scheduler(object):
             # numStuds = len(self.studList)
             # numAC = len(self.flightLine)
             # num = numStuds if numStuds <= numAC else numAC
-            ## this for-loop is intended to get the entire flightLine
-            ## in the air. We can make it a percentage
-            ## This is the start of the day
+            # this for-loop is intended to get the entire flightLine
+            # in the air. We can make it a percentage
+            # This is the start of the day
             availStuds = self.studList.copy()
             availInst = self.instList.copy()
             availAC = self.flightLine.copy()
@@ -413,19 +411,13 @@ class Scheduler(object):
                     # print(str(self.instList[0].ID) + str(self.instList[1].ID))
             nextEvent =  3 if int(env.now) % 3 == 0 else env.now % 3
             outOfPipeline = len(gradStuds) + len(attritStuds)
-            if (outOfPipeline == len(studList)):
-                print("There is no one left to teach" + str(env.now))
+            if (len(studList) == 0):
+                print("There is no one left to learn at time " + str(env.now))
                 yield env.timeout(10)
                 if (env.now > self.nextIndoc):
                     self.fltClassIndoc(env, 3, 10)
                     self.nextIndoc = env.now + self.indocPeriod
             yield env.timeout(nextEvent)
-            
-
-
-
-    
-
 
 
 
