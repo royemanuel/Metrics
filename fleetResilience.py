@@ -120,6 +120,7 @@ class Aircraft(object):
         self.bornDate = env.now
         self.blueBook = pd.DataFrame()
         self.lifeTime = 100
+        self.fltHours = 0
 
     def updateBlueBook(self, env, fltTime):
         # print("Updating Blue Book")
@@ -162,6 +163,7 @@ class Aircraft(object):
                                                   "Propulsion Status": self.puls.status,
                                                   "RepairTime": repTime},
                                                  ignore_index=True)
+            self.flightHours = np.around(self.blueBook.sum().FlightHours)
 
             
     def flyAircraft(self, env, fltTime, stud, inst):
@@ -245,7 +247,7 @@ class Student(Aircrew):
             self.graduated = True
             self.gradDate = env.now
             print("I'm going to TOPGUN!!")
-            gradStuds.append(self.ID)
+            gradStuds.update({self.ID: studList.pop(self.ID)})
             # gradStuds[self.ID] = env.now()
 
     def checkAttrite(self, env):
@@ -253,7 +255,7 @@ class Student(Aircrew):
             self.attrited = True
             print("Truck driving school for me.")
             print("<sad trombone>")
-            attritStuds.append(self.ID)
+            attritStuds.update({self.ID: studList.pop(self.ID)})
 
 
 
@@ -345,6 +347,7 @@ class Scheduler(object):
 # the instructor list. Pick an aircraft at random from the aircraft
 # list. The aircraft list should contain aircraft where status is True
     def dailyFlightSked(self):
+        i = 0
         while True:
             # numStuds = len(self.studList)
             # numAC = len(self.flightLine)
@@ -368,15 +371,15 @@ class Scheduler(object):
                     break
                 elif (len(availAC) == 0):
                     print("Nothing to fly!")
-                fltStud = availStuds.pop(np.random.randint(0, len(availStuds)))
+                fltStud = availStuds.pop(random.choice(list(availStuds.keys())))
                 if (fltStud.graduated == False and
                         fltStud.attrited == False):
-                    fltInst = availInst.pop(np.random.randint(0, len(availInst)))
+                    fltInst = availInst.pop(random.choice(list(availInst.keys())))
                     # acPull = np.random.randint(0, len(flightLine))
                     # ac = self.flightLine[acPull]
                     ## modifying the above acPull to use popitem()
-                    print(self.availAC)
-                    ac = availAC.popitem()[1]
+                    # print(availAC)
+                    ac = availAC.pop(random.choice(list(availAC.keys())))
                     # print("got ac" + ac.BuNo)
                     # self.acList[np.random.random_integers(0, len(self.acList) - 1)]
                     # print("Stud Vars ")
@@ -390,7 +393,7 @@ class Scheduler(object):
                     ## Check to see if the aircraft has used up its lifetime. If it
                     ## has, it is placed in the boneYard list and removed from the
                     ## flightLine list
-                    if (ac.lifeTime < env.now - ac.bornDate):
+                    if (ac.lifeTime < ac.fltHours):
                         boneYard.update({int(ac.BuNo[2:]):
                                          self.flightLine.pop(int(ac.BuNo[2:]))})
                         print("Aircraft " + str(ac.BuNo) + " is off to Davis-Monthan")
@@ -484,8 +487,8 @@ studList = {0: Student(env, 0),
             9: Student(env, 9)}
 indocPeriod = 600
 
-gradStuds = []
-attritStuds = []
+gradStuds = {}
+attritStuds = {}
 instList = {0: Instructor(env, 10, 10),
             1: Instructor(env, 11, 10),
             2: Instructor(env, 12, 10),
