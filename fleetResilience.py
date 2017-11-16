@@ -329,6 +329,7 @@ class Scheduler(object):
         self.flightLine = fl
         self.instList = instList
         self.action = env.process(self.dailyFlightSked())
+        self.indocPeriod = indocPeriod
         self.nextIndoc = indocPeriod
         self.eventsPerDay = 4
 
@@ -358,19 +359,27 @@ class Scheduler(object):
             availStuds = self.studList.copy()
             availInst = self.instList.copy()
             availAC = self.flightLine.copy()
-            if (len(availStuds) == 0 or
-                len(availInst) == 0 or
-                len(availAC) == 0):
-                yield env.timeout(1)
+            # if (len(availStuds) == 0 or
+            #     len(availInst) == 0 or
+            #     len(availAC) == 0):
+            #     yield env.timeout(1)
             for flt in range(len(self.flightLine)):
-                if (len(availStuds) == 0):
-                    print("All the students are flying")
+                if (len(availStuds) > 0 and
+                        len(availInst) > 0 and
+                        len(availAC) > 0):
+                    print("Ready to fly!")
+                elif (len(availStuds) == 0):
+                    print("At Time " + str(env.now) + "All the students are flying")
+                    # yield env.timeout(1)
                     break
                 elif (len(availInst) == 0):
-                    print("No one is left to teach!")
+                    print("At Time " + str(env.now) + "No one is left to teach!")
+                    # yield env.timeout(1)
                     break
                 elif (len(availAC) == 0):
-                    print("Nothing to fly!")
+                    print("At Time " + str(env.now) + "Nothing to fly!")
+                    # yield env.timeout(1)
+                    break
                 fltStud = availStuds.pop(random.choice(list(availStuds.keys())))
                 if (fltStud.graduated == False and
                         fltStud.attrited == False):
@@ -402,15 +411,15 @@ class Scheduler(object):
                     # print(str(self.studList[0].ID) + str(self.studList[1].ID))
                     # self.instList.extend([fltInst])
                     # print(str(self.instList[0].ID) + str(self.instList[1].ID))
-            nextEvent = env.now % 3
-            env.timeout(nextEvent)
+            nextEvent =  3 if int(env.now) % 3 == 0 else env.now % 3
             outOfPipeline = len(gradStuds) + len(attritStuds)
             if (outOfPipeline == len(studList)):
                 print("There is no one left to teach" + str(env.now))
                 yield env.timeout(10)
-                if (env.now > indocPeriod):
+                if (env.now > self.nextIndoc):
                     self.fltClassIndoc(env, 3, 10)
-                    self.nextIndoc = env.now + indocPeriod
+                    self.nextIndoc = env.now + self.indocPeriod
+            yield env.timeout(nextEvent)
             
 
 
@@ -485,7 +494,7 @@ studList = {0: Student(env, 0),
             7: Student(env, 7),
             8: Student(env, 8),
             9: Student(env, 9)}
-indocPeriod = 600
+indocPeriod = 300
 
 gradStuds = {}
 attritStuds = {}
