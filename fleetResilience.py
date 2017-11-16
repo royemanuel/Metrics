@@ -368,18 +368,15 @@ class Scheduler(object):
                     break
                 elif (len(availAC) == 0):
                     print("Nothing to fly!")
-                fltStud = availStuds.popitem()[1]
+                fltStud = availStuds.pop(np.random.randint(0, len(availStuds)))
                 if (fltStud.graduated == False and
                         fltStud.attrited == False):
-                    fltInst = self.instList[np.random.randint(0, len(instList))]
-                    fltInst = availInst.popitem()[1]
+                    fltInst = availInst.pop(np.random.randint(0, len(availInst)))
                     # acPull = np.random.randint(0, len(flightLine))
                     # ac = self.flightLine[acPull]
                     ## modifying the above acPull to use popitem()
-                    tmpFL = self.flightLine.copy()
-                    print(tmpFL)
-                    print(self.flightLine)
-                    ac = tmpFL.popitem()[1]
+                    print(self.availAC)
+                    ac = availAC.popitem()[1]
                     # print("got ac" + ac.BuNo)
                     # self.acList[np.random.random_integers(0, len(self.acList) - 1)]
                     # print("Stud Vars ")
