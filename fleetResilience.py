@@ -163,7 +163,7 @@ class Aircraft(object):
                                                   "Propulsion Status": self.puls.status,
                                                   "RepairTime": repTime},
                                                  ignore_index=True)
-            self.flightHours = np.around(self.blueBook.sum().FlightHours)
+            self.flightHours = np.around(self.blueBook.dropna(subset=["Flight Date"]).sum().FlightHours, 1)
 
             
     def flyAircraft(self, env, fltTime, stud, inst):
@@ -469,6 +469,7 @@ NUM_INSTRUCTOR = 1
 
 
 np.random.seed([RANDOM_SEED])
+random.seed(RANDOM_SEED)
 
 
 # def repair(env, ac)
