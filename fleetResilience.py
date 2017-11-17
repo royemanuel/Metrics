@@ -8,6 +8,9 @@ import scipy.stats as st
 import pandas as pd
 import pdb
 import random
+import time
+time.process_time()
+time.perf_counter()
 # pdb.set_trace()
 # for now we will use the Python provided module random to build random
 # numbers
@@ -37,34 +40,36 @@ class Part(object):
         self.endtime = 25
         self.fltFail = self.failTime(env, **{"endTime": self.endtime})
         
-
     # Define a fail time for the particular part.
     def failTime(self, env, **kwargs):
         for kw in kwargs:
             if kwargs[kw] == "endTime":
-                self.fltFail = np.random.random_integers(1, kwargs[kw]) 
+                print("rollin' the dice")
+                self.fltFail = np.random.random_integers(1, kwargs[kw])
 
     # Check the whether the part breaks during the operation
     def failFlight(self, env, fltTime):
-        if (self.fltFail < self.fltHrsSinceFail + fltTime):
-            self.fltHours = self.fltHours + self.fltFail - self.fltHrsSinceFail
+        if (np.allclose(self.fltFail, fltTime)):
+            self.fltHours += self.fltFail
             self.status = False
             self.age = env.now - self.bornDate
             self.history = self.history.append({"ID": self.ID,
-                                               "Age": self.age,
-                                               "FlightHours": self.fltHours},
+                                                "Age": self.age,
+                                                "FlightHours": self.fltHours,
+                                                "TimeToFail": self.fltFail},
                                                ignore_index=True)
             # THis section will go with a repair function, but for now
             # I want to check the validity
             self.failTime(env, **{"endTime": self.endtime})
             self.fltHrsSinceFail = 0
         else:
-            self.fltHrsSinceFail += fltTime
+            self.fltFail -= fltTime
             self.fltHours += fltTime
             self.age = env.now - self.bornDate
             self.history = self.history.append({"ID": self.ID,
                                                 "Age": self.age,
                                                 "FlightHours": self.fltHours,
+                                                "TimeToFail": self.fltFail,
                                                 "fhSinceFail": self.fltHrsSinceFail},
                                                 ignore_index=True)
 
@@ -163,12 +168,17 @@ class Aircraft(object):
                                                   "Propulsion Status": self.puls.status,
                                                   "RepairTime": repTime},
                                                  ignore_index=True)
-            self.flightHours = np.around(self.blueBook.dropna(subset=["Flight Date"]).sum().FlightHours, 1)
+            tmpBB = self.blueBook.copy()
+            self.fltHours = tmpBB.dropna(subset=["Flight Date"]).sum().FlightHours
 
             
     def flyAircraft(self, env, fltTime, stud, inst):
         # Check to see if any of the parts failed in flight
         attrit = .2
+        fltTime = fltTime - np.ceil(max(0,
+                                    (fltTime - self.av.fltFail) * 10,
+                                    (fltTime - self.af.fltFail) * 10,
+                                    (fltTime - self.puls.fltFail) * 10)) / 10
         self.av.failFlight(env, fltTime)
         # histUpdate(self.av)
         self.af.failFlight(env, fltTime)
@@ -361,12 +371,13 @@ class Scheduler(object):
             #     len(availInst) == 0 or
             #     len(availAC) == 0):
             #     yield env.timeout(1)
+            i += 1
+            print("Ready to fly! for event" + str(i))
             for flt in range(len(self.flightLine)):
-                if (len(availStuds) > 0 and
-                        len(availInst) > 0 and
-                        len(availAC) > 0):
-                    print("Ready to fly!")
-                elif (len(availStuds) == 0):
+                # if (len(availStuds) > 0 and
+                #         len(availInst) > 0 and
+                #         len(availAC) > 0):
+                if (len(availStuds) == 0):
                     print("At Time " + str(env.now) + "All the students are flying")
                     # yield env.timeout(1)
                     break
@@ -521,3 +532,5 @@ for inst in instList:
 
 for ac in flightLine:
     aircraftHistory = aircraftHistory.append(flightLine[ac].blueBook)
+print(time.process_time())
+print(time.perf_counter())
