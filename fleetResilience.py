@@ -168,8 +168,8 @@ class Aircraft(object):
                                                   "Propulsion Status": self.puls.status,
                                                   "RepairTime": repTime},
                                                  ignore_index=True)
-            tmpBB = self.blueBook.copy()
-            self.fltHours = tmpBB.dropna(subset=["Flight Date"]).sum().FlightHours
+        tmpBB = self.blueBook.copy()
+        self.fltHours = tmpBB.dropna(subset=["Flight Date"]).sum().FlightHours
 
             
     def flyAircraft(self, env, fltTime, stud, inst):
