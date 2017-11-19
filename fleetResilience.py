@@ -50,7 +50,7 @@ class Part(object):
 
     # Check the whether the part breaks during the operation
     def failFlight(self, env, fltTime):
-        print(np.allclose(self.fltFail, fltTime), self.ID)
+        # print(np.allclose(self.fltFail, fltTime), self.ID)
         if (np.allclose(self.fltFail, fltTime)):
             self.fltHours += self.fltFail
             self.status = False
@@ -62,9 +62,7 @@ class Part(object):
                                                ignore_index=True)
             # THis section will go with a repair function, but for now
             # I want to check the validity
-            print("do I get to this point?")
             self.failTime(env, **{"endTime": self.endtime})
-            print(self.fltFail)
             self.fltHrsSinceFail = 0
         else:
             self.fltFail -= fltTime
@@ -198,10 +196,10 @@ class Aircraft(object):
     def flyAircraft(self, env, fltTime, stud, inst):
         # Check to see if any of the parts failed in flight
         attrit = .2
-        print("flight time = " +str(fltTime))
-        print("av " + str(self.av.fltFail))
-        print("af " + str(self.af.fltFail))
-        print("puls " + str(self.puls.fltFail))
+        # print("flight time = " +str(fltTime))
+        # print("av " + str(self.av.fltFail))
+        # print("af " + str(self.af.fltFail))
+        # print("puls " + str(self.puls.fltFail))
         fltTime = min(fltTime,
                           self.av.fltFail,
                           self.af.fltFail,
@@ -210,7 +208,7 @@ class Aircraft(object):
         #                             (fltTime - self.av.fltFail) * 10,
         #                             (fltTime - self.af.fltFail) * 10,
         #                             (fltTime - self.puls.fltFail) * 10)) / 10
-        print("right after" + str(fltTime))
+        # print("right after" + str(fltTime))
         self.av.failFlight(env, fltTime)
         # histUpdate(self.av)
         self.af.failFlight(env, fltTime)
@@ -232,7 +230,7 @@ class Aircraft(object):
             # print("Airplane " + str(self.BuNo) + " still worky")
         # else:
             # print("Plane broke dick")
-        print("flight time" + str(fltTime))
+        # print("flight time" + str(fltTime))
         stud.hours += fltTime
         inst.hours = inst.hours + fltTime
         inst.flightLog(env, fltTime, self.BuNo, "NA")
@@ -508,7 +506,7 @@ def buildAC(env, numAC, fl):
 ######################################################################
 
 RANDOM_SEED = 42
-NUM_AIRCRAFT = 1
+NUM_AIRCRAFT = 15
 NUM_STUDENT = 1
 NUM_INSTRUCTOR = 1
 
@@ -551,7 +549,7 @@ instList = {0: Instructor(env, 10, 10),
             8: Instructor(env, 18, 10),
             9: Instructor(env, 19, 10)}
 sked = Scheduler(env, flightLine, studList, instList, indocPeriod)
-env.run(until=200)
+env.run(until=2000)
 
 ######################################################################
 #                    Data Collection                                 #
