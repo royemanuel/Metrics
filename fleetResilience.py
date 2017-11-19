@@ -42,13 +42,15 @@ class Part(object):
         
     # Define a fail time for the particular part.
     def failTime(self, env, **kwargs):
-        for kw in kwargs:
-            if kwargs[kw] == "endTime":
-                print("rollin' the dice")
-                self.fltFail = np.random.random_integers(1, kwargs[kw])
+        self.fltFail = np.random.randint(1, 25)
+        # for kw in kwargs:
+        #     if kwargs[kw] == "endTime":
+        #         print("rollin' the dice")
+        #         self.fltFail = np.random.random_integers(1, kwargs[kw])
 
     # Check the whether the part breaks during the operation
     def failFlight(self, env, fltTime):
+        print(np.allclose(self.fltFail, fltTime), self.ID)
         if (np.allclose(self.fltFail, fltTime)):
             self.fltHours += self.fltFail
             self.status = False
@@ -60,7 +62,9 @@ class Part(object):
                                                ignore_index=True)
             # THis section will go with a repair function, but for now
             # I want to check the validity
+            print("do I get to this point?")
             self.failTime(env, **{"endTime": self.endtime})
+            print(self.fltFail)
             self.fltHrsSinceFail = 0
         else:
             self.fltFail -= fltTime
@@ -141,24 +145,43 @@ class Aircraft(object):
                                               "Flight Date": env.now},
                                              ignore_index=True)
         if self.status is False:
+        #     if self.af.status is False:
+        #         repTime = 15
+        #         yield env.timeout(repTime)
+        #         self.af.status = True
+        #         self.av.status = True
+        #         self.puls.status = True
+        #         print("The Airframe was broken, but now we fixed everything")
+        #     elif self.puls.status is False:
+        #         repTime = 15
+        #         yield env.timeout(repTime)
+        #         self.puls.status = True
+        #         self.av.status = True
+        #         print("The Engine busted, so we fixed that and checked the instruments")
+        #     elif self.av.status is False:
+        #         repTime = 15
+        #         yield env.timeout(repTime)
+        #         self.av.status = True
+        #         print("Just the instruments were down. Up and at'em")
+            afRepTime = 0
+            avRepTime = 0
+            pulsRepTime = 0
             if self.af.status is False:
-                repTime = 15
-                yield env.timeout(repTime)
+                afRepTime = 15
                 self.af.status = True
+                print("The Airframe was broken, but we bent some metal")
+            if self.av.status is False:
+                avRepTime = 15
                 self.av.status = True
-                self.puls.status = True
-                print("The Airframe was broken, but now we fixed everything")
-            elif self.puls.status is False:
-                repTime = 15
-                yield env.timeout(repTime)
-                self.puls.status = True
-                self.av.status = True
-                print("The Engine busted, so we fixed that and checked the instruments")
-            elif self.av.status is False:
-                repTime = 15
-                yield env.timeout(repTime)
-                self.av.status = True
-                print("Just the instruments were down. Up and at'em")
+                print("The instruments were down. Up and at'em")
+            if self.puls.status is False:
+                pulsRepTime = 15
+                self.puls.status  = True
+                print("The Engine busted, so now it purrs like a kitten")
+            repTime = max(afRepTime,
+                              avRepTime,
+                              pulsRepTime)
+            yield env.timeout(repTime)
             self.status = self.af.status & self.av.status & self.puls.status
             self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
                                                   "FlightHours": fltTime,
@@ -175,10 +198,19 @@ class Aircraft(object):
     def flyAircraft(self, env, fltTime, stud, inst):
         # Check to see if any of the parts failed in flight
         attrit = .2
-        fltTime = fltTime - np.ceil(max(0,
-                                    (fltTime - self.av.fltFail) * 10,
-                                    (fltTime - self.af.fltFail) * 10,
-                                    (fltTime - self.puls.fltFail) * 10)) / 10
+        print("flight time = " +str(fltTime))
+        print("av " + str(self.av.fltFail))
+        print("af " + str(self.af.fltFail))
+        print("puls " + str(self.puls.fltFail))
+        fltTime = min(fltTime,
+                          self.av.fltFail,
+                          self.af.fltFail,
+                          self.puls.fltFail)
+        # fltTime = fltTime - np.ceil(max(0,
+        #                             (fltTime - self.av.fltFail) * 10,
+        #                             (fltTime - self.af.fltFail) * 10,
+        #                             (fltTime - self.puls.fltFail) * 10)) / 10
+        print("right after" + str(fltTime))
         self.av.failFlight(env, fltTime)
         # histUpdate(self.av)
         self.af.failFlight(env, fltTime)
@@ -200,7 +232,8 @@ class Aircraft(object):
             # print("Airplane " + str(self.BuNo) + " still worky")
         # else:
             # print("Plane broke dick")
-        stud.hours = stud.hours + fltTime
+        print("flight time" + str(fltTime))
+        stud.hours += fltTime
         inst.hours = inst.hours + fltTime
         inst.flightLog(env, fltTime, self.BuNo, "NA")
         env.process(self.updateBlueBook(env, fltTime))
@@ -314,11 +347,11 @@ def flight(env, ac, stud, inst):
         ac.flyAircraft(env, ft, stud, inst)
         # print(inst.ID, "and", stud.ID, "tempted death again in aircraft",
         #       ac.BuNo, "at time", env.now, "for", ft, "hours!")
-        yield env.timeout(ft)
+        yield env.timeout(0)
     # else:
         # print("Side number " + str(ac.BuNo) + " is broke, fool!")
     # Hard code three hours to the next event 
-    yield env.timeout(3)
+    yield env.timeout(0)
 
 
 def grading(self, env, stud, attrit, fltTime):
@@ -372,7 +405,8 @@ class Scheduler(object):
             #     len(availAC) == 0):
             #     yield env.timeout(1)
             i += 1
-            print("Ready to fly! for event" + str(i))
+            print("Ready to fly! for event" + str(i) + " at time " +
+                      str(env.now))
             for flt in range(len(self.flightLine)):
                 # if (len(availStuds) > 0 and
                 #         len(availInst) > 0 and
@@ -428,6 +462,10 @@ class Scheduler(object):
                 if (env.now > self.nextIndoc):
                     self.fltClassIndoc(env, 3, 10)
                     self.nextIndoc = env.now + self.indocPeriod
+                    if i > 4:
+                        nextEvent = 12
+                        print("Break Time")
+                        i = 0
             yield env.timeout(nextEvent)
 
 
@@ -470,7 +508,7 @@ def buildAC(env, numAC, fl):
 ######################################################################
 
 RANDOM_SEED = 42
-NUM_AIRCRAFT = 20
+NUM_AIRCRAFT = 1
 NUM_STUDENT = 1
 NUM_INSTRUCTOR = 1
 
@@ -513,7 +551,7 @@ instList = {0: Instructor(env, 10, 10),
             8: Instructor(env, 18, 10),
             9: Instructor(env, 19, 10)}
 sked = Scheduler(env, flightLine, studList, instList, indocPeriod)
-env.run(until=2000)
+env.run(until=200)
 
 ######################################################################
 #                    Data Collection                                 #
