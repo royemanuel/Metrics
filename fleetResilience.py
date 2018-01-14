@@ -465,6 +465,9 @@ class Scheduler(object):
                         print("Break Time")
                         i = 0
             yield env.timeout(nextEvent)
+            if len(flightLine) == 0:
+                print(env.now)
+                break
 
 
 
@@ -549,7 +552,7 @@ instList = {0: Instructor(env, 10, 10),
             8: Instructor(env, 18, 10),
             9: Instructor(env, 19, 10)}
 sked = Scheduler(env, flightLine, studList, instList, indocPeriod)
-env.run(until=2000)
+env.run(until=2500)
 
 ######################################################################
 #                    Data Collection                                 #
