@@ -44,7 +44,8 @@ eFL <- function(v){
     }
 }
 
-storms <- storms %>% mutate(S1.FL = recode(S1.Strength, 1, rtriangle(1, .5, 1, .9)
+
+
 storms <- storms %>% mutate(S1.Strength = ifelse(S1.Strength < .54, 1,
                              ifelse(S1.Strength < .8, 2,
                                     ifelse(S1.Strength < .94, 3, 4)))
@@ -64,57 +65,125 @@ storms <- storms %>% mutate(S1.Strength = ifelse(S1.Strength < .54, 1,
                      mutate(S5.Strength = ifelse(S5.Strength < .54, 1,
                              ifelse(S5.Strength < .8, 2,
                                     ifelse(S5.Strength < .94, 3, 4))))
-## Assign a failure level
-storms <- storms %>% mutate(S1.FL = ifelse(S1.Strength == 1,
-                               rtriangle(1, a = 0, b = .9, c = .8),
-                                ifelse(S1.Strength == 2,
-                                       rtriangle(1, a = 0, b = .8, c = .4),
-                                       ifelse(S1.Strength == 3,
-                                              rtriangle(1, a = 0,
-                                                         b = .4,
-                                                         c = .1),
-                                              0)))
-                            ) %>%
-                     mutate(S2.FL = ifelse(S2.Strength == 1,
-                               rtriangle(1, a = 0, b = .9, c = .8),
-                                ifelse(S2.Strength == 2,
-                                       rtriangle(1, a = 0, b = .8, c = .4),
-                                       ifelse(S2.Strength == 3,
-                                              rtriangle(1, a = 0,
-                                                         b = .4,
-                                                         c = .1),
-                                              0)))
-                            ) %>%
-                     mutate(S3.FL = ifelse(S3.Strength == 1,
-                               rtriangle(1, a = 0, b = .9, c = .8),
-                                ifelse(S3.Strength == 2,
-                                       rtriangle(1, a = 0, b = .8, c = .4),
-                                       ifelse(S3.Strength == 3,
-                                              rtriangle(1, a = 0,
-                                                         b = .4,
-                                                         c = .1),
-                                              0)))
-                            ) %>%
-                     mutate(S4.FL = ifelse(S4.Strength == 1,
-                               rtriangle(1, a = 0, b = .9, c = .8),
-                                ifelse(S4.Strength == 2,
-                                       rtriangle(1, a = 0, b = .8, c = .4),
-                                       ifelse(S4.Strength == 3,
-                                              rtriangle(1, a = 0,
-                                                         b = .4,
-                                                         c = .1),
-                                              0)))
-                            ) %>%
-                     mutate(S5.FL = ifelse(S5.Strength == 1,
-                               rtriangle(1, a = 0, b = .9, c = .8),
-                                ifelse(S5.Strength == 2,
-                                       rtriangle(1, a = 0, b = .8, c = .4),
-                                       ifelse(S5.Strength == 3,
-                                              rtriangle(1, a = 0,
-                                                         b = .4,
-                                                         c = .1),
-                                              0)))
-                            )
+## Assign a recovery level
+storms <- storms %>%
+    mutate(S1.RL = recode(S1.Strength, `1`= rtriangle(1, .9, 1, 1),
+                          `2` = rtriangle(1, .8, 1, 1),
+                          `3` = rtriangle(1, .6, 1, .95),
+                          `4` = rtriangle(1, .6, .9, .8))) %>%
+    mutate(S2.RL = recode(S2.Strength, `1`= rtriangle(1, .9, 1, 1),
+                          `2` = rtriangle(1, .8, 1, 1),
+                          `3` = rtriangle(1, .6, 1, .95),
+                          `4` = rtriangle(1, .6, .9, .8))) %>%
+    mutate(S3.RL = recode(S3.Strength, `1`= rtriangle(1, .9, 1, 1),
+                          `2` = rtriangle(1, .8, 1, 1),
+                          `3` = rtriangle(1, .6, 1, .95),
+                          `4` = rtriangle(1, .6, .9, .8))) %>%
+    mutate(S4.RL = recode(S4.Strength, `1`= rtriangle(1, .9, 1, 1),
+                          `2` = rtriangle(1, .8, 1, 1),
+                          `3` = rtriangle(1, .6, 1, .95),
+                          `4` = rtriangle(1, .6, .9, .8))) %>%
+    mutate(S5.RL = recode(S5.Strength, `1`= rtriangle(1, .9, 1, 1),
+                          `2` = rtriangle(1, .8, 1, 1),
+                          `3` = rtriangle(1, .6, 1, .95),
+                          `4` = rtriangle(1, .6, .9, .8)))
+
+## Assign a recovery level
+storms <- storms %>%
+    mutate(S1.FL = recode(S1.Strength, `1`= rtriangle(1, .5, 1, .9),
+                          `2` = rtriangle(1, 0, .8, .4),
+                          `3` = rtriangle(1, 0, .4, .1),
+                          `4` = 0)) %>%
+    mutate(S2.FL = recode(S2.Strength, `1`= rtriangle(1, .5, 1, .9),
+                          `2` = rtriangle(1, 0, .8, .4),
+                          `3` = rtriangle(1, 0, .4, .1),
+                          `4` = 0)) %>%
+    mutate(S3.FL = recode(S3.Strength, `1`= rtriangle(1, .5, 1, .9),
+                          `2` = rtriangle(1, 0, .8, .4),
+                          `3` = rtriangle(1, 0, .4, .1),
+                          `4` = 0)) %>%
+    mutate(S4.FL = recode(S4.Strength, `1`= rtriangle(1, .5, 1, .9),
+                          `2` = rtriangle(1, 0, .8, .4),
+                          `3` = rtriangle(1, 0, .4, .1),
+                          `4` = 0)) %>%
+    mutate(S5.FL = recode(S5.Strength, `1`= rtriangle(1, .5, 1, .9),
+                          `2` = rtriangle(1, 0, .8, .4),
+                          `3` = rtriangle(1, 0, .4, .1),
+                          `4` = 0))
+storms <- storms %>%
+    mutate(S1.RT = recode(S1.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
+                          `2` = 1440 * rtriangle(1, 7, 21, 14),
+                          `3` = 1440 * rtriangle(1, 14, 35, 25),
+                          `4` = 1440 * rtriangle(1, 28, 100, 64))) %>%
+    mutate(S2.RT = recode(S2.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
+                          `2` = 1440 * rtriangle(1, 7, 21, 14),
+                          `3` = 1440 * rtriangle(1, 14, 35, 25),
+                          `4` = 1440 * rtriangle(1, 28, 100, 64))) %>%
+    mutate(S3.RT = recode(S3.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
+                          `2` = 1440 * rtriangle(1, 7, 21, 14),
+                          `3` = 1440 * rtriangle(1, 14, 35, 25),
+                          `4` = 1440 * rtriangle(1, 28, 100, 64))) %>%
+    mutate(S4.RT = recode(S4.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
+                          `2` = 1440 * rtriangle(1, 7, 21, 14),
+                          `3` = 1440 * rtriangle(1, 14, 35, 25),
+                          `4` = 1440 * rtriangle(1, 28, 100, 64))) %>%
+    mutate(S5.FL = recode(S5.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
+                          `2` = 1440 * rtriangle(1, 7, 21, 14),
+                          `3` = 1440 * rtriangle(1, 14, 35, 25),
+                          `4` = 1440 * rtriangle(1, 28, 100, 64)))
+
+
+
+## storms <- storms %>% mutate(S1.FL = ifelse(S1.Strength == 1,
+##                                rtriangle(1, a = 0, b = .9, c = .8),
+##                                 ifelse(S1.Strength == 2,
+##                                        rtriangle(1, a = 0, b = .8, c = .4),
+##                                        ifelse(S1.Strength == 3,
+##                                               rtriangle(1, a = 0,
+##                                                          b = .4,
+##                                                          c = .1),
+##                                               0)))
+##                             ) %>%
+##                      mutate(S2.FL = ifelse(S2.Strength == 1,
+##                                rtriangle(1, a = 0, b = .9, c = .8),
+##                                 ifelse(S2.Strength == 2,
+##                                        rtriangle(1, a = 0, b = .8, c = .4),
+##                                        ifelse(S2.Strength == 3,
+##                                               rtriangle(1, a = 0,
+##                                                          b = .4,
+##                                                          c = .1),
+##                                               0)))
+##                             ) %>%
+##                      mutate(S3.FL = ifelse(S3.Strength == 1,
+##                                rtriangle(1, a = 0, b = .9, c = .8),
+##                                 ifelse(S3.Strength == 2,
+##                                        rtriangle(1, a = 0, b = .8, c = .4),
+##                                        ifelse(S3.Strength == 3,
+##                                               rtriangle(1, a = 0,
+##                                                          b = .4,
+##                                                          c = .1),
+##                                               0)))
+##                             ) %>%
+##                      mutate(S4.FL = ifelse(S4.Strength == 1,
+##                                rtriangle(1, a = 0, b = .9, c = .8),
+##                                 ifelse(S4.Strength == 2,
+##                                        rtriangle(1, a = 0, b = .8, c = .4),
+##                                        ifelse(S4.Strength == 3,
+##                                               rtriangle(1, a = 0,
+##                                                          b = .4,
+##                                                          c = .1),
+##                                               0)))
+##                             ) %>%
+##                      mutate(S5.FL = ifelse(S5.Strength == 1,
+##                                rtriangle(1, a = 0, b = .9, c = .8),
+##                                 ifelse(S5.Strength == 2,
+##                                        rtriangle(1, a = 0, b = .8, c = .4),
+##                                        ifelse(S5.Strength == 3,
+##                                               rtriangle(1, a = 0,
+##                                                          b = .4,
+##                                                          c = .1),
+##                                               0)))
+##                             )
 
 ## Assign a recovery time
 ## storms <- storms %>% mutate(S1.RT = ifelse(S1.Strength == 1,
