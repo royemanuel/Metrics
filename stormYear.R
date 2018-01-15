@@ -14,6 +14,7 @@ s3 <- runif(1000)
 s4 <- runif(1000)
 s5 <- runif(1000)
 
+stormsInYear <- data.frame()
 stormsInYear <- data.frame(Storm1 = a,
                            Storm2 = a + b,
                            Storm3 = a + b + c,
@@ -23,7 +24,22 @@ stormsInYear <- data.frame(Storm1 = a,
                            S2.Strength = s2,
                            S3.Strength = s3,
                            S4.Strength = s4,
-                           S5.Strength = s5
+                           S5.Strength = s5,
+                           S1.RL= NA,
+                           S2.RL= NA,
+                           S3.RL= NA,
+                           S4.RL= NA,
+                           S5.RL= NA,
+                           S1.RT= NA,
+                           S2.RT= NA,
+                           S3.RT= NA,
+                           S4.RT= NA,
+                           S5.RT= NA,
+                           S1.FL= NA,
+                           S2.FL= NA,
+                           S3.FL= NA,
+                           S4.FL= NA,
+                           S5.FL= NA
                            )
 
 ## stormsInYear[stormsInYear > 2 * 525600] <- NA
@@ -32,17 +48,17 @@ storms <- stormsInYear %>% filter(Storm1 < 525600 * 2)
 
 ## Assign a storm strength
 
-eFL <- function(v){
-    if(v == 1){
-        fl <- rtriangle(1, 0, .9, .8)
-    } else if (v ==2) {
-        fl <- rtriangle(1, 0, .8, .6)
-    } else if (v == 4){
-        fl <- rtriangle(1, 0, .5, .2)
-    } else {
-        fl <- 0
-    }
-}
+## eFL <- function(v){
+##     if(v == 1){
+##         fl <- rtriangle(1, 0, .9, .8)
+##     } else if (v ==2) {
+##         fl <- rtriangle(1, 0, .8, .6)
+##     } else if (v == 4){
+##         fl <- rtriangle(1, 0, .5, .2)
+##     } else {
+##         fl <- 0
+##     }
+## }
 
 
 
@@ -65,75 +81,106 @@ storms <- storms %>% mutate(S1.Strength = ifelse(S1.Strength < .54, 1,
                      mutate(S5.Strength = ifelse(S5.Strength < .54, 1,
                              ifelse(S5.Strength < .8, 2,
                                     ifelse(S5.Strength < .94, 3, 4))))
+
+##     mutate(S1.RT = recode(S1.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
+##                           `2` = 
+##                           `3` = 
+##                           `4` = 
 ## Assign a recovery level
-storms <- storms %>%
-    mutate(S1.RL = recode(S1.Strength, `1`= rtriangle(1, .9, 1, 1),
-                          `2` = rtriangle(1, .8, 1, 1),
-                          `3` = rtriangle(1, .6, 1, .95),
-                          `4` = rtriangle(1, .6, .9, .8))) %>%
-    mutate(S2.RL = recode(S2.Strength, `1`= rtriangle(1, .9, 1, 1),
-                          `2` = rtriangle(1, .8, 1, 1),
-                          `3` = rtriangle(1, .6, 1, .95),
-                          `4` = rtriangle(1, .6, .9, .8))) %>%
-    mutate(S3.RL = recode(S3.Strength, `1`= rtriangle(1, .9, 1, 1),
-                          `2` = rtriangle(1, .8, 1, 1),
-                          `3` = rtriangle(1, .6, 1, .95),
-                          `4` = rtriangle(1, .6, .9, .8))) %>%
-    mutate(S4.RL = recode(S4.Strength, `1`= rtriangle(1, .9, 1, 1),
-                          `2` = rtriangle(1, .8, 1, 1),
-                          `3` = rtriangle(1, .6, 1, .95),
-                          `4` = rtriangle(1, .6, .9, .8))) %>%
-    mutate(S5.RL = recode(S5.Strength, `1`= rtriangle(1, .9, 1, 1),
-                          `2` = rtriangle(1, .8, 1, 1),
-                          `3` = rtriangle(1, .6, 1, .95),
-                          `4` = rtriangle(1, .6, .9, .8)))
 
+
+for (c in 6:10){
+    print(c)
+    for (r in 1:dim(storms)[1]){
+        if (storms[r, c] == 1){
+            storms[r, (c + 5) ] = rtriangle(1, .9, 1, 1)
+            storms[r, (c + 10) ] =  1440 * rtriangle(1, 3, 5, 4)
+            storms[r, (c + 15) ] = rtriangle(1, .5, 1, .9)
+        } else if (storms [r, c] == 2){
+            storms[r, (c + 5) ] =  rtriangle(1, .8, 1, 1)
+            storms[r, (c + 10) ] = 1440 * rtriangle(1, 7, 21, 14)
+            storms[r, (c + 15) ] = rtriangle(1, 0, .8, .4)
+        } else if (storms[r, c] == 3){
+            storms[r, (c + 5) ] =  rtriangle(1, .6, 1, .95)
+            storms[r, (c + 10) ] = 1440 * rtriangle(1, 14, 35, 25)
+            storms[r, (c + 15) ] = rtriangle(1, 0, .4, .1)
+        } else {
+            storms[r, (c + 5) ] =  rtriangle(1, .6, .9, .8)
+            storms[r, (c + 10) ] = 1440 * rtriangle(1, 28, 100, 64)
+            storms[r, (c + 15) ] = 0
+        }
+    }
+}
+
+write.xlsx2(storms, file="d:/onedrive/PhD Work/Dissertation/Programming/Metrics/storms.xlsx")
 ## Assign a recovery level
-storms <- storms %>%
-    mutate(S1.FL = recode(S1.Strength, `1`= rtriangle(1, .5, 1, .9),
-                          `2` = rtriangle(1, 0, .8, .4),
-                          `3` = rtriangle(1, 0, .4, .1),
-                          `4` = 0)) %>%
-    mutate(S2.FL = recode(S2.Strength, `1`= rtriangle(1, .5, 1, .9),
-                          `2` = rtriangle(1, 0, .8, .4),
-                          `3` = rtriangle(1, 0, .4, .1),
-                          `4` = 0)) %>%
-    mutate(S3.FL = recode(S3.Strength, `1`= rtriangle(1, .5, 1, .9),
-                          `2` = rtriangle(1, 0, .8, .4),
-                          `3` = rtriangle(1, 0, .4, .1),
-                          `4` = 0)) %>%
-    mutate(S4.FL = recode(S4.Strength, `1`= rtriangle(1, .5, 1, .9),
-                          `2` = rtriangle(1, 0, .8, .4),
-                          `3` = rtriangle(1, 0, .4, .1),
-                          `4` = 0)) %>%
-    mutate(S5.FL = recode(S5.Strength, `1`= rtriangle(1, .5, 1, .9),
-                          `2` = rtriangle(1, 0, .8, .4),
-                          `3` = rtriangle(1, 0, .4, .1),
-                          `4` = 0))
-storms <- storms %>%
-    mutate(S1.RT = recode(S1.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
-                          `2` = 1440 * rtriangle(1, 7, 21, 14),
-                          `3` = 1440 * rtriangle(1, 14, 35, 25),
-                          `4` = 1440 * rtriangle(1, 28, 100, 64))) %>%
-    mutate(S2.RT = recode(S2.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
-                          `2` = 1440 * rtriangle(1, 7, 21, 14),
-                          `3` = 1440 * rtriangle(1, 14, 35, 25),
-                          `4` = 1440 * rtriangle(1, 28, 100, 64))) %>%
-    mutate(S3.RT = recode(S3.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
-                          `2` = 1440 * rtriangle(1, 7, 21, 14),
-                          `3` = 1440 * rtriangle(1, 14, 35, 25),
-                          `4` = 1440 * rtriangle(1, 28, 100, 64))) %>%
-    mutate(S4.RT = recode(S4.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
-                          `2` = 1440 * rtriangle(1, 7, 21, 14),
-                          `3` = 1440 * rtriangle(1, 14, 35, 25),
-                          `4` = 1440 * rtriangle(1, 28, 100, 64))) %>%
-    mutate(S5.FL = recode(S5.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
-                          `2` = 1440 * rtriangle(1, 7, 21, 14),
-                          `3` = 1440 * rtriangle(1, 14, 35, 25),
-                          `4` = 1440 * rtriangle(1, 28, 100, 64)))
-
-
-
+## storms <- storms %>%
+##     mutate(S1.RL = recode(S1.Strength, `1`= rtriangle(1, .9, 1, 1),
+##                           `2` = rtriangle(1, .8, 1, 1),
+##                           `3` = rtriangle(1, .6, 1, .95),
+##                           `4` = rtriangle(1, .6, .9, .8))) %>%
+##     mutate(S2.RL = recode(S2.Strength, `1`= rtriangle(1, .9, 1, 1),
+##                           `2` = rtriangle(1, .8, 1, 1),
+##                           `3` = rtriangle(1, .6, 1, .95),
+##                           `4` = rtriangle(1, .6, .9, .8))) %>%
+##     mutate(S3.RL = recode(S3.Strength, `1`= rtriangle(1, .9, 1, 1),
+##                           `2` = rtriangle(1, .8, 1, 1),
+##                           `3` = rtriangle(1, .6, 1, .95),
+##                           `4` = rtriangle(1, .6, .9, .8))) %>%
+##     mutate(S4.RL = recode(S4.Strength, `1`= rtriangle(1, .9, 1, 1),
+##                           `2` = rtriangle(1, .8, 1, 1),
+##                           `3` = rtriangle(1, .6, 1, .95),
+##                           `4` = rtriangle(1, .6, .9, .8))) %>%
+##     mutate(S5.RL = recode(S5.Strength, `1`= rtriangle(1, .9, 1, 1),
+##                           `2` = rtriangle(1, .8, 1, 1),
+##                           `3` = rtriangle(1, .6, 1, .95),
+##                           `4` = rtriangle(1, .6, .9, .8)))
+## 
+## ## Assign a recovery level
+## storms <- storms %>%
+##     mutate(S1.FL = recode(S1.Strength, `1`= rtriangle(1, .5, 1, .9),
+##                           `2` = rtriangle(1, 0, .8, .4),
+##                           `3` = rtriangle(1, 0, .4, .1),
+##                           `4` = 0)) %>%
+##     mutate(S2.FL = recode(S2.Strength, `1`= rtriangle(1, .5, 1, .9),
+##                           `2` = rtriangle(1, 0, .8, .4),
+##                           `3` = rtriangle(1, 0, .4, .1),
+##                           `4` = 0)) %>%
+##     mutate(S3.FL = recode(S3.Strength, `1`= rtriangle(1, .5, 1, .9),
+##                           `2` = rtriangle(1, 0, .8, .4),
+##                           `3` = rtriangle(1, 0, .4, .1),
+##                           `4` = 0)) %>%
+##     mutate(S4.FL = recode(S4.Strength, `1`= rtriangle(1, .5, 1, .9),
+##                           `2` = rtriangle(1, 0, .8, .4),
+##                           `3` = rtriangle(1, 0, .4, .1),
+##                           `4` = 0)) %>%
+##     mutate(S5.FL = recode(S5.Strength, `1`= rtriangle(1, .5, 1, .9),
+##                           `2` = rtriangle(1, 0, .8, .4),
+##                           `3` = rtriangle(1, 0, .4, .1),
+##                           `4` = 0))
+## storms <- storms %>%
+##     mutate(S1.RT = recode(S1.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
+##                           `2` = 1440 * rtriangle(1, 7, 21, 14),
+##                           `3` = 1440 * rtriangle(1, 14, 35, 25),
+##                           `4` = 1440 * rtriangle(1, 28, 100, 64))) %>%
+##     mutate(S2.RT = recode(S2.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
+##                           `2` = 1440 * rtriangle(1, 7, 21, 14),
+##                           `3` = 1440 * rtriangle(1, 14, 35, 25),
+##                           `4` = 1440 * rtriangle(1, 28, 100, 64))) %>%
+##     mutate(S3.RT = recode(S3.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
+##                           `2` = 1440 * rtriangle(1, 7, 21, 14),
+##                           `3` = 1440 * rtriangle(1, 14, 35, 25),
+##                           `4` = 1440 * rtriangle(1, 28, 100, 64))) %>%
+##     mutate(S4.RT = recode(S4.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
+##                           `2` = 1440 * rtriangle(1, 7, 21, 14),
+##                           `3` = 1440 * rtriangle(1, 14, 35, 25),
+##                           `4` = 1440 * rtriangle(1, 28, 100, 64))) %>%
+##     mutate(S5.RT = recode(S5.Strength, `1`= 1440 * rtriangle(1, 3, 5, 4),
+##                           `2` = 1440 * rtriangle(1, 7, 21, 14),
+##                           `3` = 1440 * rtriangle(1, 14, 35, 25),
+##                           `4` = 1440 * rtriangle(1, 28, 100, 64)))
+## 
+## 
 ## storms <- storms %>% mutate(S1.FL = ifelse(S1.Strength == 1,
 ##                                rtriangle(1, a = 0, b = .9, c = .8),
 ##                                 ifelse(S1.Strength == 2,
@@ -208,6 +255,6 @@ storms <- storms %>%
 ##                                     ifelse(S5.Strength == 3, 3, 4))))
 ## 
 ## 
-## write.xlsx2(storms, file="d:/onedrive/PhD Work/Dissertation/Programming/Metrics/storms.xlsx")
+## 
 ## 
 ## 
