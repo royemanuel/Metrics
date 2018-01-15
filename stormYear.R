@@ -93,11 +93,11 @@ for (c in 6:10){
     print(c)
     for (r in 1:dim(storms)[1]){
         if (storms[r, c] == 1){
-            storms[r, (c + 5) ] = rtriangle(1, .9, 1, 1)
+            storms[r, (c + 5) ] = rtriangle(1, .91, 1, 1)
             storms[r, (c + 10) ] =  1440 * rtriangle(1, 3, 5, 4)
-            storms[r, (c + 15) ] = rtriangle(1, .5, 1, .9)
+            storms[r, (c + 15) ] = rtriangle(1, .5, .9, .8)
         } else if (storms [r, c] == 2){
-            storms[r, (c + 5) ] =  rtriangle(1, .8, 1, 1)
+            storms[r, (c + 5) ] =  rtriangle(1, .81, 1, 1)
             storms[r, (c + 10) ] = 1440 * rtriangle(1, 7, 21, 14)
             storms[r, (c + 15) ] = rtriangle(1, 0, .8, .4)
         } else if (storms[r, c] == 3){
@@ -111,6 +111,13 @@ for (c in 6:10){
         }
     }
 }
+
+storms <- storms %>%
+    mutate(b1 = -(1/S1.RT) * log((0.01 * S1.RL)/(S1.RL - S1.FL))) %>%
+    mutate(b2 = -(1/S2.RT) * log((0.01 * S2.RL)/(S2.RL - S2.FL))) %>%
+    mutate(b3 = -(1/S3.RT) * log((0.01 * S3.RL)/(S3.RL - S3.FL))) %>%
+    mutate(b4 = -(1/S4.RT) * log((0.01 * S4.RL)/(S4.RL - S4.FL))) %>%
+    mutate(b5 = -(1/S5.RT) * log((0.01 * S5.RL)/(S5.RL - S5.FL))) 
 
 write.xlsx2(storms, file="d:/onedrive/PhD Work/Dissertation/Programming/Metrics/storms.xlsx")
 ## Assign a recovery level
