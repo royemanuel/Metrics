@@ -1,8 +1,8 @@
 source("metrics.R")
 source("anyLogicDataPull.R")
 
-infNameList <-  c("AsIs2Week.csv", "RobustOnly.csv", "TTR.csv",
-                  "RecLevel.csv")
+infNameList <-  c("singleRunOutputPR-good.csv")# c("AsIs2Week.csv", "RobustOnly.csv", "TTR.csv",
+                #   "RecLevel.csv")
 nl <- c(.9, .5, .3, .9, .75, .95, .8, .3)
 sl <- c(.0, .0, .0, .05, .2, .0, .0, 0)
 
@@ -20,7 +20,7 @@ rMat <-data.frame(tDelta = 30,
 allInfrastructures <- multScenarioFast(fileNames = infNameList,
                                        N = nMat,
                                        R = rMat,
-                                       TH = (20200 - 40) / 1440)
+                                       TH = (171560 - 40) / 1440) # (20200 - 40) / 1440)
 
 infFactor <- allInfrastructures %>%
     filter(Infrastructure == "Electricity.Availability" & nRun == 1 |

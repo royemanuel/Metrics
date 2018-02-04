@@ -2,9 +2,15 @@ library("tidyverse")
 library("readxl")
 
 ## Pull the 15 example sheets
-xlfiles <- c("c:/users/emanurn1/Documents/Resilience/AnyLogic/Austin Sector Model v4/Austin Sector Model/MCoutput15seed2.xlsx")
+xlfiles <- c("HurricaneData/MCoutput15seed2.xlsx",
+             "HurricaneData/MCoutput20seed3.xlsx")
 
-
+## test_tibble <-
+##     xlfiles %>%
+##     excel_sheets() %>%
+##     set_names() %>%
+##     map(read_excel, path = xlfiles) %>%
+##     filter()
 
 
 cleanHurrData <- function(tbl){
@@ -25,17 +31,36 @@ cleanHurrData <- function(tbl){
 }
 
 ingestHurrData <- function(file_list){
+    all_data <- tibble()
     for(f in 1:length(file_list)){
-        sheet <- file_list[f] %>%
+        sheets <-
+            file_list[f] %>%
             excel_sheets() %>%
             set_names() %>%
             map(read_excel, path = file_list[f])
-        for (s in 1:length(sheet){
-            sheet[s] <- cleanHurrData(sheet[s])
+        temp_sheet <- tibble()
+        for (s in 1:length(sheets)){
+            print(s)
+            if(dim(sheets[[s]])[1] > 0){
+                temp_data <- cleanHurrData(sheets[[s]])
+                temp_sheet <- rbind(temp_sheet, temp_data)
+            }
         }
+        all_data <- rbind(all_data, temp_sheet)
     }
+    all_data
 }
 
-raw_data <- read_excel(xlfiles)
 
-    map(cleanHurrData)
+
+
+
+
+
+
+
+
+
+
+
+

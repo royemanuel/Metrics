@@ -6,8 +6,9 @@ source("anyLogicDataPull.R")
 ######################################################################
 ## The output files from the model
 
-waterNameList <- c("AsIs2Week.csv", "RobustOnly.csv", "TTR.csv",
-              "RecLevel.csv")
+waterNameList <- c("singleRunOutputPR-good.csv")
+    #c("AsIs2Week.csv", "RobustOnly.csv", "TTR.csv",
+    #          "RecLevel.csv")
 
 ## The needs for the stakeholder
 fireNeed <- 0.3

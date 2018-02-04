@@ -1,7 +1,7 @@
 library("dplyr")
 
 bCalculator <- function(inputs){
-    bVals <- inputs %>% mutate(b = (1/T.rec) *
+    bVals <- inputs %>% mutate(b = -(1/T.rec) *
                                    log((1-closeEnough) *
                                            hRecLevel /
                                                (hRecLevel - hFLevel)))
