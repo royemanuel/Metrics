@@ -2,15 +2,25 @@ library("tidyverse")
 library("readxl")
 
 ## Pull the 15 example sheets
-xlfiles <- c("HurricaneData/MCoutput15seed2.xlsx",
-             "HurricaneData/MCoutput20seed3.xlsx")
+xlfiles <- c("HurricaneData/MCoutputseed1.xlsx",
+             "HurricaneData/MCoutput15seed2.xlsx",
+             "HurricaneData/MCoutput20seed3.xlsx",
+             "HurricaneData/MCoutput20seed4.xlsx",
+             "HurricaneData/MCoutput20seed5.xlsx",
+             "HurricaneData/MCoutput20seed6.xlsx",
+             "HurricaneData/MCoutput20seed7.xlsx",
+             "HurricaneData/MCoutput20seed8.xlsx",
+             "HurricaneData/MCoutput20seed9.xlsx",
+             "HurricaneData/MCoutput20seed10.xlsx",
+             "HurricaneData/MCoutput20seed11.xlsx",
+             "HurricaneData/MCoutput18seed12.xlsx"
+             )
 
 ## test_tibble <-
 ##     xlfiles %>%
 ##     excel_sheets() %>%
 ##     set_names() %>%
-##     map(read_excel, path = xlfiles) %>%
-##     filter()
+##     map(read_excel, path = xlfiles)
 
 
 cleanHurrData <- function(tbl){
@@ -33,6 +43,7 @@ cleanHurrData <- function(tbl){
 ingestHurrData <- function(file_list){
     all_data <- tibble()
     for(f in 1:length(file_list)){
+        print(f)
         sheets <-
             file_list[f] %>%
             excel_sheets() %>%
@@ -40,7 +51,7 @@ ingestHurrData <- function(file_list){
             map(read_excel, path = file_list[f])
         temp_sheet <- tibble()
         for (s in 1:length(sheets)){
-            print(s)
+            ## print(s)
             if(dim(sheets[[s]])[1] > 0){
                 temp_data <- cleanHurrData(sheets[[s]])
                 temp_sheet <- rbind(temp_sheet, temp_data)
