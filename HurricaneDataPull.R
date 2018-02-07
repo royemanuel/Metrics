@@ -2,19 +2,19 @@ library("tidyverse")
 library("readxl")
 
 ## Pull the 15 example sheets
-xlfiles <- c("HurricaneData/MCoutputseed1.xlsx",
-             "HurricaneData/MCoutput15seed2.xlsx",
-             "HurricaneData/MCoutput20seed3.xlsx",
-             "HurricaneData/MCoutput20seed4.xlsx",
-             "HurricaneData/MCoutput20seed5.xlsx",
-             "HurricaneData/MCoutput20seed6.xlsx",
-             "HurricaneData/MCoutput20seed7.xlsx",
-             "HurricaneData/MCoutput20seed8.xlsx",
-             "HurricaneData/MCoutput20seed9.xlsx",
-             "HurricaneData/MCoutput20seed10.xlsx",
-             "HurricaneData/MCoutput20seed11.xlsx",
-             "HurricaneData/MCoutput18seed12.xlsx"
-             )
+xlfiles <- c("HurricaneDataFixed/MCoutputseed1.xlsx",
+             "HurricaneDataFixed/MCoutput15seed2.xlsx")#,
+##              "HurricaneDataFixed/MCoutput20seed3.xlsx",
+##              "HurricaneDataFixed/MCoutput20seed4.xlsx",
+##              "HurricaneDataFixed/MCoutput20seed5.xlsx",
+##              "HurricaneDataFixed/MCoutput20seed6.xlsx",
+##              "HurricaneDataFixed/MCoutput20seed7.xlsx",
+##              "HurricaneDataFixed/MCoutput20seed8.xlsx",
+##              "HurricaneDataFixed/MCoutput20seed9.xlsx",
+##              "HurricaneDataFixed/MCoutput20seed10.xlsx",
+##              "HurricaneDataFixed/MCoutput20seed11.xlsx",
+##              "HurricaneDataFixed/MCoutput18seed12.xlsx"
+##              )
 
 ## test_tibble <-
 ##     xlfiles %>%
@@ -62,16 +62,74 @@ ingestHurrData <- function(file_list){
     all_data
 }
 
+## calc_resilience <- function(performanceDF, stakeholderDF){
+##     working_performance <-
+##         performanceDF %>%
+##         
+## }
 
+## Building demonstration code to be used on the whole shebang
+wd <- ingestHurrData(xlfiles)
 
+tidy_working_data <-
+    wd %>%
+    filter(Time > 0) %>%
+    mutate(Need = 1, chi = 0) %>%
+    gather(Infrastructure, Performance, -Run, -Time, -Need, - chi) %>%
+    mutate(Performance = round(Performance / 100, 2)) %>%
+    group_by(Run, Infrastructure)
 
-
-
-
-
-
-
-
-
-
-
+assignGroup <- function(DF){
+    DF <- DF %>% mutate(diff = round(Performance - Need, 2))
+    i <- sign(DF$diff[1])
+    grp <- 1
+    DF$Grp <- 1
+    DF_output <- tibble()
+    for (run in 1:max(DF$Run)){
+        DF_by_run <-
+            DF %>%
+            filter(Run == run)
+        print(dim(DF_by_run))
+        for (r in 2:nrow(DF_by_run)){
+            if(DF_by_run$Infrastructure[r] != DF_by_run$Infrastructure[r-1]){
+                grp <- 1
+            }
+            if (sign(i) == sign(DF_by_run$diff[r])){
+                DF_by_run$Grp[r] <- grp
+            } else {
+                grp <- grp + 1
+                i <- sign(DF_by_run$diff[r])
+                print(grp)
+                DF_by_run$Grp[r] <- grp
+            }
+            DF_by_run
+        }
+        DF_output <- bind_rows(DF_output, DF_by_run)
+    }
+    DF_output 
+}
+    
+calc_EIR <- function(DF, chi){
+    DFg <- DF %>%
+        group_by(Run, Infrastructure, Grp) %>%
+        summarize(grpInt = (trapz(Time, Performance) /
+                            trapz(Time, Need)) *
+                      (max(Time) - min(Time) + 1),
+                  grpTime = max(Time) - min(Time))
+    print(DFg)
+    DFg <- DFg %>% summarize(ExtendedIntegralResilience =
+                                 ifelse(sum(grpInt) / sum(grpTime) < 1,
+                                        sum(grpInt) / sum(grpTime),
+                                        1 + chi *
+                                        (sum(grpInt) / sum(grpTime) - 1)))
+    return(DFg)
+}
+calc_stakeholder_resilience <- function(performanceDF){
+    ## Data.Frame or Tibble should be grouped by Infrastructure and
+    ## Run. Need and Chishould be a columns. We are using the last
+    ## time as the time horizon since that is the purpose of the hurricane
+    ## demonstration
+    performanceDF %>%
+        mutate(excess = Performance - Need) %>%
+        
+        }
