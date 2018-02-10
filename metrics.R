@@ -1,9 +1,10 @@
 ## Try to write the metrics in R. It may be easier with
 ## dplyr and plyr and such available
-library('plyr')
-library('dplyr')
-library('reshape2')
-library('ggplot2')
+## library('plyr')
+## library('dplyr')
+## library('reshape2')
+## library('ggplot2')
+library('tidyverse')
 library('extrafont')
 library('caTools')
 library('forcats')

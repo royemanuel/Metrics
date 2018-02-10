@@ -93,6 +93,7 @@ assignGroup <- function(DF){
         for (r in 2:nrow(DF_by_run)){
             if(DF_by_run$Infrastructure[r] != DF_by_run$Infrastructure[r-1]){
                 grp <- 1
+                i <- sign(DF_by_run$Infrastructure[r-1])
             }
             if (sign(i) == sign(DF_by_run$diff[r])){
                 DF_by_run$Grp[r] <- grp
@@ -122,8 +123,9 @@ calc_EIR <- function(DF, chi){
                                         sum(grpInt) / sum(grpTime),
                                         1 + chi *
                                         (sum(grpInt) / sum(grpTime) - 1)))
-    return(DFg)
 }
+
+
 calc_stakeholder_resilience <- function(performanceDF){
     ## Data.Frame or Tibble should be grouped by Infrastructure and
     ## Run. Need and Chishould be a columns. We are using the last

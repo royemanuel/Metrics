@@ -298,10 +298,10 @@ oldTest6 <- intRes(test6,1)
 EIR <- function(DF, chi){
     DFg <- DF %>%
         group_by(Scenario, PreferenceScenario, Grp) %>%
-            summarize(grpInt = (trapz(Time, Performance) /
-                                    trapz(Time, Preference)) * 
-                                         (max(Time) - min(Time) + 1),
-                      grpTime = max(Time) - min(Time) + 1)
+        summarize(grpInt = (trapz(Time, Performance) /
+                            trapz(Time, Preference)) *
+                      (max(Time) - min(Time) + 1),
+                  grpTime = max(Time) - min(Time) + 1)
     DFg <- DFg %>% summarize(ExtendedIntegralResilience =
                                  ifelse(sum(grpInt) / sum(grpTime) < 1,
                                         sum(grpInt) / sum(grpTime),
