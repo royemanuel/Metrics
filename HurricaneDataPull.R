@@ -1,5 +1,6 @@
 library("tidyverse")
 library("readxl")
+source("metrics.R")
 
 ## Pull the 15 example sheets
 xlfiles <- c("HurricaneDataFixed/MCoutputseed1.xlsx",
@@ -75,41 +76,97 @@ tidy_working_data <-
     wd %>%
     filter(Time > 0) %>%
     mutate(Need = 1, chi = 0) %>%
-    gather(Infrastructure, Performance, -Run, -Time, -Need, - chi) %>%
+    gather(Infrastructure, Performance, -Run, -Time, -Need, -chi) %>%
     mutate(Performance = round(Performance / 100, 2)) %>%
-    group_by(Run, Infrastructure)
+    group_by(Run, Infrastructure) 
 
 assignGroup <- function(DF){
     DF <- DF %>% mutate(diff = round(Performance - Need, 2))
-    i <- sign(DF$diff[1])
-    grp <- 1
     DF$Grp <- 1
     DF_output <- tibble()
+    DF$Infrastructure <- as.factor(DF$Infrastructure)
+    inf_values <- unique(DF$Infrastructure)
+    inf_number <- length(inf_values)
     for (run in 1:max(DF$Run)){
         DF_by_run <-
             DF %>%
             filter(Run == run)
-        print(dim(DF_by_run))
-        for (r in 2:nrow(DF_by_run)){
-            if(DF_by_run$Infrastructure[r] != DF_by_run$Infrastructure[r-1]){
-                grp <- 1
-                i <- sign(DF_by_run$Infrastructure[r-1])
+        print(run)
+        DF_inf_grp <- tibble()
+        for (i in 1:inf_number){
+            grp <- 1
+            DF_inf <-
+                DF_by_run %>%
+                filter(Infrastructure == inf_values[i])
+            s <- sign(DF_inf$diff[1])
+            for (r in 1:nrow(DF_inf)){
+                if (sign(s) == sign(DF_inf$diff[r])){
+                    DF_inf$Grp[r] <- grp
+                } else {
+                    grp <- grp + 1
+                    s <- sign(DF_inf$diff[r])
+                    ##print(grp)
+                    DF_inf$Grp[r] <- grp
+                }
+                DF_inf
             }
-            if (sign(i) == sign(DF_by_run$diff[r])){
-                DF_by_run$Grp[r] <- grp
-            } else {
-                grp <- grp + 1
-                i <- sign(DF_by_run$diff[r])
-                print(grp)
-                DF_by_run$Grp[r] <- grp
-            }
-            DF_by_run
+            DF_inf_grp <- bind_rows(DF_inf_grp, DF_inf)
         }
-        DF_output <- bind_rows(DF_output, DF_by_run)
+        DF_output <- bind_rows(DF_output, DF_inf_grp)
     }
-    DF_output 
+    DF_output <- endcap_group(DF_output)
+    DF_output
 }
-    
+
+
+## area calculations need to take into account where it was left off before
+## this should handle the problem of when there is only one time tick in
+## a group
+endcap_group <- function(DF){
+    num_runs <- length(unique(DF$Run))
+    type_inf <- unique(DF$Infrastructure)
+    num_inf <- length(type_inf)
+    rDF <- tibble()
+    for (r in 1:num_runs){
+        iDF <- tibble()
+        print(paste("Run", r))
+        for (i in 1:num_inf){
+            inf_DF <-
+                DF %>%
+                filter(Run == r, Infrastructure == type_inf[i])
+            gDF <- tibble()
+            num_grp <- length(unique(inf_DF$Grp))
+            for (g in 1:num_grp){
+                grp_DF <-
+                    inf_DF %>%
+                    filter(Grp == g)
+                if (g != 1){
+                    new_start <-
+                        inf_DF %>%
+                        filter(Grp == g - 1) %>%
+                        filter (Time == max(Time))
+                    new_start$Grp <- g
+                    grp_DF <- bind_rows(new_start, grp_DF)
+                }
+                if (g != num_grp){
+                    new_end <-
+                        inf_DF %>%
+                        filter(Grp == g + 1) %>%
+                        filter(Time == min(Time))
+                    new_end$Grp <- g
+                    grp_DF <- bind_rows(grp_DF, new_end)
+                }
+                ##print(grp_DF)
+                gDF <- bind_rows(gDF, grp_DF)
+                gDF
+            }
+            iDF <- bind_rows(iDF, gDF)
+        }
+        rDF <- bind_rows(rDF, iDF)
+    }
+    rDF
+}
+
 calc_EIR <- function(DF, chi){
     DFg <- DF %>%
         group_by(Run, Infrastructure, Grp) %>%
@@ -126,12 +183,12 @@ calc_EIR <- function(DF, chi){
 }
 
 
-calc_stakeholder_resilience <- function(performanceDF){
+## calc_stakeholder_resilience <- function(performanceDF){
     ## Data.Frame or Tibble should be grouped by Infrastructure and
     ## Run. Need and Chishould be a columns. We are using the last
     ## time as the time horizon since that is the purpose of the hurricane
     ## demonstration
-    performanceDF %>%
-        mutate(excess = Performance - Need) %>%
-        
-        }
+##     performanceDF %>%
+##         mutate(excess = Performance - Need) %>%
+##         
+##         }
