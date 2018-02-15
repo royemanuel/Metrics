@@ -1,6 +1,8 @@
 library("dplyr")
 library('xlsx')
 library('triangle')
+set.seed(58425)
+
 a <- rexp(1000, 0.00000027)
 
 b <- rexp(1000, 0.00000027)
@@ -119,7 +121,7 @@ storms <- storms %>%
     mutate(b4 = -(1/S4.RT) * log((0.01 * S4.RL)/(S4.RL - S4.FL))) %>%
     mutate(b5 = -(1/S5.RT) * log((0.01 * S5.RL)/(S5.RL - S5.FL))) 
 
-write.xlsx2(storms, file="d:/onedrive/PhD Work/Dissertation/Programming/Metrics/storms.xlsx")
+#write.xlsx2(storms, file="d:/onedrive/PhD Work/Dissertation/Programming/Metrics/stormsSeed.xlsx")
 ## Assign a recovery level
 ## storms <- storms %>%
 ##     mutate(S1.RL = recode(S1.Strength, `1`= rtriangle(1, .9, 1, 1),
