@@ -47,6 +47,7 @@ stormsInYear <- data.frame(Storm1 = a,
 ## stormsInYear[stormsInYear > 2 * 525600] <- NA
 
 storms <- stormsInYear %>% filter(Storm1 < 525600 * 2)
+storms2 <- stormsInYear %>% filter(Storm1 < 525600 * 5)
 
 ## Assign a storm strength
 

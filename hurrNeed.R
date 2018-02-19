@@ -11,17 +11,20 @@
 build_need <- function(DF,
                        stormlist,
                        system,
-                       delay, # days
+                       # delay, # days
                        baseline,
-                       year2val,
-                       perturb_level,
-                       recovertime){ # days
+                       year2val
+                       #perturb_level,
+                       ##recovertime
+                       ){ # days
     DF <-
         DF %>%
         filter(Infrastructure == system)
     DF_holder <- tibble()
-    recovertime <- recovertime * 1440
-    delay <- delay * 1440
+    ## This is temporary until I build a recovery time and perturbation
+    ## level that is dependent upon storm strength
+    #### recovertime <- recovertime * 1440
+    #### delay <- delay * 1440
     for (run in 1:length(unique(DF$Run))){
         DF_run<-
             DF %>%
@@ -29,19 +32,28 @@ build_need <- function(DF,
         need_vector <- seq(from = baseline,
                            to = year2val,
                            length.out = 1051200)
-        print(length(need_vector))
+        ## print(length(need_vector))
         storms_run <-
-            stormlist[run, 1:10] %>%
+            stormlist[run, 2:11] %>%
             gather() %>%
             filter(value < 1051200)
-        print(storms_run)
+        ## print(storms_run)
         ## Hardcoding this for simplicity
         num_storm_run <- dim(storms_run)[1] - 5
-        print(paste("storms in this row", num_storm_run))
+        ## print(paste("storms in this row", num_storm_run))
         for (sr in 1:num_storm_run){
             time <- storms_run$value[sr]
             strength <- storms_run$value[sr+5]
-            print(sr)
+            ## Need to vary the recovery time and the perturbation level by
+            ## strength of the storm
+            p_vec <- calc_strength_factors(system, strength)
+            ## p_vec[1] is the time to recover (days)
+            ## p_vec[2] is the perturbation level
+            ## p_vec[3] is the delay time
+            recovertime <- p_vec[1] * 1440
+            perturb_level <- p_vec[2]
+            delay <- p_vec[3] * 1440
+            # print(sr)
             abs_rec_time <- time + (delay + recovertime) 
             start_replace <- time + delay 
             ## Need to handle the case when demand does not recover
@@ -55,23 +67,33 @@ build_need <- function(DF,
                 demand_vec <- seq(from = perturb_level,
                                   to = rec_level_future,
                                   length.out = recovertime )
-                time_to_end <- 1051200 - (time + delay) 
+                time_to_end <- 1051200 - (time + delay) + 1
                 demand_vec <- demand_vec[1:time_to_end]
              } else {
                 end_replace <- start_replace + recovertime  - 1
                 rec_level <- need_vector[time + (delay + recovertime) ]
-                print(rec_level)
+                ## print(rec_level)
                 demand_vec <- seq(from = perturb_level,
                                   to = rec_level,
                                   length.out = recovertime )
-                print("yup")
+                ## print("yup")
+             }
+            if(length(demand_vec) > 0){
+                if(length(need_vector[start_replace:end_replace]) !=
+                          length(demand_vec)){
+                    print(paste("NV = ", length(need_vector[start_replace:
+                                                      end_replace]),
+                                ", DV = ", length(demand_vec),
+                                " at time ", start_replace,
+                                "and run ", run ))
+                }
+                need_vector[start_replace:end_replace] <- demand_vec
             }
-            need_vector[start_replace:end_replace] <- demand_vec
             t_vec <- seq(from = 1, to = length(need_vector), by = 1)
             need_tbl <- as.tibble(bind_cols(Need = need_vector,
                                             Time = t_vec))
             need_tbl <- filter(need_tbl, Time %% 240 == 0)
-            print(need_tbl)
+            ## print(need_tbl)
         }
         DF_run <- inner_join(DF_run, need_tbl, by = "Time")
         DF_holder <- bind_rows(DF_holder, DF_run)
@@ -79,21 +101,163 @@ build_need <- function(DF,
     DF_holder
 }
 
+## calc_strength_factors <- function(strength, system){
+##     switch(system,
+##            Transportation_Function =
+##                if(strength == 1){
+##                    ## sf[1] is the time to recover (days)
+##                    ## sf[2] is the perturbation level
+##                    ## sf[3] is the delay time
+##                    ttr <- 0
+##                    pl <- 0
+##                    dt <- 0
+##                    c(ttr, pl, dt)
+##                } else if (strength < 4){
+##                    ttr <- 3
+##                    pl <- 1.2
+##                    dt <- -3
+##                    c(ttr, pl, dt)
+##                } else {
+##                    ttr <- 3
+##                    pl <- 2.0
+##                    dt <- -3.5
+##                    c(ttr, pl, dt)
+##                },
+##            Emergency_Services_Functionality =
+##                if(strength == 1){
+##                    ttr <- 2
+##                    pl <- 1.2
+##                    dt <- .5
+##                    c(ttr, pl, dt)
+##                } else if (strength < 4) {
+##                    ttr <- 8
+##                    pl <- 1.4
+##                    dt <- .5
+##                    c(ttr, pl, dt)
+##                } else {
+##                    ttr <- 15
+##                    pl <- 1.5
+##                    dt <- .5
+##                    c(ttr, pl, dt)
+##                },
+##            Electricity_Availability =
+##                c(0, 0, 0),
+##            Critical_Manufacturing_Functionality = 
+##                c(0, 0, 0),
+##            Water_Functionality =
+##                c(0, 0, 0),
+##            Healthcare_Function =
+##                if(strength == 1){
+##                    ttr <- 2
+##                    pl <- 1.2
+##                    dt <- .5
+##                    c(ttr, pl, dt)
+##                } else if (strength < 4) {
+##                    ttr <- 8
+##                    pl <- 1.4
+##                    dt <- .5
+##                    c(ttr, pl, dt)
+##                } else {
+##                    ttr <- 15
+##                    pl <- 1.5
+##                    dt <- .5
+##                    c(ttr, pl, dt)
+##                },
+##            IT_Function =
+##                c(0, 0, 0),
+##            Communications_Function =
+##                c(0, 0, 0)
+##            )
+## }
+calc_strength_factors <- function(system, strength){
+    if(system == "Transportation_Function"){
+        if(strength == 1){
+            ## sf[1] is the time to recover (days)
+            ## sf[2] is the perturbation level
+            ## sf[3] is the delay time
+            ttr <- 4.5
+            pl <- 1.2
+            dt <- -2
+            c(ttr, pl, dt)
+        } else if (strength == 2){
+            ttr <- 17
+            pl <- 1.8
+            dt <- -5
+            c(ttr, pl, dt)
+        } else if (strength == 3){
+            ttr <- 28
+            pl <- 1.8
+            dt <- -5
+            c(ttr, pl, dt)
+        } else {
+            ttr <- 75
+            pl <- 2.0
+            dt <- -5
+            c(ttr, pl, dt)
+        }
+    } else if (system == "Emergency_Services_Functionality"){
+        if(strength == 1){
+            ttr <- 5
+            pl <- 1.2
+            dt <- 0
+            c(ttr, pl, dt)
+        } else if (strength == 2) {
+            ttr <- 17
+            pl <- 1.5
+            dt <- 0
+            c(ttr, pl, dt)
+        } else if (strength == 3) {
+            ttr <- 28
+            pl <- 1.5
+            dt <- 0
+            c(ttr, pl, dt)
+        } else {
+            ttr <- 75
+            pl <- 1.5
+            dt <- 0
+            c(ttr, pl, dt)
+        }
+    } else if (system == "Healthcare_Function"){
+        if(strength == 1){
+            ttr <- 5
+            pl <- 1.2
+            dt <- 0
+            c(ttr, pl, dt)
+        } else if (strength == 2) {
+            ttr <- 17
+            pl <- 1.5
+            dt <- 0
+            c(ttr, pl, dt)
+        } else if (strength == 3) {
+            ttr <- 28
+            pl <- 1.5
+            dt <- 0
+            c(ttr, pl, dt)
+        } else {
+            ttr <- 75
+            pl <- 1.5
+            dt <- 0
+            c(ttr, pl, dt)
+        }
+    } else {
+        c(0, 0, 0)
+    }
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+bld_need_all <- function(DF, stormlist){
+    name_inf <- unique(DF$Infrastructure)
+    num_inf <- length(name_inf)
+    all_DF <- tibble()
+    pb <- txtProgressBar(min = 0, max = num_inf, style = 3)
+    for(i in 1:num_inf){
+        ## Could call a case switch statement for each of the
+        ## infrastructures here to calc baseline and year2val if desired
+        bl <- 1
+        yr2val <- 1
+        system_inf<- name_inf[i]
+        need_DF <- build_need(DF, stormlist, system_inf, bl, yr2val)
+        all_DF <- bind_rows(all_DF, need_DF)
+        setTxtProgressBar(pb, i)
+    }
+    all_DF
+}
