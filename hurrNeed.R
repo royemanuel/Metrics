@@ -23,8 +23,9 @@ build_need <- function(DF,
     DF_holder <- tibble()
     ## This is temporary until I build a recovery time and perturbation
     ## level that is dependent upon storm strength
-    #### recovertime <- recovertime * 1440
-    #### delay <- delay * 1440
+    ## recovertime <- recovertime * 1440
+    ## delay <- delay * 1440
+    pb2 <- txtProgressBar(min = 0, max = length(unique(DF$Run)), style = 3)
     for (run in 1:length(unique(DF$Run))){
         DF_run<-
             DF %>%
@@ -37,13 +38,20 @@ build_need <- function(DF,
             stormlist[run, 2:11] %>%
             gather() %>%
             filter(value < 1051200)
+        rem_storms <-  2 * dim(storms_run)[1] - 10
+        storms_run <- storms_run[1:rem_storms,]
+        storm_strengths <-
+            storms_run %>%
+            filter(value < 6)
+        biggest_storm <- max(storm_strengths$value)
+        print(paste("Run ", run, ", BS ", biggest_storm))
         ## print(storms_run)
         ## Hardcoding this for simplicity
-        num_storm_run <- dim(storms_run)[1] - 5
+        num_storm_run <- dim(storms_run)[1] / 2
         ## print(paste("storms in this row", num_storm_run))
         for (sr in 1:num_storm_run){
             time <- storms_run$value[sr]
-            strength <- storms_run$value[sr+5]
+            strength <- storms_run$value[sr + num_storm_run]
             ## Need to vary the recovery time and the perturbation level by
             ## strength of the storm
             p_vec <- calc_strength_factors(system, strength)
@@ -79,14 +87,6 @@ build_need <- function(DF,
                 ## print("yup")
              }
             if(length(demand_vec) > 0){
-                if(length(need_vector[start_replace:end_replace]) !=
-                          length(demand_vec)){
-                    print(paste("NV = ", length(need_vector[start_replace:
-                                                      end_replace]),
-                                ", DV = ", length(demand_vec),
-                                " at time ", start_replace,
-                                "and run ", run ))
-                }
                 need_vector[start_replace:end_replace] <- demand_vec
             }
             t_vec <- seq(from = 1, to = length(need_vector), by = 1)
@@ -95,7 +95,9 @@ build_need <- function(DF,
             need_tbl <- filter(need_tbl, Time %% 240 == 0)
             ## print(need_tbl)
         }
-        DF_run <- inner_join(DF_run, need_tbl, by = "Time")
+        setTxtProgressBar(pb2, run)
+        DF_run <- inner_join(DF_run, need_tbl, by = "Time") %>%
+            mutate(Biggest_Storm = biggest_storm)
         DF_holder <- bind_rows(DF_holder, DF_run)
     }
     DF_holder
