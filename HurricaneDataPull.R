@@ -154,14 +154,17 @@ endcap_group <- function(DF){
                     new_start$Grp <- g
                     grp_DF <- bind_rows(new_start, grp_DF)
                 }
-                if (g != num_grp){
-                    new_end <-
-                        inf_DF %>%
-                        filter(Grp == g + 1) %>%
-                        filter(Time == min(Time))
-                    new_end$Grp <- g
-                    grp_DF <- bind_rows(grp_DF, new_end)
-                }
+                ## I am afraid that this is double counting between
+                ## the groups. We are double counting the transitions here.
+                
+                ## if (g != num_grp){
+                ##     new_end <-
+                ##         inf_DF %>%
+                ##         filter(Grp == g + 1) %>%
+                ##         filter(Time == min(Time))
+                ##     new_end$Grp <- g
+                ##     grp_DF <- bind_rows(grp_DF, new_end)
+                ## }
                 ##print(grp_DF)
                 gDF <- bind_rows(gDF, grp_DF)
                 gDF
