@@ -44,7 +44,7 @@ build_need <- function(DF,
             storms_run %>%
             filter(value < 6)
         biggest_storm <- max(storm_strengths$value)
-        print(paste("Run ", run, ", BS ", biggest_storm))
+        ## print(paste("Run ", run, ", BS ", biggest_storm))
         ## print(storms_run)
         ## Hardcoding this for simplicity
         num_storm_run <- dim(storms_run)[1] / 2
@@ -97,7 +97,8 @@ build_need <- function(DF,
         }
         setTxtProgressBar(pb2, run)
         DF_run <- inner_join(DF_run, need_tbl, by = "Time") %>%
-            mutate(Biggest_Storm = biggest_storm)
+            mutate(Biggest_Storm = biggest_storm,
+                   Number_Storms = num_storm_run)
         DF_holder <- bind_rows(DF_holder, DF_run)
     }
     DF_holder
