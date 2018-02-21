@@ -527,6 +527,7 @@ env = simpy.Environment()
 flightLine = {}
 boneYard = {}
 buildAC(env, NUM_AIRCRAFT, flightLine)
+
 studList = {0: Student(env, 0),
             1: Student(env, 1),
             2: Student(env, 2),
@@ -565,6 +566,12 @@ aircraftHistory = pd.DataFrame()
 
 for stud in studList:
     studHistory = studHistory.append(studList[stud].flightDF)
+
+for grad in gradStuds:
+    studHistory = studHistory.append(gradStuds[grad].flightDF)
+
+for flnk in attritStuds:
+    studHistory = studHistory.append(attritStuds[flnk].flightDF)
 
 for inst in instList:
     instHistory = instHistory.append(instList[inst].flightDF)
