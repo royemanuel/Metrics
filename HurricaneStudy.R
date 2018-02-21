@@ -3,12 +3,12 @@ source("metrics.R")
 source("HurricaneDataPull.R")
 source("hurrNeed.R")
 
-study_files <- c("HurricaneData1_with_StormSeed/001MCoutput.xlsx")#,
+study_files <- c("HurricaneData1_with_StormSeed/001MCoutput.xlsx",
 ##                   "HurricaneData1_with_StormSeed/002MCoutput.xlsx",
 ##                     "HurricaneData1_with_StormSeed/003MCoutput.xlsx",
 ##                     "HurricaneData1_with_StormSeed/004MCoutput.xlsx",
 ##                     "HurricaneData1_with_StormSeed/005MCoutput.xlsx",
-##                     "HurricaneData1_with_StormSeed/006MCoutput.xlsx",
+                     "HurricaneData1_with_StormSeed/006MCoutput.xlsx")#,
 ##                     "HurricaneData1_with_StormSeed/007MCoutput.xlsx",
 ##                     "HurricaneData1_with_StormSeed/008MCoutput.xlsx",
 ##                     "HurricaneData1_with_StormSeed/009MCoutput.xlsx",
@@ -27,6 +27,11 @@ sf_data_clean <-
 mystorms <- read_excel("HurricaneData1_with_StormSeed/stormsSeed.xlsx")
 
 sf_data_need <- bld_need_all(sf_data_clean, mystorms)
+
+storm_run_data <-
+    sf_data_need %>%
+    group_by(Run) %>%
+    summarize(Biggest_Storm = mean(Biggest_Storm), Number_Storms = mean(Number_Storms))
 
 sf_data_groups <- assignGroup(sf_data_need)
 
