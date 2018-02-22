@@ -7,7 +7,6 @@ dTest.exe
 dTest.c
 *.png
 *.emf
-*.csv
 #plotter.R#
 #school.py#
 #singleServer.py#

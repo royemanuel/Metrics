@@ -27,31 +27,16 @@ build_need <- function(DF,
     ## delay <- delay * 1440
     pb2 <- txtProgressBar(min = 0, max = length(unique(DF$Run)), style = 3)
     for (run in 1:length(unique(DF$Run))){
-        DF_run<-
+        DF_run <-
             DF %>%
             filter(Run == run)
         need_vector <- seq(from = baseline,
                            to = year2val,
                            length.out = 1051200)
-        ## print(length(need_vector))
-        storms_run <-
-            stormlist[run, 2:11] %>%
-            gather() %>%
-            filter(value < 1051200)
-        rem_storms <-  2 * dim(storms_run)[1] - 10
-        storms_run <- storms_run[1:rem_storms,]
-        storm_strengths <-
-            storms_run %>%
-            filter(value < 6)
-        biggest_storm <- max(storm_strengths$value)
-        ## print(paste("Run ", run, ", BS ", biggest_storm))
-        ## print(storms_run)
-        ## Hardcoding this for simplicity
-        num_storm_run <- dim(storms_run)[1] / 2
-        ## print(paste("storms in this row", num_storm_run))
-        for (sr in 1:num_storm_run){
-            time <- storms_run$value[sr]
-            strength <- storms_run$value[sr + num_storm_run]
+        storm_run <- filter(mystorms, Run == run)
+        for (sr in 1:dim(storm_run)[1]){
+            time <- storm_run$FailTime[sr]
+            strength <- storm_run$HurricaneStrength[sr]
             ## Need to vary the recovery time and the perturbation level by
             ## strength of the storm
             p_vec <- calc_strength_factors(system, strength)
@@ -96,9 +81,7 @@ build_need <- function(DF,
             ## print(need_tbl)
         }
         setTxtProgressBar(pb2, run)
-        DF_run <- inner_join(DF_run, need_tbl, by = "Time") %>%
-            mutate(Biggest_Storm = biggest_storm,
-                   Number_Storms = num_storm_run)
+        DF_run <- inner_join(DF_run, need_tbl, by = "Time") 
         DF_holder <- bind_rows(DF_holder, DF_run)
     }
     DF_holder
