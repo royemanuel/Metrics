@@ -9,25 +9,29 @@ prob_hurricane_year <- .25
 hurr_lambda <- -log(1 - prob_hurricane_year)/(365 * 1440)
 
 a <- rexp(1000, hurr_lambda)
-
 b <- rexp(1000, hurr_lambda)
 c <- rexp(1000, hurr_lambda)
 d <- rexp(1000, hurr_lambda)
 f <- rexp(1000, hurr_lambda)
+g <- rexp(1000, hurr_lambda)
 
-s1 <- runif(1000)
-s2 <- runif(1000)
-s3 <- runif(1000)
-s4 <- runif(1000)
-s5 <- runif(1000)
+## s1 <- runif(1000)
+## s2 <- runif(1000)
+## s3 <- runif(1000)
+## s4 <- runif(1000)
+## s5 <- runif(1000)
 
 stormsInYear <- data.frame()
 stormsInYear <- data.frame(Storm1 = a,
                            Storm2 = a + b,
                            Storm3 = a + b + c,
                            Storm4 = a + b + c + d,
-                           Storm5 = a + b + c + d + f)
-storms <- stormsInYear %>% filter(Storm1 < 525600 * 2)
+                           Storm5 = a + b + c + d + f,
+                           Storm6 = a + b + c + d + f + g)
+mystorms <-
+    stormsInYear %>%
+    filter(Storm1 < 525600 * 2) %>%
+    as.tibble()
 
 ######################################################################
 ## This is all old. I calculate all these things in Anylogic now    ##

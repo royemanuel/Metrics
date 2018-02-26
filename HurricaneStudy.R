@@ -2,19 +2,24 @@ library("tidyverse")
 source("metrics.R")
 source("HurricaneDataPull.R")
 source("hurrNeed.R")
-#source("stormDef.R")
+## Commented out because build it once and be done.
+##source("stormDef.R")
 
-study_files <- c("HurricaneData1_with_StormSeed/001MCoutput.xlsx",
-                  "HurricaneData1_with_StormSeed/002MCoutput.xlsx",
-                    "HurricaneData1_with_StormSeed/003MCoutput.xlsx",
-                    "HurricaneData1_with_StormSeed/004MCoutput.xlsx",
-                    "HurricaneData1_with_StormSeed/005MCoutput.xlsx",
-                    "HurricaneData1_with_StormSeed/006MCoutput.xlsx",
-                    "HurricaneData1_with_StormSeed/007MCoutput.xlsx",
-                    "HurricaneData1_with_StormSeed/008MCoutput.xlsx",
-                    "HurricaneData1_with_StormSeed/009MCoutput.xlsx",
-                    "HurricaneData1_with_StormSeed/010MCoutput.xlsx",
-                    "HurricaneData1_with_StormSeed/011MCoutput.xlsx")
+
+study_files <- c("HurrData547/01MCoutput.xlsx",
+                 "HurrData547/02MCoutput.xlsx")
+## ,
+##                  "HurrData547/03MCoutput.xlsx",
+##                  "HurrData547/04MCoutput.xlsx",
+##                  "HurrData547/05MCoutput.xlsx",
+##                  "HurrData547/06MCoutput.xlsx",
+##                  "HurrData547/07MCoutput.xlsx",
+##                  "HurrData547/08MCoutput.xlsx",
+##                  "HurrData547/09MCoutput.xlsx",
+##                  "HurrData547/10MCoutput.xlsx",
+##                  "HurrData547/11MCoutput.xlsx",
+##                  "HurrData547/12MCoutput.xlsx")
+## 
  
 sf_data <- ingestHurrData(study_files)
 print("Data ingested from Excel")
@@ -27,7 +32,9 @@ sf_data_clean <-
 
 mystorms <- as.tibble(read.csv("run_profiles_seed.csv"))
 
-sf_data_need <- bld_need_all(sf_data_clean, mystorms)
+sf_data_need <- bld_need_all(DF = sf_data_clean,
+                             time_h = 525600 * 2,
+                             stormlist = mystorms)
 
 storm_run_data <-
     sf_data_need %>%

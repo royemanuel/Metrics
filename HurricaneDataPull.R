@@ -193,12 +193,23 @@ calc_EIR <- function(DF, chi){
 }
 
 
-## calc_stakeholder_resilience <- function(performanceDF){
-    ## Data.Frame or Tibble should be grouped by Infrastructure and
-    ## Run. Need and Chishould be a columns. We are using the last
-    ## time as the time horizon since that is the purpose of the hurricane
-    ## demonstration
-##     performanceDF %>%
-##         mutate(excess = Performance - Need) %>%
-##         
-##         }
+
+######################################################################
+## Summary statistics and Plotting                                  ##
+######################################################################
+
+
+summ_stats_inf <- function(DF){
+    DF <-
+        DF %>%
+        group_by(Infrastructure) %>%
+        summarize(mean = mean(ExtendedIntegralResilience),
+                  sd = sd(ExtendedIntegralResilience),
+                  median = median(ExtendedIntegralResilience),
+                  min = min(ExtendedIntegralResilience),
+                  max = max(ExtendedIntegralResilience),
+                  bottom10 = quantile(ExtendedIntegralResilience, .10),
+                  top10 = quantile(ExtendedIntegralResilience, .9))
+}
+
+

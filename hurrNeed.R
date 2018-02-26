@@ -13,7 +13,8 @@ build_need <- function(DF,
                        system,
                        # delay, # days
                        baseline,
-                       year2val
+                       year2val,
+                       time_horizon
                        #perturb_level,
                        ##recovertime
                        ){ # days
@@ -30,61 +31,63 @@ build_need <- function(DF,
         DF_run <-
             DF %>%
             filter(Run == run)
+        print(paste("baseline is", baseline, "in run", run))
         need_vector <- seq(from = baseline,
                            to = year2val,
-                           length.out = 1051200)
-        storm_run <- filter(mystorms, Run == run)
-        for (sr in 1:dim(storm_run)[1]){
-            time <- storm_run$FailTime[sr]
-            strength <- storm_run$HurricaneStrength[sr]
-            ## Need to vary the recovery time and the perturbation level by
-            ## strength of the storm
-            p_vec <- calc_strength_factors(system, strength)
-            ## p_vec[1] is the time to recover (days)
-            ## p_vec[2] is the perturbation level
-            ## p_vec[3] is the delay time
-            recovertime <- p_vec[1] * 1440
-            perturb_level <- p_vec[2]
-            delay <- p_vec[3] * 1440
-            # print(sr)
-            abs_rec_time <- time + (delay + recovertime) 
-            start_replace <- time + delay 
-            ## Need to handle the case when demand does not recover
-            ## before the two year point
-            if (time + delay > 1051200){
-                break
-            } else if (abs_rec_time > 1051200){
-                end_replace <- 1051200
-                rec_level_future <- (year2val - baseline) / 1051200 *
-                    (time + delay + recovertime)
-                demand_vec <- seq(from = perturb_level,
-                                  to = rec_level_future,
-                                  length.out = recovertime )
-                time_to_end <- 1051200 - (time + delay) + 1
-                demand_vec <- demand_vec[1:time_to_end]
-             } else {
-                end_replace <- start_replace + recovertime  - 1
-                rec_level <- need_vector[time + (delay + recovertime) ]
-                ## print(rec_level)
-                demand_vec <- seq(from = perturb_level,
-                                  to = rec_level,
-                                  length.out = recovertime )
-                ## print("yup")
-             }
-            if(length(demand_vec) > 0){
-                need_vector[start_replace:end_replace] <- demand_vec
+                           length.out = time_horizon)
+        if(dim(stormlist)[1] != 0){
+            storm_run <- filter(mystorms, Run == run)
+            for (sr in 1:dim(storm_run)[1]){
+                time <- storm_run$FailTime[sr]
+                strength <- storm_run$HurricaneStrength[sr]
+                ## Need to vary the recovery time and the perturbation level by
+                ## strength of the storm
+                p_vec <- calc_strength_factors(system, strength)
+                ## p_vec[1] is the time to recover (days)
+                ## p_vec[2] is the perturbation level
+                ## p_vec[3] is the delay time
+                recovertime <- p_vec[1] * 1440
+                perturb_level <- p_vec[2]
+                delay <- p_vec[3] * 1440
+                                        # print(sr)
+                abs_rec_time <- time + (delay + recovertime)
+                start_replace <- time + delay
+                ## Need to handle the case when demand does not recover
+                ## before the two year point
+                if (time + delay > time_horizon){
+                    break
+                } else if (abs_rec_time > time_horizon){
+                    end_replace <- time_horizon
+                    rec_level_future <- (year2val - baseline) / time_horizon *
+                        (time + delay + recovertime)
+                    demand_vec <- seq(from = perturb_level,
+                                      to = rec_level_future,
+                                      length.out = recovertime )
+                    time_to_end <- time_horizon - (time + delay) + 1
+                    demand_vec <- demand_vec[1:time_to_end]
+                } else {
+                    end_replace <- start_replace + recovertime  - 1
+                    rec_level <- need_vector[time + (delay + recovertime) ]
+                    ## print(rec_level)
+                    demand_vec <- seq(from = perturb_level,
+                                      to = rec_level,
+                                      length.out = recovertime )
+                    ## print("yup")
+                }
+                if(length(demand_vec)>0){
+                    need_vector[start_replace:end_replace] <- demand_vec
+                    }
             }
-            t_vec <- seq(from = 1, to = length(need_vector), by = 1)
-            need_tbl <- as.tibble(bind_cols(Need = need_vector,
-                                            Time = t_vec))
-            need_tbl <- filter(need_tbl, Time %% 240 == 0)
-            ## print(need_tbl)
         }
-        setTxtProgressBar(pb2, run)
-        DF_run <- inner_join(DF_run, need_tbl, by = "Time") 
-        DF_holder <- bind_rows(DF_holder, DF_run)
+        t_vec <- seq(from = 1, to = length(need_vector), by = 1)
+        need_tbl <- as.tibble(bind_cols(Need = need_vector,
+                                        Time = t_vec))
+        need_tbl <- filter(need_tbl, Time %% 240 == 0)
+        ## print(need_tbl)
     }
-    DF_holder
+    setTxtProgressBar(pb2, run)
+    DF_run <- inner_join(DF_run, need_tbl, by = "Time")
+    DF_holder <- bind_rows(DF_holder, DF_run)
 }
 
 ## calc_strength_factors <- function(strength, system){
@@ -230,7 +233,12 @@ calc_strength_factors <- function(system, strength){
     }
 }
 
-bld_need_all <- function(DF, stormlist){
+bld_need_all <- function(DF, time_h, stormlist, need_inf){
+    if(missing(need_inf)){
+        need_inf <- tibble(Infrastructure = unique(DF$Infrastructure)) %>%
+            mutate(BL = 1, Y2 = 1)
+    }
+    print(need_inf)
     name_inf <- unique(DF$Infrastructure)
     num_inf <- length(name_inf)
     all_DF <- tibble()
@@ -238,12 +246,48 @@ bld_need_all <- function(DF, stormlist){
     for(i in 1:num_inf){
         ## Could call a case switch statement for each of the
         ## infrastructures here to calc baseline and year2val if desired
-        bl <- 1
-        yr2val <- 1
         system_inf<- name_inf[i]
-        need_DF <- build_need(DF, stormlist, system_inf, bl, yr2val)
+        bl <-  filter(need_inf, Infrastructure == name_inf[i])$BL
+        yr2val <- filter(need_inf, Infrastructure == name_inf[i])$Y2
+        need_DF <- build_need(DF = DF,
+                              stormlist = stormlist,
+                              system = system_inf,
+                              baseline = bl,
+                              year2val = yr2val,
+                              time_horizon = time_h)
         all_DF <- bind_rows(all_DF, need_DF)
         setTxtProgressBar(pb, i)
     }
     all_DF
 }
+
+test_need <- tibble(Infrastructure = c("Electricity_Availability",
+                                       "Communications_Function",
+                                       "IT_Function",
+                                       "Healthcare_Function",
+                                       "Transportation_Function",
+                                       "Emergency_Services_Functionality",
+                                       "Critical_Manufacturing_Functionality",
+                                       "Water_Functionality"),
+                    BL = c(1.0, 1.1, 1.2, 1.3, 1.0, 1.0, 1.0, 1.0),
+                    Y2 = c(1.0, 1.0, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2))
+
+zero_storm_profile <- function(DF, time_hor, emptystormlist, need_profile){
+    working_DF <-
+        DF %>%
+        filter(Run == 1) %>%
+        mutate(Performance = 1)
+    if (missing(need_profile)){
+        wdf <- bld_need_all(working_DF, time_hor, emptystormlist)
+    } else {
+        wdf <- bld_need_all(working_DF, time_hor, emptystormlist, need_profile)
+    }
+}
+
+
+
+
+
+
+
+
