@@ -192,7 +192,21 @@ calc_EIR <- function(DF, chi){
                                         (sum(grpInt) / sum(grpTime) - 1)))
 }
 
-
+add_nostorm_runs <- function(stormRuns, nostormRuns, num_noStorms){
+    stormRuns <- ungroup(stormRuns)
+    nostormRuns <- ungroup(nostormRuns) %>%
+        select(-Run)    
+    run_start <- max(stormRuns$Run)
+    all_nf_runs <- tibble()
+    for (run in 1:num_noStorms){
+        nf_run <-
+            nostormRuns %>%
+            mutate(Run = run + run_start)
+        all_nf_runs <- bind_rows(all_nf_runs, nf_run)
+    }
+    all_DF <- bind_rows(stormRuns, all_nf_runs)
+    all_DF <- group_by(all_DF, Run)
+}
 
 ######################################################################
 ## Summary statistics and Plotting                                  ##
