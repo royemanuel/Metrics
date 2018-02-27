@@ -31,12 +31,12 @@ build_need <- function(DF,
         DF_run <-
             DF %>%
             filter(Run == run)
-        print(paste("baseline is", baseline, "in run", run))
+        ## print(paste("baseline is", baseline, "in run", run))
         need_vector <- seq(from = baseline,
                            to = year2val,
                            length.out = time_horizon)
         if(dim(stormlist)[1] != 0){
-            storm_run <- filter(mystorms, Run == run)
+            storm_run <- filter(stormlist, Run == run)
             for (sr in 1:dim(storm_run)[1]){
                 time <- storm_run$FailTime[sr]
                 strength <- storm_run$HurricaneStrength[sr]
@@ -52,9 +52,10 @@ build_need <- function(DF,
                                         # print(sr)
                 abs_rec_time <- time + (delay + recovertime)
                 start_replace <- time + delay
+                cat("\r", system, run, sr, start_replace)
                 ## Need to handle the case when demand does not recover
                 ## before the two year point
-                if (time + delay > time_horizon){
+                if (start_replace > time_horizon){
                     break
                 } else if (abs_rec_time > time_horizon){
                     end_replace <- time_horizon
@@ -78,16 +79,18 @@ build_need <- function(DF,
                     need_vector[start_replace:end_replace] <- demand_vec
                     }
             }
+            need_vector
         }
         t_vec <- seq(from = 1, to = length(need_vector), by = 1)
         need_tbl <- as.tibble(bind_cols(Need = need_vector,
                                         Time = t_vec))
         need_tbl <- filter(need_tbl, Time %% 240 == 0)
         ## print(need_tbl)
+        DF_run <- inner_join(DF_run, need_tbl, by = "Time")
+        DF_holder <- bind_rows(DF_holder, DF_run)
     }
     setTxtProgressBar(pb2, run)
-    DF_run <- inner_join(DF_run, need_tbl, by = "Time")
-    DF_holder <- bind_rows(DF_holder, DF_run)
+    DF_holder
 }
 
 ## calc_strength_factors <- function(strength, system){
@@ -238,7 +241,7 @@ bld_need_all <- function(DF, time_h, stormlist, need_inf){
         need_inf <- tibble(Infrastructure = unique(DF$Infrastructure)) %>%
             mutate(BL = 1, Y2 = 1)
     }
-    print(need_inf)
+    ## print(need_inf)
     name_inf <- unique(DF$Infrastructure)
     num_inf <- length(name_inf)
     all_DF <- tibble()
@@ -269,8 +272,8 @@ test_need <- tibble(Infrastructure = c("Electricity_Availability",
                                        "Emergency_Services_Functionality",
                                        "Critical_Manufacturing_Functionality",
                                        "Water_Functionality"),
-                    BL = c(1.0, 1.1, 1.2, 1.3, 1.0, 1.0, 1.0, 1.0),
-                    Y2 = c(1.0, 1.0, 1.2, 1.2, 1.2, 1.2, 1.2, 1.2))
+                    BL = c(1.0, 1.0, .95, 0.9, 1.05, .9, 1.0, 1.0),
+                    Y2 = c(1.0, 1.2, .95, 1.2, 1.2, 1.1, 1.3, 1.1))
 
 zero_storm_profile <- function(DF, time_hor, emptystormlist, need_profile){
     working_DF <-

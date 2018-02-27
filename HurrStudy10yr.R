@@ -27,12 +27,24 @@ sf_data10yr_clean <-
 
 my10yrstorms <- as.tibble(read.csv("run10yr_profiles_seed.csv"))
 
+rising_need10yr <- tibble(Infrastructure = c("Electricity_Availability",
+                                       "Communications_Function",
+                                       "IT_Function",
+                                       "Healthcare_Function",
+                                       "Transportation_Function",
+                                       "Emergency_Services_Functionality",
+                                       "Critical_Manufacturing_Functionality",
+                                       "Water_Functionality"),
+                    BL = c(1.0, 1.0, .95, 0.9, 1.05, .9, 1.0, 1.0),
+                    Y2 = c(1.0, 1.2, .95, 1.2, 1.2, 1.1, 1.3, 1.1))
+
 sf_data10yr_need <- bld_need_all(DF = sf_data10yr_clean,
                                  time_h = 525600 * 10,
-                                 stormlist = my10yrstorms)
+                                 stormlist = my10yrstorms,
+                                 need_inf = rising_need10yr)
 
 storm_run_data10yr <-
-    sf_data10yr_need %>%
+    sdc10n %>%##sf_data10yr_need %>%
     group_by(Run)
 
 storm10yr_summary <-
@@ -47,12 +59,12 @@ sf_data10yr_groups <- assignGroup(sf_data10yr_need)
 
 sf_EIR10yr <- calc_EIR(sf_data10yr_groups, 0)
 
-sf_EIR10yr <- inner_join(sf_EIR10yr, storm_summary, by = "Run")
+sf_EIR10yr <- inner_join(sf_EIR10yr, storm10yr_summary, by = "Run")
 
 noStorms <- filter(my10yrstorms, HurricaneStrength > 24)
 
-no_fail_runs <- zero_storm_profile(DF = sample_data_clean,
-                                   time_hor = max(sample_data_clean$Time),
+no_fail_runs <- zero_storm_profile(DF = sdc10,
+                                   time_hor = max(sdc10$Time),
                                    emptystormlist = noStorms)
 
 no_fail_runs_groups <- assignGroup(no_fail_runs)

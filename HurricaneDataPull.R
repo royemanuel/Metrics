@@ -114,6 +114,7 @@ assignGroup <- function(DF){
                 DF_inf
             }
             DF_inf_grp <- bind_rows(DF_inf_grp, DF_inf)
+            cat("\r", inf_values[i], run)
         }
         setTxtProgressBar(pb, run)
         DF_output <- bind_rows(DF_output, DF_inf_grp)
@@ -121,6 +122,48 @@ assignGroup <- function(DF){
     print("groups assigned")
     DF_output <- endcap_group(DF_output)
     DF_output
+}
+assignGroupLrg <- function(DF){
+    DF <- DF %>% mutate(diff = round(Performance - Need, 2))
+    DF$Grp <- 1
+    DF_output <- tibble()
+    DF$Infrastructure <- as.factor(DF$Infrastructure)
+    inf_values <- unique(DF$Infrastructure)
+    inf_number <- length(inf_values)
+    pb <- txtProgressBar(min = 0, max = length(unique(DF$Run)), style = 3)
+    for (run in 1:length(unique(DF$Run))){
+        DF_by_run <-
+            DF %>%
+            filter(Run == run)
+        ## print(run)
+        DF_inf_grp <- tibble()
+        for (i in 1:inf_number){
+            grp <- 1
+            DF_inf <-
+                DF_by_run %>%
+                filter(Infrastructure == inf_values[i])
+            s <- sign(DF_inf$diff[1])
+            for (r in 1:nrow(DF_inf)){
+                if (sign(s) == sign(DF_inf$diff[r])){
+                    DF_inf$Grp[r] <- grp
+                } else {
+                    grp <- grp + 1
+                    s <- sign(DF_inf$diff[r])
+                    ##print(grp)
+                    DF_inf$Grp[r] <- grp
+                }
+                DF_inf
+            }
+            DF_inf_grp <- bind_rows(DF_inf_grp, DF_inf)
+        }
+        setTxtProgressBar(pb, run)
+        DF_output <- bind_rows(DF_output, DF_inf_grp)
+        DF_output <- endcap(DF_output)
+        write.csv(DF_output, paste("tst/", run, DF_inf[r], "grped"))
+    }
+    print("groups assigned")
+    ## DF_output <- endcap_group(DF_output)
+    ## DF_output
 }
 
 

@@ -74,6 +74,8 @@ no_fail_runs_EIR <-
 
 all_sample_runs <- add_nostorm_runs(sample_EIR, no_fail_runs_EIR, 10)
 
+write.csv(sample_data_need, "studyData/need_sample_data.csv")
+write.csv(all_sample_runs, "studyData/sample_resilience.csv")
 
 ## Build plots that are useful and summary statistics
 

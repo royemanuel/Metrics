@@ -7,7 +7,10 @@ run_profiles <- c("hurr10year/01runProfile10yr.xlsx",
                   "hurr10year/05runProfile10yr.xlsx",
                   "hurr10year/06runProfile10yr.xlsx",
                   "hurr10year/07runProfile10yr.xlsx",
-                  "hurr10year/08runProfile10yr.xlsx")
+                  "hurr10year/08runProfile10yr.xlsx",
+                  "hurr10year/09runProfile10yr.xlsx",
+                  "hurr10year/10runProfile10yr.xlsx",
+                  "hurr10year/11runProfile10yr.xlsx")
 
 ingest_run_profiles <- function(file_list){
     all_data <- tibble()
@@ -41,4 +44,4 @@ clean_run_data <- function(wkbk){
 
     
 my10yrstorms <- ingest_run_profiles(run_profiles)
-#write.csv(my10yrstorms, "run10yr_profiles_seed.csv")
+write.csv(my10yrstorms, "run10yr_profiles_seed.csv")
