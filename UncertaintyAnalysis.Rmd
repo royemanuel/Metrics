@@ -18,7 +18,7 @@ situations. Trying to rebuild the situation from the
 anyLogicDataPull.R file. Small change
 ```{r}
 uncScenFast <- function(data, simRun, need, resFactors, timeHorizon=NULL){
-    resMat <- data.frame()
+    resMat <- tibble()
     needStep <- dim(need)[1]
     resStep <- dim(resFactors)[1]
 
@@ -49,18 +49,18 @@ performanceBuild takes the built scenarios and makes time-sereis
 data that is ingested by the resilience calculators
 
 ```{r Performance_Profile_Building}
-library("dplyr")
+library("tidyverse")
 library("caTools")
 set.seed(8541984)
 scenarioBuild <- function(lambda, timeHorizon, numScen, failPar, recPar){
-    outDF <- data.frame()
+    outDF <- tibble()
     for(s in 1:numScen){
-        DF <- data.frame()
+        DF <- tibble()
         t <- 0
         while(t < timeHorizon){
             f <- ceiling(rexp(n = 1, lambda))
             fLev <- rbeta(n = 1, shape1 = failPar[1], shape2 = failPar[2])
-            fDF <- data.frame(time = f,
+            fDF <- tibble(time = f,
                               event = "Fail",
                               scenario = s,
                               Level = fLev)
@@ -69,7 +69,7 @@ scenarioBuild <- function(lambda, timeHorizon, numScen, failPar, recPar){
             if(t > timeHorizon){break}
             r <- ceiling(rexp(n = 1, lambda))
             rLev <- rbeta(n = 1, shape1 = recPar[1], shape2 = recPar[2])
-            rDF <- data.frame(time = r,
+            rDF <- tibble(time = r,
                               event = "Recover",
                               scenario = s,
                               Level = rLev)
@@ -82,7 +82,7 @@ scenarioBuild <- function(lambda, timeHorizon, numScen, failPar, recPar){
     return(outDF)
 }
 performanceBuild <- function(buildDF, timeHorizon, perfInit){
-    allDF <- data.frame()
+    allDF <- tibble()
     fileExport <- paste0("performance",
                                 runif(1),
                                 ".csv")
@@ -90,13 +90,13 @@ performanceBuild <- function(buildDF, timeHorizon, perfInit){
         workDF <- filter(buildDF, scenario == s)
         p <- perfInit
         startTime <- 0
-        scenDF <- data.frame()
+        scenDF <- tibble()
         for(r in 1:nrow(workDF)){
             timeCol <- seq(from = startTime,
                            to = startTime + workDF$time[r] - 1,
                            by = 1)
             perfLevel <- rep(p, workDF$time[r])
-            eventDF <- data.frame(Time = timeCol,
+            eventDF <- tibble(Time = timeCol,
                                   Performance = perfLevel,
                                   Scenario = s)
             startTime <- startTime + workDF$time[r]
@@ -175,7 +175,7 @@ preferenceParams <- expand.grid(TimeHorizon = timeHorList,
    
 # Extended Integral Resilience
 Build extended integral resilience value from what we have. 
-1. Split the data.frame up by perf > Need
+1. Split the tibble up by perf > Need
 2. for Need > perf -> trapz perf / trapz need
 3. for per > need -> 1 + chi(trapz perf / trapz need
 4. R_EIR = sum of 1 & 2 / T_h
@@ -199,7 +199,7 @@ assignGroup <- function(DF){
 }
 
 buildPPDF <- function(performanceDF, preferDF){
-    ppDF <- data.frame()
+    ppDF <- tibble()
     for (t in 1:nrow(preferDF)){
         pref <- buildPref(preferDF[t,], t)
         for (s in 1:max(performanceDF$Scenario)){
@@ -216,8 +216,8 @@ buildPPDF <- function(performanceDF, preferDF){
 }
 
 buildPref <- function(preferList, t){
-    perfDF <- data.frame()
-    DF <- data.frame(Time = seq(0, preferList$TimeHorizon, 1),
+    perfDF <- tibble()
+    DF <- tibble(Time = seq(0, preferList$TimeHorizon, 1),
                      Preference = preferList$NeedLevel,
                      PreferenceScenario = t)
     return(DF)
@@ -236,7 +236,7 @@ IR <- function(DF){
 }
 
 ## oldResWay <- function(DF, chi){
-##     resultDF <- data.frame()
+##     resultDF <- tibble()
 ##     for(u in 1:length(unique(DF$Scenario))){
 ##         workDF <- DF %>% filter(Scenario == u) %>%
 ##             mutate(Need = Preference)
@@ -253,27 +253,27 @@ IR <- function(DF){
 Build a study of 10 time ticks with the Preference and Performance at
 1
 ```{r Test_1}
-test1 <- data.frame(Time = seq(0, 10, 1), Performance = 1, Preference = 1,
+test1 <- tibble(Time = seq(0, 10, 1), Performance = 1, Preference = 1,
                     Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
 newTest1a <- IR(test1)
 ## newTest1b <- newTest1a %>% summarize(IntegralResilience = sum(grpInt) / sum(grpTime))
 oldTest1 <- intRes(test1,1)
 
-test2 <- data.frame(Time = seq(0, 10, 1),
+test2 <- tibble(Time = seq(0, 10, 1),
                     Performance = .5,
                     Preference = 1,
                     Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
 newTest2 <- IR(test2)
 oldTest2 <- intRes(test2,1)
 
-## test3 <- data.frame(Time = seq(0, 10, 1),
+## test3 <- tibble(Time = seq(0, 10, 1),
 ##                     Performance = ,
 ##                         Preference = 1,
 ##                         Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
 ## newTest3 <- IR(test3)
 ## oldTest3 <- intRes(test3,1)
 
-test5 <- data.frame(Time = seq(0, 10, 1),
+test5 <- tibble(Time = seq(0, 10, 1),
                     Performance = c(rep(.5, 5), rep(1, 6)),
                         Preference = c(rep(.5, 5), rep(.8,6)),
                     Scenario = 1, PreferenceScenario = 1,
@@ -282,7 +282,7 @@ test5 <- data.frame(Time = seq(0, 10, 1),
 newTest5 <- IR(test5)
 oldTest5 <- intRes(test5,1)
 
-test6 <- data.frame(Time = seq(0, 10000, 1),
+test6 <- tibble(Time = seq(0, 10000, 1),
                     Performance = c(rep(.5, 5001), rep(1, 5000)),
                         Preference = c(rep(.5, 5001), rep(.8,5000)),
                     Scenario = 1, PreferenceScenario = 1,
@@ -439,6 +439,7 @@ expDF3$Experiment <- 3
 expDF4$Experiment <- 4
 wholeShebang <- bind_rows(expDF1, expDF2, expDF3, expDF4)
 aa <- resilienceDo(wholeShebang, 0, 20, 0)
+aa <- as.tibble(aa)
 aaCol <- aa %>% select(Time,
                        Experiment,
                        QR,
@@ -450,16 +451,20 @@ aaCol <- aa %>% select(Time,
                        Scenario,
                        PreferenceScenario) %>%
                            filter(Time == max(Time))
-tidyaaCol <- melt(aaCol, id.vars = c("Experiment",
-                             "Scenario",
-                             "PreferenceScenario",
-                             "Time"))
-nh <- ggplot(tidyaaCol, aes(Experiment, value, group=Experiment)) +
-    geom_jitter() + facet_wrap(~ variable)
+tidyaaCol <- gather(aaCol,
+                    ResilienceType,
+                    Resilience,
+                    -Experiment,
+                    -Time,
+                    -PreferenceScenario,
+                    -Scenario)
+
+nh <- ggplot(tidyaaCol, aes(Experiment, Resilience, group=Experiment)) +
+    geom_jitter() + facet_wrap(~ ResilienceType)
 nh
 
-aaExtInt <- tidyaaCol %>% filter(variable == "extResilience")
-aei <- ggplot(aaExtInt, aes(Experiment, value, group=Experiment)) +
+aaExtInt <- tidyaaCol %>% filter(ResilienceType == "extResilience")
+aei <- ggplot(aaExtInt, aes(Experiment, Resilience, group=Experiment)) +
     geom_boxplot() + 
         facet_wrap(~ Scenario)
 aei
