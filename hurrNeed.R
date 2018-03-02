@@ -264,16 +264,6 @@ bld_need_all <- function(DF, time_h, stormlist, need_inf){
     all_DF
 }
 
-test_need <- tibble(Infrastructure = c("Electricity_Availability",
-                                       "Communications_Function",
-                                       "IT_Function",
-                                       "Healthcare_Function",
-                                       "Transportation_Function",
-                                       "Emergency_Services_Functionality",
-                                       "Critical_Manufacturing_Functionality",
-                                       "Water_Functionality"),
-                    BL = c(1.0, 1.0, .95, 0.9, 1.05, .9, 1.0, 1.0),
-                    Y2 = c(1.0, 1.2, .95, 1.2, 1.2, 1.1, 1.3, 1.1))
 
 zero_storm_profile <- function(DF, time_hor, emptystormlist, need_profile){
     working_DF <-

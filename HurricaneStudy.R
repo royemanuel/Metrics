@@ -70,7 +70,8 @@ noStorms <- filter(mystorms, HurricaneStrength > 24)
 
 no_fail_runs <- zero_storm_profile(DF = sample_data_clean,
                                    time_hor = max(sample_data_clean$Time),
-                                   emptystormlist = noStorms)
+                                   emptystormlist = noStorms
+                                   need_profile= rising_need2yr)
 
 no_fail_runs_groups <- assignGroup(no_fail_runs)
 
@@ -85,7 +86,36 @@ no_fail_runs_EIR <-
 
 all_2yr_runs <- add_nostorm_runs(sf_EIR, no_fail_runs_EIR, 541)
 
+## Now do the same thing for Need is status quo
+sf_SQ__data_need <- mutate(sf_data_clean, Need = 1)
 
+sf_SQ__data_groups <- assignGroup(sf_SQ__data_need)
+
+sf_SQ__EIR <- calc_EIR(sf_SQ__data_groups, 0)
+
+sf_SQ__EIR <- inner_join(sf_SQ__EIR, storm_summary, by = "Run")
+
+
+no_fail_runs_SQ <- mutate(sample_data_clean,
+                                   time_hor = max(sample_data_clean$Time),
+                                   emptystormlist = noStorms
+                                   need_profile = rising_need2yr)
+
+no_fail_runs_groups_SQ <- assignGroup(no_fail_runs_SQ)
+
+no_fail_runs_EIR <- calc_EIR(no_fail_runs_groups_SQ, 0)
+
+no_fail_runs_EIR <-
+    no_fail_runs_EIR %>%
+    mutate(Strongest_Storm = 0,
+           Worst_Failure = NA,
+           End_Rec_Level = NA,
+           Number_Storms = 0)
+
+all_2yr_runs_SQ <- add_nostorm_runs(sf_SQ__EIR, no_fail_runs_EIR, 541)
+
+write.csv(sf_SQ__data_groups, "")
+ 
 ## Build plots that are useful and summary statistics
 
 plot_EIR <- ggplot(sf_EIR, aes(Infrastructure, ExtendedIntegralResilience)) +
