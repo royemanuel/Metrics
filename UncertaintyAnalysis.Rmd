@@ -1,8 +1,10 @@
 ---
 title: "Resilience Model Uncertainty Analysis"
 author: "Roy Emanuel II"
-output:
-    html_document
+date: "3/2/2018"
+output: pdf_document
+keep_tex: yes
+    # html_document
     # md_document:
         #variant: markdown_github
 
@@ -112,7 +114,7 @@ performanceBuild <- function(buildDF, timeHorizon, perfInit){
 g <- scenarioBuild(1/10, 120, 3, c(1,5), c(5,1))
 currentFile <- performanceBuild(g, 120, 1)
 print(head(g))
-h <- read.csv(currentFile)
+h <- as.tibble(read.csv(currentFile)
 print(head(h, 50))
 print(dim(h))
 ```
@@ -358,7 +360,7 @@ expPref <- expand.grid(TimeHorizon = timeHorList,
 set.seed(8541984)
 exp1a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
 exp1b <- performanceBuild(exp1a, 250, 1)
-exp1c <- read.csv(exp1b)
+exp1c <- as.tibble(read.csv(exp1b))
 expDF1 <- buildPPDF(exp1c, expPref)
 expER1 <- EIR(expDF1, 0)
 expER1$Experiment <- 1
@@ -370,7 +372,7 @@ expER1$Experiment <- 1
 set.seed(8541984)
 exp2a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
 exp2b <- performanceBuild(exp2a, 250, 1)
-exp2c <- read.csv(exp2b)
+exp2c <- as.tibble(read.csv(exp2b))
 expDF2 <- buildPPDF(exp2c, expPref)
 
 expER2 <- EIR(expDF2, 0)
@@ -384,7 +386,7 @@ set.seed(8541984)
 
 exp3a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,4), c(7,1))
 exp3b <- performanceBuild(exp3a, 250, 1)
-exp3c <- read.csv(exp3b)
+exp3c <- as.tibble(read.csv(exp3b))
 expDF3 <- buildPPDF(exp3c, expPref)
 
 expER3 <- EIR(expDF3, 0)
@@ -397,7 +399,7 @@ set.seed(8541984)
 
 exp4a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,3.5), c(4,1))
 exp4b <- performanceBuild(exp4a, 250, 1)
-exp4c <- read.csv(exp4b)
+exp4c <- as.tibble(read.csv(exp4b))
 expDF4 <- buildPPDF(exp4c, expPref)
 expER4 <- EIR(expDF4, 0)
 expER4$Experiment <- 4
