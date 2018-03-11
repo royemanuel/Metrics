@@ -19,8 +19,7 @@ format_plot <- function(plt){
 plot_EIR <- function(DF){
     DF <-
         DF %>%
-        mutate(Infrastructure = fix_infrastructure(Infrastructure),
-               Resilience = ExtendedIntegralResilience) %>%
+        mutate(Resilience = ExtendedIntegralResilience) %>%
         select(-ExtendedIntegralResilience)
     p <- ggplot(DF,
                 aes(Infrastructure, Resilience)) +
@@ -70,6 +69,18 @@ fix_infrastructure <- function(listinf){
         str_remove("(.)Function") %>%
         str_remove("ality") %>%
         str_remove("Availability") %>%
-        str_replace("_", " ") %>%
-        str_replace("IT", "Information Technology")
+        str_replace("_", "\n") %>%
+        str_replace("IT", "Information\nTechnology")
+}
+
+abbrev_inf <- function(listinf){
+    vec_inf <- listinf %>%
+        str_replace("Communications", "Comm") %>%
+        str_replace("Information\nTechnology", "IT") %>%
+        str_replace("Critical\nManufacturing", "CM") %>%
+        str_replace("Electricity", "Elec") %>%
+        str_replace("Emergency\nServices", "ES") %>%
+        str_replace("Healthcare", "H") %>%
+        str_replace("Transportation", "T") %>%
+        str_replace("Water", "W")
 }

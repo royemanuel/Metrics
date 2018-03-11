@@ -3,7 +3,7 @@ title: "Resilience Model Uncertainty Analysis"
 author: "Roy Emanuel II"
 date: "3/2/2018"
 output: pdf_document
-keep_tex: yes
+keep_tex: true
     # html_document
     # md_document:
         #variant: markdown_github
@@ -114,365 +114,365 @@ performanceBuild <- function(buildDF, timeHorizon, perfInit){
 g <- scenarioBuild(1/10, 120, 3, c(1,5), c(5,1))
 currentFile <- performanceBuild(g, 120, 1)
 print(head(g))
-h <- as.tibble(read.csv(currentFile)
-print(head(h, 50))
+h <- as.tibble(read.csv(currentFile))
+##print(head(h, 50))
 print(dim(h))
 ```
-## Build Stakeholder Preferences
-
-My next step is to build it soe the integral resilience metric is
-applied. This is non-trivial. I will also need to generate stakeholder
-preferences from probabilistic and possibilistic methods and append
-them to the performance profile before I can calculate resilience. 
-Let's build a framework that can take the stakeholder preference and
-assign random steps? a linear trajectory? I'm not sure. OK, why not
-both?
-First, the simplest - assume constant need, but it may be distributed
-triangularly.
-
-# How the performance preference profiles will be generated.
-Build a list of the parameters I want it to have. Looking at the
-inputs to the current resilience for the infrastructure problem:
-multScenarioFast 
-fileNames
-Need list
-Resilience list
-Time Horizon
-Calls:
-cleanAnylogic - list of filenames
-multInfrastructureFast - all inputs provided by multScenarioFast
- 
-
-## Build constant stakeholder need profiles
-Here is an attempt to split up multiple performance and preference
-profiles. In order to incorporate a time-dependent sigma we will
-need a column of those as well.
-
-```{r Preference_Building}
-
-library("triangle")
-minTH <- 85
-maxTH <- 115
-modeTH <- 105
-numScenTH <- 5
-timeHorList <- ceiling(
-    rtriangle(n = numScenTH,
-              a = minTH,
-              b = maxTH,
-              c = modeTH))
-minNeed <- .7
-maxNeed <- 1.05
-modeNeed <- .9
-numScenN <- 10
-cnstNeedList <- rtriangle(n = numScenN,
-                          a = minNeed,
-                          b = maxNeed,
-                          c = modeNeed)
-
-preferenceParams <- expand.grid(TimeHorizon = timeHorList,
-                                 NeedLevel = cnstNeedList)
-
-
-```
-   
-# Extended Integral Resilience
-Build extended integral resilience value from what we have. 
-1. Split the tibble up by perf > Need
-2. for Need > perf -> trapz perf / trapz need
-3. for per > need -> 1 + chi(trapz perf / trapz need
-4. R_EIR = sum of 1 & 2 / T_h
-## Build Original Integral Resilience
-```{r Integral_Resilience}
-assignGroup <- function(DF){
-    DF <- DF %>% mutate(diff = Performance - Preference)
-    i <- sign(DF$diff[1])
-    grp <- 1
-    DF$Grp <- 1
-    for (r in 2:nrow(DF)){
-        if (sign(i) == sign(DF$diff[r])){
-            DF$Grp[r] <- grp
-        } else {
-            grp <- grp + 1
-            i <- sign(DF$diff[r])
-            DF$Grp[r] <- grp
-        }
-    }
-    return(DF)
-}
-
-buildPPDF <- function(performanceDF, preferDF){
-    ppDF <- tibble()
-    for (t in 1:nrow(preferDF)){
-        pref <- buildPref(preferDF[t,], t)
-        for (s in 1:max(performanceDF$Scenario)){
-            workDF <- performanceDF %>% filter(Scenario == s) %>%
-                filter(Time <= preferDF$TimeHorizon[t])
-            ## Goal: define the columns to do th inner_join by. This may
-            ## speed things up. 
-            workDF <- suppressMessages(inner_join(workDF, pref))
-            workDF <- assignGroup(workDF)
-            ppDF <- bind_rows(ppDF, workDF)
-        }
-    }
-    return(ppDF)
-}
-
-buildPref <- function(preferList, t){
-    perfDF <- tibble()
-    DF <- tibble(Time = seq(0, preferList$TimeHorizon, 1),
-                     Preference = preferList$NeedLevel,
-                     PreferenceScenario = t)
-    return(DF)
-}
-
-IR <- function(DF){
-    DFg <- DF %>%
-        group_by(Scenario, PreferenceScenario, Grp) %>%
-            summarize(grpInt = (trapz(Time, Performance) /
-                                    trapz(Time, Preference)) * 
-                                         (max(Time) - min(Time) + 1),
-                      grpTime = max(Time) - min(Time) + 1)
-                      ## grpTime = n())
-    DFg <- DFg %>% summarize(IntegralResilience = sum(grpInt) / sum(grpTime))
-    return(DFg)
-}
-
-## oldResWay <- function(DF, chi){
-##     resultDF <- tibble()
-##     for(u in 1:length(unique(DF$Scenario))){
-##         workDF <- DF %>% filter(Scenario == u) %>%
-##             mutate(Need = Preference)
-##         for(v in 1:length(unique(DF$PreferenceScenario))){
-##             workDF <- workDF %>% filter(workDF$PreferenceScenario == v)
-##             intDF <- intRes(workDF, chi)
-##             resultDF <- bind_rows(resultDF, intDF)
+## ## Build Stakeholder Preferences
+## 
+## My next step is to build it soe the integral resilience metric is
+## applied. This is non-trivial. I will also need to generate stakeholder
+## preferences from probabilistic and possibilistic methods and append
+## them to the performance profile before I can calculate resilience. 
+## Let's build a framework that can take the stakeholder preference and
+## assign random steps? a linear trajectory? I'm not sure. OK, why not
+## both?
+## First, the simplest - assume constant need, but it may be distributed
+## triangularly.
+## 
+## # How the performance preference profiles will be generated.
+## Build a list of the parameters I want it to have. Looking at the
+## inputs to the current resilience for the infrastructure problem:
+## multScenarioFast 
+## fileNames
+## Need list
+## Resilience list
+## Time Horizon
+## Calls:
+## cleanAnylogic - list of filenames
+## multInfrastructureFast - all inputs provided by multScenarioFast
+##  
+## 
+## ## Build constant stakeholder need profiles
+## Here is an attempt to split up multiple performance and preference
+## profiles. In order to incorporate a time-dependent sigma we will
+## need a column of those as well.
+## 
+## ```{r Preference_Building}
+## 
+## library("triangle")
+## minTH <- 85
+## maxTH <- 115
+## modeTH <- 105
+## numScenTH <- 5
+## timeHorList <- ceiling(
+##     rtriangle(n = numScenTH,
+##               a = minTH,
+##               b = maxTH,
+##               c = modeTH))
+## minNeed <- .7
+## maxNeed <- 1.05
+## modeNeed <- .9
+## numScenN <- 10
+## cnstNeedList <- rtriangle(n = numScenN,
+##                           a = minNeed,
+##                           b = maxNeed,
+##                           c = modeNeed)
+## 
+## preferenceParams <- expand.grid(TimeHorizon = timeHorList,
+##                                  NeedLevel = cnstNeedList)
+## 
+## 
+## ```
+##    
+## # Extended Integral Resilience
+## Build extended integral resilience value from what we have. 
+## 1. Split the tibble up by perf > Need
+## 2. for Need > perf -> trapz perf / trapz need
+## 3. for per > need -> 1 + chi(trapz perf / trapz need
+## 4. R_EIR = sum of 1 & 2 / T_h
+## ## Build Original Integral Resilience
+## ```{r Integral_Resilience}
+## assignGroup <- function(DF){
+##     DF <- DF %>% mutate(diff = Performance - Preference)
+##     i <- sign(DF$diff[1])
+##     grp <- 1
+##     DF$Grp <- 1
+##     for (r in 2:nrow(DF)){
+##         if (sign(i) == sign(DF$diff[r])){
+##             DF$Grp[r] <- grp
+##         } else {
+##             grp <- grp + 1
+##             i <- sign(DF$diff[r])
+##             DF$Grp[r] <- grp
 ##         }
 ##     }
+##     return(DF)
 ## }
-
-```
-# Test Cases for the original integral resilience
-Build a study of 10 time ticks with the Preference and Performance at
-1
-```{r Test_1}
-test1 <- tibble(Time = seq(0, 10, 1), Performance = 1, Preference = 1,
-                    Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
-newTest1a <- IR(test1)
-## newTest1b <- newTest1a %>% summarize(IntegralResilience = sum(grpInt) / sum(grpTime))
-oldTest1 <- intRes(test1,1)
-
-test2 <- tibble(Time = seq(0, 10, 1),
-                    Performance = .5,
-                    Preference = 1,
-                    Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
-newTest2 <- IR(test2)
-oldTest2 <- intRes(test2,1)
-
-## test3 <- tibble(Time = seq(0, 10, 1),
-##                     Performance = ,
-##                         Preference = 1,
-##                         Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
-## newTest3 <- IR(test3)
-## oldTest3 <- intRes(test3,1)
-
-test5 <- tibble(Time = seq(0, 10, 1),
-                    Performance = c(rep(.5, 5), rep(1, 6)),
-                        Preference = c(rep(.5, 5), rep(.8,6)),
-                    Scenario = 1, PreferenceScenario = 1,
-                    Grp = c(rep(1, 5), rep(2,6)),
-                    Need =  c(rep(.5, 5), rep(.8,6)))
-newTest5 <- IR(test5)
-oldTest5 <- intRes(test5,1)
-
-test6 <- tibble(Time = seq(0, 10000, 1),
-                    Performance = c(rep(.5, 5001), rep(1, 5000)),
-                        Preference = c(rep(.5, 5001), rep(.8,5000)),
-                    Scenario = 1, PreferenceScenario = 1,
-                    Grp = c(rep(1, 5001), rep(2, 5000)),
-                    Need =  c(rep(.5, 5001), rep(.8,5000)))
-newTest6 <- IR(test6)
-oldTest6 <- intRes(test6,1)
-
-```
-## Build the Extended integral resilience
-```{r Extended_Integral_Resilience}
-
-EIR <- function(DF, chi){
-    DFg <- DF %>%
-        group_by(Scenario, PreferenceScenario, Grp) %>%
-        summarize(grpInt = (trapz(Time, Performance) /
-                            trapz(Time, Preference)) *
-                      (max(Time) - min(Time) + 1),
-                  grpTime = max(Time) - min(Time) + 1)
-    DFg <- DFg %>% summarize(ExtendedIntegralResilience =
-                                 ifelse(sum(grpInt) / sum(grpTime) < 1,
-                                        sum(grpInt) / sum(grpTime),
-                                        1 + chi *
-                                        (sum(grpInt) / sum(grpTime) - 1)))
-    return(DFg)
-}
-oldTest6Ext0 <- intRes(test6, 0)
-oldTest6Ext.5 <- intRes(test6, .5)
-oldTest6Ext1 <- intRes(test6, 1)
-newTest6Ext0 <- EIR(test6, 0)
-newTest6Ext.5 <- EIR(test6, .5)
-newTest6Ext1 <- EIR(test6, 1)
-
-print(c(oldTest6Ext0$extResilience[10001], newTest6Ext0))
-print(c(oldTest6Ext.5$extResilience[10001], newTest6Ext.5))
-print(c(oldTest6Ext1$extResilience[10001], newTest6Ext1))
-
-```
-
-# First Experiment Time to Failure
-
-The  point is to build an experiment of multiple options for
-solutions. We will build two scenarios first. Let's just look at
-varying the time to failure.
-
-## Overall settings for the experiment
-```{r Time_to_failure_experiment, message=FALSE, error=FALSE}
-expminTH <- 180
-expmaxTH <- 250
-expmodeTH <- 200
-expnumScenTH <- 10
-exptimeHorList <- ceiling(
-    rtriangle(n = numScenTH,
-              a = minTH,
-              b = maxTH,
-              c = modeTH))
-expminNeed <- .7
-expmaxNeed <- 1.05
-expmodeNeed <- .9
-expnumScenN <- 10
-expcnstNeedList <- rtriangle(n = numScenN,
-                          a = minNeed,
-                          b = maxNeed,
-                          c = modeNeed)
-
-expPref <- expand.grid(TimeHorizon = timeHorList,
-                       NeedLevel = cnstNeedList)
-
-```
-## Experiment 1
-```{r Experiment_1, message=FALSE, error=FALSE}
-
-set.seed(8541984)
-exp1a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
-exp1b <- performanceBuild(exp1a, 250, 1)
-exp1c <- as.tibble(read.csv(exp1b))
-expDF1 <- buildPPDF(exp1c, expPref)
-expER1 <- EIR(expDF1, 0)
-expER1$Experiment <- 1
-
-```
-# Experiment 2
-
-```{r Experiment_2, message=FALSE, error=FALSE}
-set.seed(8541984)
-exp2a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
-exp2b <- performanceBuild(exp2a, 250, 1)
-exp2c <- as.tibble(read.csv(exp2b))
-expDF2 <- buildPPDF(exp2c, expPref)
-
-expER2 <- EIR(expDF2, 0)
-expER2$Experiment <- 2
-exprmnt <- bind_rows(expER1, expER2)
-```
-# Experiment 3
-
-```{R Changing_need_and_fail_levels, message=FALSE, error=FALSE, warning=FALSE}
-set.seed(8541984)
-
-exp3a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,4), c(7,1))
-exp3b <- performanceBuild(exp3a, 250, 1)
-exp3c <- as.tibble(read.csv(exp3b))
-expDF3 <- buildPPDF(exp3c, expPref)
-
-expER3 <- EIR(expDF3, 0)
-expER3$Experiment <- 3
-```
-# Experiment 4
-
-```{r Experiment_4, message=FALSE, error=FALSE}
-set.seed(8541984)
-
-exp4a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,3.5), c(4,1))
-exp4b <- performanceBuild(exp4a, 250, 1)
-exp4c <- as.tibble(read.csv(exp4b))
-expDF4 <- buildPPDF(exp4c, expPref)
-expER4 <- EIR(expDF4, 0)
-expER4$Experiment <- 4
-exprmnt <- bind_rows(expER3, expER4, expER1, expER2)
-
-expPlot <- ggplot(exprmnt, aes(Experiment, ExtendedIntegralResilience, group=Experiment)) +
-    geom_boxplot()
-
-```
-
-# Multiple Resilience Models
-Up to this point the focus has been upon integral resilience. This
-chunk of R will incorporate the quotient, total quotient, and
-resilience factor models as well as the non-extended integral
-resilience model.
-
-```{r All_models, messages=FALSE, warnings=FALSE}
-resilienceDo <- function(DF, sigma, Td, dec){
-    DF <- DF %>% mutate(Need = Preference)
-    DF <- DF %>% group_by(Experiment, Scenario, PreferenceScenario)
-    DF <- DF %>% do(., quotRes(.))
-    print("QR")
-    DF <- DF %>% do(., extQuotRes(., sigma))
-    print("EQR")
-    DF <- DF %>% do(., totalQR(., TH = max(.$Time)))
-    print("TQR")
-    ## DF <- DF %>% do(., resFac(., Td, dec))
-    ## print("RF")
-    ## DF <- DF %>% do(., extResFac(., Td, dec, sigma))
-    ## print("ERF")
-    DF <- DF %>% do(., intRes(., sigma))
-    print("IR & EIR")
-    return(DF)
-}
-
-expDF1$Experiment <- 1
-expDF2$Experiment <- 2
-expDF3$Experiment <- 3
-expDF4$Experiment <- 4
-wholeShebang <- bind_rows(expDF1, expDF2, expDF3, expDF4)
-aa <- resilienceDo(wholeShebang, 0, 20, 0)
-aa <- as.tibble(aa)
-aaCol <- aa %>% select(Time,
-                       Experiment,
-                       QR,
-                       EQR,
-                       TQR,
-                       ETQR,
-                       statQuoResilience,
-                       extResilience,
-                       Scenario,
-                       PreferenceScenario) %>%
-                           filter(Time == max(Time))
-tidyaaCol <- gather(aaCol,
-                    ResilienceType,
-                    Resilience,
-                    -Experiment,
-                    -Time,
-                    -PreferenceScenario,
-                    -Scenario)
-
-nh <- ggplot(tidyaaCol, aes(Experiment, Resilience, group=Experiment)) +
-    geom_jitter() + facet_wrap(~ ResilienceType)
-nh
-
-aaExtInt <- tidyaaCol %>% filter(ResilienceType == "extResilience")
-aei <- ggplot(aaExtInt, aes(Experiment, Resilience, group=Experiment)) +
-    geom_boxplot() + 
-        facet_wrap(~ Scenario)
-aei
-
-
-```
+## 
+## buildPPDF <- function(performanceDF, preferDF){
+##     ppDF <- tibble()
+##     for (t in 1:nrow(preferDF)){
+##         pref <- buildPref(preferDF[t,], t)
+##         for (s in 1:max(performanceDF$Scenario)){
+##             workDF <- performanceDF %>% filter(Scenario == s) %>%
+##                 filter(Time <= preferDF$TimeHorizon[t])
+##             ## Goal: define the columns to do th inner_join by. This may
+##             ## speed things up. 
+##             workDF <- suppressMessages(inner_join(workDF, pref))
+##             workDF <- assignGroup(workDF)
+##             ppDF <- bind_rows(ppDF, workDF)
+##         }
+##     }
+##     return(ppDF)
+## }
+## 
+## buildPref <- function(preferList, t){
+##     perfDF <- tibble()
+##     DF <- tibble(Time = seq(0, preferList$TimeHorizon, 1),
+##                      Preference = preferList$NeedLevel,
+##                      PreferenceScenario = t)
+##     return(DF)
+## }
+## 
+## IR <- function(DF){
+##     DFg <- DF %>%
+##         group_by(Scenario, PreferenceScenario, Grp) %>%
+##             summarize(grpInt = (trapz(Time, Performance) /
+##                                     trapz(Time, Preference)) * 
+##                                          (max(Time) - min(Time) + 1),
+##                       grpTime = max(Time) - min(Time) + 1)
+##                       ## grpTime = n())
+##     DFg <- DFg %>% summarize(IntegralResilience = sum(grpInt) / sum(grpTime))
+##     return(DFg)
+## }
+## 
+## ## oldResWay <- function(DF, chi){
+## ##     resultDF <- tibble()
+## ##     for(u in 1:length(unique(DF$Scenario))){
+## ##         workDF <- DF %>% filter(Scenario == u) %>%
+## ##             mutate(Need = Preference)
+## ##         for(v in 1:length(unique(DF$PreferenceScenario))){
+## ##             workDF <- workDF %>% filter(workDF$PreferenceScenario == v)
+## ##             intDF <- intRes(workDF, chi)
+## ##             resultDF <- bind_rows(resultDF, intDF)
+## ##         }
+## ##     }
+## ## }
+## 
+## ```
+## # Test Cases for the original integral resilience
+## Build a study of 10 time ticks with the Preference and Performance at
+## 1
+## ```{r Test_1}
+## test1 <- tibble(Time = seq(0, 10, 1), Performance = 1, Preference = 1,
+##                     Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
+## newTest1a <- IR(test1)
+## ## newTest1b <- newTest1a %>% summarize(IntegralResilience = sum(grpInt) / sum(grpTime))
+## oldTest1 <- intRes(test1,1)
+## 
+## test2 <- tibble(Time = seq(0, 10, 1),
+##                     Performance = .5,
+##                     Preference = 1,
+##                     Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
+## newTest2 <- IR(test2)
+## oldTest2 <- intRes(test2,1)
+## 
+## ## test3 <- tibble(Time = seq(0, 10, 1),
+## ##                     Performance = ,
+## ##                         Preference = 1,
+## ##                         Scenario = 1, PreferenceScenario = 1, Grp = 1, Need = 1)
+## ## newTest3 <- IR(test3)
+## ## oldTest3 <- intRes(test3,1)
+## 
+## test5 <- tibble(Time = seq(0, 10, 1),
+##                     Performance = c(rep(.5, 5), rep(1, 6)),
+##                         Preference = c(rep(.5, 5), rep(.8,6)),
+##                     Scenario = 1, PreferenceScenario = 1,
+##                     Grp = c(rep(1, 5), rep(2,6)),
+##                     Need =  c(rep(.5, 5), rep(.8,6)))
+## newTest5 <- IR(test5)
+## oldTest5 <- intRes(test5,1)
+## 
+## test6 <- tibble(Time = seq(0, 10000, 1),
+##                     Performance = c(rep(.5, 5001), rep(1, 5000)),
+##                         Preference = c(rep(.5, 5001), rep(.8,5000)),
+##                     Scenario = 1, PreferenceScenario = 1,
+##                     Grp = c(rep(1, 5001), rep(2, 5000)),
+##                     Need =  c(rep(.5, 5001), rep(.8,5000)))
+## newTest6 <- IR(test6)
+## oldTest6 <- intRes(test6,1)
+## 
+## ```
+## ## Build the Extended integral resilience
+## ```{r Extended_Integral_Resilience}
+## 
+## EIR <- function(DF, chi){
+##     DFg <- DF %>%
+##         group_by(Scenario, PreferenceScenario, Grp) %>%
+##         summarize(grpInt = (trapz(Time, Performance) /
+##                             trapz(Time, Preference)) *
+##                       (max(Time) - min(Time) + 1),
+##                   grpTime = max(Time) - min(Time) + 1)
+##     DFg <- DFg %>% summarize(ExtendedIntegralResilience =
+##                                  ifelse(sum(grpInt) / sum(grpTime) < 1,
+##                                         sum(grpInt) / sum(grpTime),
+##                                         1 + chi *
+##                                         (sum(grpInt) / sum(grpTime) - 1)))
+##     return(DFg)
+## }
+## oldTest6Ext0 <- intRes(test6, 0)
+## oldTest6Ext.5 <- intRes(test6, .5)
+## oldTest6Ext1 <- intRes(test6, 1)
+## newTest6Ext0 <- EIR(test6, 0)
+## newTest6Ext.5 <- EIR(test6, .5)
+## newTest6Ext1 <- EIR(test6, 1)
+## 
+## print(c(oldTest6Ext0$extResilience[10001], newTest6Ext0))
+## print(c(oldTest6Ext.5$extResilience[10001], newTest6Ext.5))
+## print(c(oldTest6Ext1$extResilience[10001], newTest6Ext1))
+## 
+## ```
+## 
+## # First Experiment Time to Failure
+## 
+## The  point is to build an experiment of multiple options for
+## solutions. We will build two scenarios first. Let's just look at
+## varying the time to failure.
+## 
+## ## Overall settings for the experiment
+## ```{r Time_to_failure_experiment, message=FALSE, error=FALSE}
+## expminTH <- 180
+## expmaxTH <- 250
+## expmodeTH <- 200
+## expnumScenTH <- 10
+## exptimeHorList <- ceiling(
+##     rtriangle(n = numScenTH,
+##               a = minTH,
+##               b = maxTH,
+##               c = modeTH))
+## expminNeed <- .7
+## expmaxNeed <- 1.05
+## expmodeNeed <- .9
+## expnumScenN <- 10
+## expcnstNeedList <- rtriangle(n = numScenN,
+##                           a = minNeed,
+##                           b = maxNeed,
+##                           c = modeNeed)
+## 
+## expPref <- expand.grid(TimeHorizon = timeHorList,
+##                        NeedLevel = cnstNeedList)
+## 
+## ```
+## ## Experiment 1
+## ```{r Experiment_1, message=FALSE, error=FALSE}
+## 
+## set.seed(8541984)
+## exp1a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
+## exp1b <- performanceBuild(exp1a, 250, 1)
+## exp1c <- as.tibble(read.csv(exp1b))
+## expDF1 <- buildPPDF(exp1c, expPref)
+## expER1 <- EIR(expDF1, 0)
+## expER1$Experiment <- 1
+## 
+## ```
+## # Experiment 2
+## 
+## ```{r Experiment_2, message=FALSE, error=FALSE}
+## set.seed(8541984)
+## exp2a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,5), c(5,1))
+## exp2b <- performanceBuild(exp2a, 250, 1)
+## exp2c <- as.tibble(read.csv(exp2b))
+## expDF2 <- buildPPDF(exp2c, expPref)
+## 
+## expER2 <- EIR(expDF2, 0)
+## expER2$Experiment <- 2
+## exprmnt <- bind_rows(expER1, expER2)
+## ```
+## # Experiment 3
+## 
+## ```{R Changing_need_and_fail_levels, message=FALSE, error=FALSE, warning=FALSE}
+## set.seed(8541984)
+## 
+## exp3a <- scenarioBuild(lambda = 1/150, timeHorizon = 250, numScen = 20, c(1,4), c(7,1))
+## exp3b <- performanceBuild(exp3a, 250, 1)
+## exp3c <- as.tibble(read.csv(exp3b))
+## expDF3 <- buildPPDF(exp3c, expPref)
+## 
+## expER3 <- EIR(expDF3, 0)
+## expER3$Experiment <- 3
+## ```
+## # Experiment 4
+## 
+## ```{r Experiment_4, message=FALSE, error=FALSE}
+## set.seed(8541984)
+## 
+## exp4a <- scenarioBuild(lambda = 1/170, timeHorizon = 250, numScen = 20, c(1,3.5), c(4,1))
+## exp4b <- performanceBuild(exp4a, 250, 1)
+## exp4c <- as.tibble(read.csv(exp4b))
+## expDF4 <- buildPPDF(exp4c, expPref)
+## expER4 <- EIR(expDF4, 0)
+## expER4$Experiment <- 4
+## exprmnt <- bind_rows(expER3, expER4, expER1, expER2)
+## 
+## expPlot <- ggplot(exprmnt, aes(Experiment, ExtendedIntegralResilience, group=Experiment)) +
+##     geom_boxplot()
+## 
+## ```
+## 
+## # Multiple Resilience Models
+## Up to this point the focus has been upon integral resilience. This
+## chunk of R will incorporate the quotient, total quotient, and
+## resilience factor models as well as the non-extended integral
+## resilience model.
+## 
+## ```{r All_models, messages=FALSE, warnings=FALSE}
+## resilienceDo <- function(DF, sigma, Td, dec){
+##     DF <- DF %>% mutate(Need = Preference)
+##     DF <- DF %>% group_by(Experiment, Scenario, PreferenceScenario)
+##     DF <- DF %>% do(., quotRes(.))
+##     print("QR")
+##     DF <- DF %>% do(., extQuotRes(., sigma))
+##     print("EQR")
+##     DF <- DF %>% do(., totalQR(., TH = max(.$Time)))
+##     print("TQR")
+##     ## DF <- DF %>% do(., resFac(., Td, dec))
+##     ## print("RF")
+##     ## DF <- DF %>% do(., extResFac(., Td, dec, sigma))
+##     ## print("ERF")
+##     DF <- DF %>% do(., intRes(., sigma))
+##     print("IR & EIR")
+##     return(DF)
+## }
+## 
+## expDF1$Experiment <- 1
+## expDF2$Experiment <- 2
+## expDF3$Experiment <- 3
+## expDF4$Experiment <- 4
+## wholeShebang <- bind_rows(expDF1, expDF2, expDF3, expDF4)
+## aa <- resilienceDo(wholeShebang, 0, 20, 0)
+## aa <- as.tibble(aa)
+## aaCol <- aa %>% select(Time,
+##                        Experiment,
+##                        QR,
+##                        EQR,
+##                        TQR,
+##                        ETQR,
+##                        statQuoResilience,
+##                        extResilience,
+##                        Scenario,
+##                        PreferenceScenario) %>%
+##                            filter(Time == max(Time))
+## tidyaaCol <- gather(aaCol,
+##                     ResilienceType,
+##                     Resilience,
+##                     -Experiment,
+##                     -Time,
+##                     -PreferenceScenario,
+##                     -Scenario)
+## 
+## nh <- ggplot(tidyaaCol, aes(Experiment, Resilience, group=Experiment)) +
+##     geom_jitter() + facet_wrap(~ ResilienceType)
+## nh
+## 
+## aaExtInt <- tidyaaCol %>% filter(ResilienceType == "extResilience")
+## aei <- ggplot(aaExtInt, aes(Experiment, Resilience, group=Experiment)) +
+##     geom_boxplot() + 
+##         facet_wrap(~ Scenario)
+## aei
+## 
+## 
+## ```
 
 ### NHPP
 Next is the Nonhomogeneous Poisson process (NHPP)

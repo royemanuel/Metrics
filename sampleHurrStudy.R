@@ -1,3 +1,4 @@
+ptm <- proc.time()
 library("tidyverse")
 source("metrics.R")
 source("HurricaneDataPull.R")
@@ -58,10 +59,14 @@ sample_EIR <- inner_join(sample_EIR, storm_summary, by = "Run")
 
 noStorms <- filter(mystorms, HurricaneStrength > 24)
 
+perfect_performance <- tibble()
+
 no_fail_runs_testneed <- zero_storm_profile(DF = sample_data_clean,
                                    time_hor = max(sample_data_clean$Time),
                                    emptystormlist = noStorms,
                                    need_profile = test_need)
+
+
 
 no_fail_runs_groups_testneed <- assignGroup(no_fail_runs_testneed)
 
@@ -76,70 +81,72 @@ no_fail_runs_EIR_testneed <-
 
 all_sample_runs_testneed <- add_nostorm_runs(sample_EIR, no_fail_runs_EIR_testneed, 10)
 
-write.csv(sample_data_testneed, "studyData/SampleData//testneed_sample_data_testneed.csv")
-write.csv(all_sample_runs_testneed, "studyData/SampleData/sample_resilience_tesnteed.csv")
+## write.csv(sample_data_testneed, "studyData/SampleData//testneed_sample_data_testneed-bumpspike.csv")
+## write.csv(all_sample_runs_testneed, "studyData/SampleData/sample_resilience_tesnteed-bumpspike.csv")
 
 ## Build a profile with all needs set to 1
-need_data <- sample_data_testneed
-
-need_data_statusquo <-
-    need_data %>%
-    mutate(Need = 1)
-
-write.csv(need_data_statusquo, "studyData/SampleData/statusquo_need_sample.csv")
-
-sample_statusquo_groups <- assignGroup(need_data_statusquo)
-sample_statusquo_EIR <- calc_EIR(sample_statusquo_groups, 0)
-
-no_fail_runs_SQ <-
-    sample_data_clean %>%
-    mutate(Need = 1)
-
-no_fail_runs_SQ_groups <- assignGroup(no_fail_runs_SQ)
-
-no_fail_runs_SQ_EIR <- calc_EIR(no_fail_runs_SQ_groups, 0)
-
-no_fail_runs_SQ_EIR <-
-    no_fail_runs_SQ_EIR %>%
-    mutate(Strongest_Storm = 0,
-           Worst_Failure = NA,
-           End_Rec_Level = NA,
-           Number_Storms = 0)
-
-all_sample_runs_SQ <- add_nostorm_runs(sample_EIR, no_fail_runs_SQ_EIR, 10)
-
-
-all_sample_statusquo <- bind_rows(sample_statusquo_EIR, no_fail_runs_SQ_EIR)
-
-write.csv(all_sample_statusquo, "studyData/SampleData/sample_resilience_SQ")
+## need_data <- sample_data_testneed
+## 
+## ## Make all the needs = 1
+## need_data_statusquo <-
+##     need_data %>%
+##     mutate(Need = 1)
+## 
+## write.csv(need_data_statusquo, "studyData/SampleData/statusquo_need_sample.csv")
+## 
+## sample_statusquo_groups <- assignGroup(need_data_statusquo)
+## sample_statusquo_EIR <- calc_EIR(sample_statusquo_groups, 0)
+## 
+## no_fail_runs_SQ <-
+##     sample_data_clean %>%
+##     filter(Run == 1) %>%
+##     mutate(Need = 1, Performance = 1)
+## 
+## no_fail_runs_SQ_groups <- assignGroup(no_fail_runs_SQ)
+## 
+## no_fail_runs_SQ_EIR <- calc_EIR(no_fail_runs_SQ_groups, 0)
+## 
+## no_fail_runs_SQ_EIR <-
+##     no_fail_runs_SQ_EIR %>%
+##     mutate(Strongest_Storm = 0,
+##            Worst_Failure = NA,
+##            End_Rec_Level = NA,
+##            Number_Storms = 0)
+## 
+## all_sample_runs_SQ <- add_nostorm_runs(sample_EIR, no_fail_runs_SQ_EIR, 10)
+## 
+## 
+## all_sample_statusquo <- bind_rows(sample_statusquo_EIR, no_fail_runs_SQ_EIR)
+## 
+## write.csv(all_sample_statusquo, "studyData/SampleData/sample_resilience_SQ")
 ####################################################################
 ## Reading csv's instead of recalculating each time
 source("hurr_plots_stats.R")
-sample_EIR <- as.tibble(read.csv("studyData/sample_resilience.csv"))
-sample_need <- as.tibble(read.csv("studyData/need_sample_data.csv"))
+## sample_EIR <- as.tibble(read.csv("studyData/SampleData/sample_resilience.csv"))
+## sample_need <- as.tibble(read.csv("studyData/SampleDate/need_sample_data.csv"))
 
                         
-plot_EIR <- ggplot(sample_EIR, aes(Infrastructure, ExtendedIntegralResilience)) +
-    geom_boxplot() +
-    theme_bw(base_size = 12, base_family = "serif") +
-    theme(legend.margin=margin(t = 0, unit = 'cm'),
-          legend.position = "top",
-          legend.title = element_blank()) +
-    ylim(0, 1.2)
+## plot_EIR <- ggplot(sample_EIR, aes(Infrastructure, ExtendedIntegralResilience)) +
+##     geom_boxplot() +
+##     theme_bw(base_size = 12, base_family = "serif") +
+##     theme(legend.margin=margin(t = 0, unit = 'cm'),
+##           legend.position = "top",
+##           legend.title = element_blank()) +
+##     ylim(0, 1.2)
+## 
+## plot_storm_strength <- ggplot(sample_EIR, aes(Infrastructure, ExtendedIntegralResilience)) +
+##     geom_boxplot() +
+##     facet_grid(Strongest_Storm ~ Number_Storms) +
+##     theme_bw(base_size = 12, base_family = "serif") +
+##     theme(legend.margin=margin(t = 0, unit = 'cm'),
+##           legend.position = "top",
+##           legend.title = element_blank()) +
+##     ylim(0, 1.2)
+## 
+## needProf <- example_profiles(sample_need, 41)
 
-plot_storm_strength <- ggplot(sample_EIR, aes(Infrastructure, ExtendedIntegralResilience)) +
-    geom_boxplot() +
-    facet_grid(Strongest_Storm ~ Number_Storms) +
-    theme_bw(base_size = 12, base_family = "serif") +
-    theme(legend.margin=margin(t = 0, unit = 'cm'),
-          legend.position = "top",
-          legend.title = element_blank()) +
-    ylim(0, 1.2)
 
-needProf <- example_profiles(sample_need, 41)
-
-
-
+end_time <- proc.time() - ptm
 
 
 

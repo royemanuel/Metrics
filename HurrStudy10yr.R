@@ -44,7 +44,7 @@ sf_data10yr_need <- bld_need_all(DF = sf_data10yr_clean,
                                  need_inf = rising_need10yr)
 
 storm_run_data10yr <-
-    sdc10n %>%##sf_data10yr_need %>%
+    sf_data10yr_need %>%
     group_by(Run)
 
 storm10yr_summary <-
@@ -63,9 +63,10 @@ sf_EIR10yr <- inner_join(sf_EIR10yr, storm10yr_summary, by = "Run")
 
 noStorms <- filter(my10yrstorms, HurricaneStrength > 24)
 
-no_fail_runs <- zero_storm_profile(DF = sdc10,
-                                   time_hor = max(sdc10$Time),
-                                   emptystormlist = noStorms)
+no_fail_runs <- zero_storm_profile(DF = sf_data10yr_clean,
+                                   time_hor = max(sf_data10yr_clean$Time),
+                                   emptystormlist = noStorms,
+                                   need_profile = rising_need10yr)
 
 no_fail_runs_groups <- assignGroup(no_fail_runs)
 
@@ -79,6 +80,43 @@ no_fail_runs_EIR <-
            Number_Storms = 0)
 
 all_10yr_runs <- add_nostorm_runs(sf_EIR10yr, no_fail_runs_EIR, 18)
+write.csv(sf_data10yr_groups, "studyData/10yrData/10yr_risingNeed_groups.csv")
+write.csv(all_10yr_runs, "studyData/10yrData/10yr_risingNeed_resilience.csv")
+## Now do the same thing for Need is status quo
+sf_SQ__data10yr_need <- mutate(sf_data10yr_clean, Need = 1)
+
+sf_SQ__data10yr_groups <- assignGroup(sf_SQ__data10yr_need)
+
+sf_SQ__EIR <- calc_EIR(sf_SQ__data10yr_groups, 0)
+
+sf_SQ__EIR <- inner_join(sf_SQ__EIR, storm10yr_summary, by = "Run")
+
+## Now build the no storm runs with a status quo need
+no_fail_runs_SQ <-
+    sf_data10yr_groups %>%
+    filter(Run == 1) %>%
+    select(-diff, -Grp) %>%
+    mutate(Performance = 1, Need = 1)
+
+no_fail_runs_groups_SQ <- assignGroup(no_fail_runs_SQ)
+
+no_fail_runs_EIR <- calc_EIR(no_fail_runs_groups_SQ, 0)
+
+no_fail_runs_EIR <-
+    no_fail_runs_EIR %>%
+    mutate(Strongest_Storm = 0,
+           Worst_Failure = NA,
+           End_Rec_Level = NA,
+           Number_Storms = 0)
+
+all_10yr_runs_SQ <- add_nostorm_runs(sf_SQ__EIR, no_fail_runs_EIR, 18)
+
+write.csv(sf_data10yr_groups, "studyData/10yrData/10yr_statusquoNeed_groups.csv")
+write.csv(all_10yr_runs_SQ, "studyData/10yrData/10yr_statusquoNeed_resilience.csv")
+ 
+
+
+
 
 ## Build plots that are useful and summary statistics
 

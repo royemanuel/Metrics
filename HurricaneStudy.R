@@ -1,4 +1,5 @@
 library("tidyverse")
+setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/")
 source("metrics.R")
 source("HurricaneDataPull.R")
 source("hurrNeed.R")
@@ -40,12 +41,12 @@ rising_need2yr <- tibble(Infrastructure = c("Electricity_Availability",
                                        "Critical_Manufacturing_Functionality",
                                        "Water_Functionality"),
                     BL = c(1.0, 1.0, .95, 0.9, 1.05, .9, 1.0, 1.0),
-                    Y2 = c(1.0, 1.04, .95, 1.96, 1.09, .94, 1.06, 1.02))
+                    Y2 = c(1.0, 1.04, .95, 0.96, 1.09, .94, 1.06, 1.02))
 
 sf_data_need <- bld_need_all(DF = sf_data_clean,
                              time_h = 525600 * 2,
-                             stormlist = mystorms,
-                             need_inf = rising_need2yr)
+                             stormlist = mystorms)#,
+                             #need_inf = rising_need2yr)
 
 
 storm_run_data <-
@@ -68,10 +69,10 @@ sf_EIR <- inner_join(sf_EIR, storm_summary, by = "Run")
 
 noStorms <- filter(mystorms, HurricaneStrength > 24)
 
-no_fail_runs <- zero_storm_profile(DF = sample_data_clean,
-                                   time_hor = max(sample_data_clean$Time),
-                                   emptystormlist = noStorms
-                                   need_profile= rising_need2yr)
+no_fail_runs <- zero_storm_profile(DF = sf_data_clean,
+                                   time_hor = max(sf_data_clean$Time),
+                                   emptystormlist = noStorms)#,
+                                   # need_profile= rising_need2yr)
 
 no_fail_runs_groups <- assignGroup(no_fail_runs)
 
@@ -85,6 +86,8 @@ no_fail_runs_EIR <-
            Number_Storms = 0)
 
 all_2yr_runs <- add_nostorm_runs(sf_EIR, no_fail_runs_EIR, 541)
+write.csv(sf_data_groups, "studyData/2yrData/2yr_levelNeedproportionaltotime_groups.csv")
+write.csv(all_2yr_runs, "studyData/2yrData/2yr_levelNeedproportionaltotime_resilience.csv")
 
 ## Now do the same thing for Need is status quo
 sf_SQ__data_need <- mutate(sf_data_clean, Need = 1)
@@ -95,11 +98,11 @@ sf_SQ__EIR <- calc_EIR(sf_SQ__data_groups, 0)
 
 sf_SQ__EIR <- inner_join(sf_SQ__EIR, storm_summary, by = "Run")
 
-
-no_fail_runs_SQ <- mutate(sample_data_clean,
-                                   time_hor = max(sample_data_clean$Time),
-                                   emptystormlist = noStorms
-                                   need_profile = rising_need2yr)
+## Now build the no storm runs with a status quo need
+no_fail_runs_SQ <-
+    sf_data_clean %>%
+    filter(Run == 1) %>%
+    mutate(Performance = 1, Need = 1)
 
 no_fail_runs_groups_SQ <- assignGroup(no_fail_runs_SQ)
 
@@ -114,7 +117,8 @@ no_fail_runs_EIR <-
 
 all_2yr_runs_SQ <- add_nostorm_runs(sf_SQ__EIR, no_fail_runs_EIR, 541)
 
-write.csv(sf_SQ__data_groups, "")
+write.csv(sf_SQ__data_groups, "studyData/2yrData/2yr_statusquoNeed_groups.csv")
+write.csv(all_2yr_runs_SQ, "studyData/2yrData/2yr_statusquoNeed_resilience.csv")
  
 ## Build plots that are useful and summary statistics
 

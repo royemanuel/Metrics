@@ -1,16 +1,17 @@
 ## Pull the data from the anylogic run outputs
 
-run_profiles <- c("hurr10year/01runProfile10yr.xlsx",
-                  "hurr10year/02runProfile10yr.xlsx",
-                  "hurr10year/03runProfile10yr.xlsx",
-                  "hurr10year/04runProfile10yr.xlsx",
-                  "hurr10year/05runProfile10yr.xlsx",
-                  "hurr10year/06runProfile10yr.xlsx",
-                  "hurr10year/07runProfile10yr.xlsx",
-                  "hurr10year/08runProfile10yr.xlsx",
-                  "hurr10year/09runProfile10yr.xlsx",
-                  "hurr10year/10runProfile10yr.xlsx",
-                  "hurr10year/11runProfile10yr.xlsx")
+run_profiles <- c("hurrFullRec2yr/01runProfile.xlsx",
+                  "hurrFullRec2yr/02runProfile.xlsx",
+                  "hurrFullRec2yr/03runProfile.xlsx",
+                  "hurrFullRec2yr/04runProfile.xlsx",
+                  "hurrFullRec2yr/05runProfile.xlsx",
+                  "hurrFullRec2yr/06runProfile.xlsx",
+                  "hurrFullRec2yr/07runProfile.xlsx",
+                  "hurrFullRec2yr/08runProfile.xlsx",
+                  "hurrFullRec2yr/09runProfile.xlsx",
+                  "hurrFullRec2yr/10runProfile.xlsx",
+                  "hurrFullRec2yr/11runProfile.xlsx",
+                  "hurrFullRec2yr/12runProfile.xlsx")
 
 ingest_run_profiles <- function(file_list){
     all_data <- tibble()
@@ -44,4 +45,4 @@ clean_run_data <- function(wkbk){
 
     
 my10yrstorms <- ingest_run_profiles(run_profiles)
-write.csv(my10yrstorms, "run10yr_profiles_seed.csv")
+write.csv(my10yrstorms, "runyrFR_profiles_seed.csv")
