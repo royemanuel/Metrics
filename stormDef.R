@@ -44,5 +44,5 @@ clean_run_data <- function(wkbk){
 }
 
     
-my10yrstorms <- ingest_run_profiles(run_profiles)
-write.csv(my10yrstorms, "runyrFR_profiles_seed.csv")
+##my10yrstorms <- ingest_run_profiles(run_profiles)
+##write.csv(my10yrstorms, "runyrFR_profiles_seed.csv")

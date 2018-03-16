@@ -47,7 +47,40 @@ rising_need2yr <- tibble(Infrastructure = c("Electricity_Availability",
                                        "Critical_Manufacturing_Functionality",
                                        "Water_Functionality"),
                     BL = c(1.0, 1.0, .95, 0.9, 1.05, .9, 1.0, 1.0),
-                    Y2 = c(1.0, 1.04, .95, 0.96, 1.09, .94, 1.06, 1.02))
+                    Y2 = c(1.0, 1.04, .95, 0.96, 1.09, .94, 1.06, 1.2))
+
+rising_need6mo <- tibble(Infrastructure = c("Electricity_Availability",
+                                       "Communications_Function",
+                                       "IT_Function",
+                                       "Healthcare_Function",
+                                       "Transportation_Function",
+                                       "Emergency_Services_Functionality",
+                                       "Critical_Manufacturing_Functionality",
+                                       "Water_Functionality"),
+                    BL = c(1.0, 1.0, .95, 0.9, 1.05, .9, 1.0, 1.0),
+                    Y2 = c(1.0, 1.01, .95, 0.915, 1.065, .91, 1.015, 1.05))
+
+rising_need1yr <- tibble(Infrastructure = c("Electricity_Availability",
+                                       "Communications_Function",
+                                       "IT_Function",
+                                       "Healthcare_Function",
+                                       "Transportation_Function",
+                                       "Emergency_Services_Functionality",
+                                       "Critical_Manufacturing_Functionality",
+                                       "Water_Functionality"),
+                    BL = c(1.0, 1.0, .95, 0.9, 1.05, .9, 1.0, 1.0),
+                    Y2 = c(1.0, 1.02, .95, 0.93, 1.07, .92, 1.03, 1.1))
+
+rising_need18mo <- tibble(Infrastructure = c("Electricity_Availability",
+                                       "Communications_Function",
+                                       "IT_Function",
+                                       "Healthcare_Function",
+                                       "Transportation_Function",
+                                       "Emergency_Services_Functionality",
+                                       "Critical_Manufacturing_Functionality",
+                                       "Water_Functionality"),
+                    BL = c(1.0, 1.0, .95, 0.9, 1.05, .9, 1.0, 1.0),
+                    Y2 = c(1.0, 1.03, .95, 0.945, 1.08, .93, 1.045, 1.15))
 
 
 DF_EIR <- tibble()
@@ -78,23 +111,57 @@ for(d in 1:length(study_files)){
         storm <-
             mystorms %>%
             filter(Run == runs[r])
-        sf_data_testneed <- bld_need_all_q(DF = sf_data_run,
+        sf_data_testneed6mo<- bld_need_all_q(DF = sf_data_run,
+                                           time_h = 525600 * 0.5,
+                                           stormlist = storm,
+                                           need_inf = rising_need6mo)
+        sf_data_testneed1yr <- bld_need_all_q(DF = sf_data_run,
+                                           time_h = 525600 * 1,
+                                           stormlist = storm,
+                                           need_inf = rising_need1yr)
+        sf_data_testneed18mo <- bld_need_all_q(DF = sf_data_run,
+                                           time_h = 525600 * 1.5,
+                                           stormlist = storm,
+                                           need_inf = rising_need18mo)
+        sf_data_testneed2yr <- bld_need_all_q(DF = sf_data_run,
                                            time_h = 525600 * 2,
                                            stormlist = storm,
                                            need_inf = rising_need2yr)
-        storm_run_TN <-
-            sf_data_testneed %>%
+        storm_run_TN6mo <-
+            sf_data_testneed6mo %>%
             group_by(Run)
-        sf_data_groups <- assignGroup_q(sf_data_testneed)
-        sf_EIR <- calc_EIR(sf_data_groups, 0)
-        sf_EIR <- inner_join(sf_EIR, storm_summary, by = "Run")
+        storm_run_TN1yr <-
+            sf_data_testneed1yr %>%
+            group_by(Run)
+        storm_run_TN18mo <-
+            sf_data_testneed18mo %>%
+            group_by(Run)
+        storm_run_TN2yr <-
+            sf_data_testneed2yr%>%
+            group_by(Run)
+        sf_data_groups6mo <- assignGroup_q(sf_data_testneed6mo)
+        sf_EIR6mo <- calc_EIR(sf_data_groups6mo, 0)
+        sf_EIR6mo <- inner_join(sf_EIR6mo, storm_summary, by = "Run")
+        sf_EIR6mo <- mutate(sf_EIR6mo, TimeHorizon = 6)
+        sf_data_groups1yr <- assignGroup_q(sf_data_testneed1yr)
+        sf_EIR1yr <- calc_EIR(sf_data_groups1yr, 0)
+        sf_EIR1yr <- inner_join(sf_EIR1yr, storm_summary, by = "Run")
+        sf_EIR1yr <- mutate(sf_EIR1yr, TimeHorizon = 12)
+        sf_data_groups18mo <- assignGroup_q(sf_data_testneed18mo)
+        sf_EIR18mo <- calc_EIR(sf_data_groups18mo, 0)
+        sf_EIR18mo <- inner_join(sf_EIR18mo, storm_summary, by = "Run")
+        sf_EIR18mo <- mutate(sf_EIR18mo, TimeHorizon = 18)
+        sf_data_groups2yr <- assignGroup_q(sf_data_testneed2yr)
+        sf_EIR2yr <- calc_EIR(sf_data_groups2yr, 0)
+        sf_EIR2yr <- inner_join(sf_EIR2yr, storm_summary, by = "Run")
+        sf_EIR2yr <- mutate(sf_EIR2yr, TimeHorizon = 24)
         cat("\r", "Run ", runs[r], " complete")
-        R_EIR <- bind_rows(R_EIR, sf_EIR)
+        R_EIR <- bind_rows(R_EIR, sf_EIR6mo, sf_EIR1yr, sf_EIR18mo, sf_EIR2yr)
     }
     DF_EIR <- bind_rows(DF_EIR, R_EIR)
 }
    
-
+write.csv(DF_EIR, "studyData/2yrFullRec/multTHonlyStorms.csv")
 
 
 

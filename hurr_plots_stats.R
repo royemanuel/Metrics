@@ -75,11 +75,11 @@ fix_infrastructure <- function(listinf){
 
 abbrev_inf <- function(listinf){
     vec_inf <- listinf %>%
-        str_replace("Communications", "Comm") %>%
+        str_replace("Communications", "Com") %>%
         str_replace("Information\nTechnology", "IT") %>%
-        str_replace("Critical\nManufacturing", "CM") %>%
+        str_replace("Critical\nManufacturing", "Crit\nMnfg") %>%
         str_replace("Electricity", "Elec") %>%
-        str_replace("Emergency\nServices", "ES") %>%
+        str_replace("Emergency\nServices", "Emrg\nSrv") %>%
         str_replace("Healthcare", "H") %>%
         str_replace("Transportation", "T") %>%
         str_replace("Water", "W")

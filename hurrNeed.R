@@ -126,6 +126,9 @@ build_need_q<- function(DF,
         storm_run <- stormlist ##filter(stormlist, Run == run)
         for (sr in 1:dim(storm_run)[1]){
             time <- storm_run$FailTime[sr]
+            if(time > time_horizon){
+                break
+            }
             strength <- storm_run$HurricaneStrength[sr]
             ## Need to vary the recovery time and the perturbation level by
             ## strength of the storm
