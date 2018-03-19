@@ -9,7 +9,7 @@
 ## as the storm goes on, and that it is dependent upon the hurricane strike
 
 build_need <- function(DF,
-                       stormlist,
+                       stormlist = NA,
                        system,
                        # delay, # days
                        baseline,
@@ -30,7 +30,7 @@ build_need <- function(DF,
     for (run in 1:length(unique(DF$Run))){
         DF_run <-
             DF %>%
-            filter(Run == run)
+            filter(Run == unique(DF$Run)[run])
         ## print(paste("baseline is", baseline, "in run", run))
         need_vector <- seq(from = baseline,
                            to = year2val,
@@ -89,7 +89,7 @@ build_need <- function(DF,
                                         Time = t_vec))
         need_tbl <- filter(need_tbl, Time %% 240 == 0)
         ## print(need_tbl)
-        print(DF_run)
+        print(need_tbl)
         DF_run <- inner_join(DF_run, need_tbl, by = "Time")
         DF_holder <- bind_rows(DF_holder, DF_run)
     }
@@ -333,16 +333,19 @@ bld_need_all <- function(DF, time_h, stormlist, need_inf){
     }
     ## print(need_inf)
     name_inf <- unique(DF$Infrastructure)
+    print(name_inf)
     num_inf <- length(name_inf)
+    print(num_inf)
     all_DF <- tibble()
     ## pb <- txtProgressBar(min = 0, max = num_inf, style = 3)
     for(i in 1:num_inf){
         ## Could call a case switch statement for each of the
         ## infrastructures here to calc baseline and year2val if desired
         system_inf <- name_inf[i]
+        print(system_inf)
         bl <-  filter(need_inf, Infrastructure == name_inf[i])$BL
         yr2val <- filter(need_inf, Infrastructure == name_inf[i])$Y2
-        print(system_inf)
+        print(paste(bl, yr2val))
         need_DF <- build_need(DF = DF,
                               stormlist = stormlist,
                               system = system_inf,
@@ -368,7 +371,7 @@ bld_need_all_q<- function(DF, time_h, stormlist, need_inf){
     for(i in 1:num_inf){
         ## Could call a case switch statement for each of the
         ## infrastructures here to calc baseline and year2val if desired
-        system_inf<- name_inf[i]
+        system_inf <- name_inf[i]
         bl <-  filter(need_inf, Infrastructure == name_inf[i])$BL
         yr2val <- filter(need_inf, Infrastructure == name_inf[i])$Y2
         need_DF <- build_need_q(DF = DF,
@@ -395,9 +398,10 @@ test_need <- tibble(Infrastructure = c("Electricity_Availability",
                     Y2 = c(1.0, 1.2, .95, 1.2, 1.2, 1.1, 1.3, 1.1))
 
 zero_storm_profile <- function(DF, time_hor, emptystormlist, need_profile){
+    usedRun <- min(DF$Run)
     working_DF <-
         DF %>%
-        filter(Run == 1) %>%
+        filter(Run == usedRun) %>%
         mutate(Performance = 1)
     if (missing(need_profile)){
         wdf <- bld_need_all(working_DF, time_hor, emptystormlist)

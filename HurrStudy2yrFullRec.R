@@ -3,8 +3,10 @@ setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/")
 source("metrics.R")
 source("HurricaneDataPull.R")
 source("hurrNeed.R")
+source("stormDef.R")
 ## Commented out because build it once and be done.
 ##source("stormDef.R")
+qt <- proc.time()
 
 
 study_files <- c("hurrFullRec2yr/1MCoutput.xlsx",
@@ -48,7 +50,6 @@ rising_need2yr <- tibble(Infrastructure = c("Electricity_Availability",
                                        "Water_Functionality"),
                     BL = c(1.0, 1.0, .95, 0.9, 1.05, .9, 1.0, 1.0),
                     Y2 = c(1.0, 1.04, .95, 0.96, 1.09, .94, 1.06, 1.2))
-qt <- proc.time()
 
 
 DF_EIR_FR <- tibble()
@@ -105,12 +106,7 @@ for(d in 1:length(study_files)){
     DF_EIR_FR <- bind_rows(DF_EIR_FR, R_EIR)
 }
 
-done_time <- proc.time() - qt
-print(done_time)
-write.csv(DF_EIR_FR, "studyData/2yrFullRec/multTHonlyStormsQ .csv")
-
-
-
+write.csv(DF_EIR_FR, "studyData/2yrFullRec/multTHonlyStormsQ.csv")
 
 noStorms <- filter(mystorms, HurricaneStrength > 24)
 perfect_performance <- tibble()
@@ -118,8 +114,6 @@ no_fail_runs_testneed <- zero_storm_profile(DF = sf_data_clean,
                                time_hor = max(sf_data_clean$Time),
                                emptystormlist = noStorms,
                                need_profile = rising_need2yr)
-
-
 
 no_fail_runs_groups_testneed <- assignGroup(no_fail_runs_testneed)
 
@@ -138,8 +132,8 @@ noStorms <- filter(mystorms, HurricaneStrength > 24)
 
 no_fail_runs <- zero_storm_profile(DF = sf_data_clean,
                                    time_hor = max(sf_data_clean$Time),
-                                   emptystormlist = noStorms)#,
-                                   # need_profile= rising_need2yr)
+                                   emptystormlist = noStorms,
+                                   need_profile= rising_need2yr)
 
 no_fail_runs_groups <- assignGroup(no_fail_runs)
 
@@ -150,9 +144,16 @@ no_fail_runs_EIR <-
     mutate(Strongest_Storm = 0,
            Worst_Failure = NA,
            End_Rec_Level = NA,
-           Number_Storms = 0)
+           Number_Storms = 0,
+           TimeHorizon = "NoStorm")
 
 all_2yr_runs <- add_nostorm_runs(DF_EIR_FR, no_fail_runs_EIR, 541)
+
+write.csv(all_2yr_runs_SQ, "2yrQfullrecrisingneed.csv")
+done_time <- proc.time() - qt
+print(done_time)
+
+
 ## write.csv(sf_data_groups, "studyData/2yrFullRec/2yr_levelNeedproportionaltotime_groupsFR.csv")
 ## write.csv(all_2yr_runs, "studyData/2yrFullRec/2yr_levelNeedproportionaltotime_resilienceFR.csv")
 

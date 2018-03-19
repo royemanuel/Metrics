@@ -93,7 +93,7 @@ assignGroup <- function(DF){
     for (run in 1:length(unique(DF$Run))){
         DF_by_run <-
             DF %>%
-            filter(Run == run)
+            filter(Run == unique(DF$Run)[run])
         ## print(run)
         DF_inf_grp <- tibble()
         for (i in 1:inf_number){
@@ -256,12 +256,14 @@ endcap_group <- function(DF){
     rDF <- tibble()
     ## pb <- txtProgressBar(min = 0, max = num_runs, style = 3)
     for (r in 1:num_runs){
+        pulled_run <- unique(DF$Run)[r]
         iDF <- tibble()
         ## print(paste("Run", r))
         for (i in 1:num_inf){
             inf_DF <-
                 DF %>%
-                filter(Run == r, Infrastructure == type_inf[i])
+                filter(Run == pulled_run,
+                       Infrastructure == type_inf[i])
             gDF <- tibble()
             num_grp <- length(unique(inf_DF$Grp))
             for (g in 1:num_grp){
