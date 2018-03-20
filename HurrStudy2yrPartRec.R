@@ -9,30 +9,30 @@ source("stormDef.R")
 qt <- proc.time()
 
 
-study_files <- c("hurrFullRec2yr/1MCoutput.xlsx",
-                 "hurrFullRec2yr/2MCoutput.xlsx",
-                 "hurrFullRec2yr/3MCoutput.xlsx",
-                 "hurrFullRec2yr/4MCoutput.xlsx",
-                 "hurrFullRec2yr/5MCoutput.xlsx",
-                 "hurrFullRec2yr/6MCoutput.xlsx",
-                 "hurrFullRec2yr/7MCoutput.xlsx",
-                 "hurrFullRec2yr/8MCoutput.xlsx",
-                 "hurrFullRec2yr/9MCoutput.xlsx",
-                 "hurrFullRec2yr/10MCoutput.xlsx",
-                 "hurrFullRec2yr/11MCoutput.xlsx",
-                 "hurrFullRec2yr/12MCoutput.xlsx")
-run_profiles <- c("hurrFullRec2yr/1runProfile.xlsx",
-                  "hurrFullRec2yr/2runProfile.xlsx",
-                  "hurrFullRec2yr/3runProfile.xlsx",
-                  "hurrFullRec2yr/4runProfile.xlsx",
-                  "hurrFullRec2yr/5runProfile.xlsx",
-                  "hurrFullRec2yr/6runProfile.xlsx",
-                  "hurrFullRec2yr/7runProfile.xlsx",
-                  "hurrFullRec2yr/8runProfile.xlsx",
-                  "hurrFullRec2yr/9runProfile.xlsx",
-                  "hurrFullRec2yr/10runProfile.xlsx",
-                  "hurrFullRec2yr/11runProfile.xlsx",
-                  "hurrFullRec2yr/12runProfile.xlsx")
+study_files <- c("HurrData547/01MCoutput.xlsx",
+                 "HurrData547/02MCoutput.xlsx",
+                 "HurrData547/03MCoutput.xlsx",
+                 "HurrData547/04MCoutput.xlsx",
+                 "HurrData547/05MCoutput.xlsx",
+                 "HurrData547/06MCoutput.xlsx",
+                 "HurrData547/07MCoutput.xlsx",
+                 "HurrData547/08MCoutput.xlsx",
+                 "HurrData547/09MCoutput.xlsx",
+                 "HurrData547/10MCoutput.xlsx",
+                 "HurrData547/11MCoutput.xlsx",
+                 "HurrData547/12MCoutput.xlsx")
+run_profiles <- c("HurrData547/1runProfile.xlsx",
+                  "HurrData547/2runProfile.xlsx",
+                  "HurrData547/3runProfile.xlsx",
+                  "HurrData547/4runProfile.xlsx",
+                  "HurrData547/5runProfile.xlsx",
+                  "HurrData547/6runProfile.xlsx",
+                  "HurrData547/7runProfile.xlsx",
+                  "HurrData547/8runProfile.xlsx",
+                  "HurrData547/9runProfile.xlsx",
+                  "HurrData547/10runProfile.xlsx",
+                  "HurrData547/11runProfile.xlsx",
+                  "HurrData547/12runProfile.xlsx")
                   
  
 
@@ -106,7 +106,7 @@ for(d in 1:length(study_files)){
     DF_EIR_FR <- bind_rows(DF_EIR_FR, R_EIR)
 }
 
-write.csv(DF_EIR_FR, "studyData/2yrFullRec/multTHonlyStormsQ.csv")
+write.csv(DF_EIR_FR, "studyData/2yrPRec/multTHonlyStormsQ.csv")
 
 noStorms <- filter(mystorms, HurricaneStrength > 24)
 perfect_performance <- tibble()
@@ -147,7 +147,7 @@ no_fail_runs_EIR <-
 
 Qall_sf_runs <- add_nostorm_runs(DF_EIR_FR, no_fail_runs_EIR, 541)
 
-write.csv(Qall_sf_runs, "studyData/2yrFullRec/multTHwithNoStormsQ.csv")
+write.csv(Qall_sf_runs, "studyData/2yrPRec/multTHwithNoStormsQ.csv")
 ######################################################################
 ## Build the status quo storm runs (everything equals 1)
 ######################################################################
@@ -177,8 +177,8 @@ done_time <- proc.time() - qt
 print(done_time)
 
 
-## write.csv(sf_data_groups, "studyData/2yrFullRec/2yr_levelNeedproportionaltotime_groupsFR.csv")
-## write.csv(all_2yr_runs, "studyData/2yrFullRec/2yr_levelNeedproportionaltotime_resilienceFR.csv")
+## write.csv(sf_data_groups, "studyData/2yrPRec/2yr_levelNeedproportionaltotime_groupsFR.csv")
+## write.csv(all_2yr_runs, "studyData/2yrPRec/2yr_levelNeedproportionaltotime_resilienceFR.csv")
 
 ## Now do the same thing for Need is status quo
 ## sf_SQ__data_need <- mutate(sf_data_clean, Need = 1)
@@ -208,8 +208,8 @@ print(done_time)
 ## 
 ## all_2yr_runs_SQ <- add_nostorm_runs(sf_SQ__EIR, no_fail_runs_EIR, 541)
 ## 
-## write.csv(sf_SQ__data_groups, "studyData/2yrFullRec/2yr_statusquoNeed_groupsFR.csv")
-## write.csv(all_2yr_runs_SQ, "studyData/2yrFullRec/2yr_statusquoNeed_resilienceFR.csv")
+## write.csv(sf_SQ__data_groups, "studyData/2yrPRec/2yr_statusquoNeed_groupsFR.csv")
+## write.csv(all_2yr_runs_SQ, "studyData/2yrPRec/2yr_statusquoNeed_resilienceFR.csv")
 ##  
 ## ## Build plots that are useful and summary statistics
 ## 
