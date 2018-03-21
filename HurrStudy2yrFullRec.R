@@ -58,10 +58,35 @@ for(d in 1:length(study_files)){
     mystorms <- ingest_run_profiles(run_profiles[d])
     cat("\r", "Data file ", d, " ingested from Excel")
     R_EIR <- tibble()
-    storm_summary <-
+    storm_summary24mo <-
         mystorms %>%
         group_by(Run) %>%
-        summarize(Strongest_Storm = max(HurricaneStrength),
+        filter(FailTime < 525600 * 2) %>%
+        summarise(Strongest_Storm = max(HurricaneStrength),
+                  Worst_Failure = min(FailLevel),
+                  End_Rec_Level = min(RecoveryLevel),
+                  Number_Storms = n())
+    storm_summary18mo <-
+        mystorms %>%
+        filter(FailTime < 525600 * 1.5) %>%
+        group_by(Run) %>%
+        summarise(Strongest_Storm = max(HurricaneStrength),
+                  Worst_Failure = min(FailLevel),
+                  End_Rec_Level = min(RecoveryLevel),
+                  Number_Storms = n())
+    storm_summary12mo <-
+        mystorms %>%
+        group_by(Run) %>%
+        filter(FailTime < 525600 * 1) %>%
+        summarise(Strongest_Storm = max(HurricaneStrength),
+                  Worst_Failure = min(FailLevel),
+                  End_Rec_Level = min(RecoveryLevel),
+                  Number_Storms = n()) 
+    storm_summary6mo <-
+        mystorms %>%
+        group_by(Run) %>%
+        filter(FailTime < 525600 * .5) %>%
+        summarise(Strongest_Storm = max(HurricaneStrength),
                   Worst_Failure = min(FailLevel),
                   End_Rec_Level = min(RecoveryLevel),
                   Number_Storms = n())
@@ -89,21 +114,23 @@ for(d in 1:length(study_files)){
             group_by(Run)
         sf_data_groups2yr <- assignGroup_q(sf_data_testneed2yr)
         sf_EIR6mo <- calc_EIR(filter(sf_data_groups2yr, Time < 525600 * .5), 0)
-        sf_EIR6mo <- inner_join(sf_EIR6mo, storm_summary, by = "Run")
+        sf_EIR6mo <- left_join(sf_EIR6mo, storm_summary6mo, by = "Run")
         sf_EIR6mo <- mutate(sf_EIR6mo, TimeHorizon = 6)
         sf_EIR1yr <- calc_EIR(filter(sf_data_groups2yr, Time < 525600), 0)
-        sf_EIR1yr <- inner_join(sf_EIR1yr, storm_summary, by = "Run")
+        sf_EIR1yr <- left_join(sf_EIR1yr, storm_summary12mo, by = "Run")
         sf_EIR1yr <- mutate(sf_EIR1yr, TimeHorizon = 12)
         sf_EIR18mo <- calc_EIR(filter(sf_data_groups2yr, Time < 525600 * 1.5), 0)
-        sf_EIR18mo <- inner_join(sf_EIR18mo, storm_summary, by = "Run")
+        sf_EIR18mo <- left_join(sf_EIR18mo, storm_summary18mo, by = "Run")
         sf_EIR18mo <- mutate(sf_EIR18mo, TimeHorizon = 18)
         sf_EIR2yr <- calc_EIR(sf_data_groups2yr, 0)
-        sf_EIR2yr <- inner_join(sf_EIR2yr, storm_summary, by = "Run")
+        sf_EIR2yr <- left_join(sf_EIR2yr, storm_summary24mo, by = "Run")
         sf_EIR2yr <- mutate(sf_EIR2yr, TimeHorizon = 24)
         cat("\r", "Run ", runs[r], " complete")
         R_EIR <- bind_rows(R_EIR, sf_EIR6mo, sf_EIR1yr, sf_EIR18mo, sf_EIR2yr)
     }
     DF_EIR_FR <- bind_rows(DF_EIR_FR, R_EIR)
+    DF_EIR_FR$TimeHorizon <- as.factor(DF_EIR_FR$TimeHorizon)
+    DF_EIR_FR
 }
 
 write.csv(DF_EIR_FR, "studyData/2yrFullRec/multTHonlyStormsQ.csv")
