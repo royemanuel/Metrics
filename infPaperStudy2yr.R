@@ -102,3 +102,37 @@ range_and_mean_plotPR <-
     geom_boxplot() +
     geom_errorbar(aes(ymin = Min, ymax = Max)) +
     facet_grid(Need_Profile ~ Infrastructure)
+
+FR_boxplot <-
+    ggplot(filter(res2yr, Recovery_Type == "Full"),
+           aes(TimeHorizon, ExtendedIntegralResilience)) +
+    geom_boxplot() +
+    facet_grid(Need_Profile ~ Infrastructure)
+
+PR_boxplot <-
+    ggplot(filter(res2yr, Recovery_Type == "Partial"),
+           aes(TimeHorizon, ExtendedIntegralResilience)) +
+    geom_boxplot() +
+    facet_grid(Need_Profile ~ Infrastructure)
+
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
