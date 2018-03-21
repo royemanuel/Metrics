@@ -150,32 +150,48 @@ Qall_sf_runs <- add_nostorm_runs(DF_EIR_FR, no_fail_runs_EIR, 541)
 write.csv(Qall_sf_runs, "studyData/2yrFullRec/multTHwithNoStormsQ.csv")
 ######################################################################
 ## Build the status quo storm runs (everything equals 1)
-######################################################################
-noStorms <- filter(mystorms, HurricaneStrength > 24)
+## ######################################################################
+## noStorms <- filter(mystorms, HurricaneStrength > 24)
+##
 
-no_fail_runs <- zero_storm_profile(DF = sf_data_clean,
-                                   time_hor = max(sf_data_clean$Time),
-                                   emptystormlist = noStorms,
-                                   need_profile= rising_need2yr)
+no_fail_runsSQ <- zero_storm_profile(DF = sf_data_clean,
+                               time_hor = max(sf_data_clean$Time),
+                               emptystormlist = noStorms,
+                               need_profile = rising_need2yr)
 
-no_fail_runs_groups <- assignGroup(no_fail_runs)
+no_fail_runsSQ_groups <- assignGroup(no_fail_runsSQ)
 
-no_fail_runs_EIR <- calc_EIR(no_fail_runs_groups, 0)
-
-no_fail_runs_EIR <-
-    no_fail_runs_EIR %>%
+no_fail_runsSQ_EIR_24mo <- calc_EIR(no_fail_runsSQ_groups, 0) %>%
+    mutate(TimeHorizon = 24)
+no_fail_runsSQ_EIR_18mo <- calc_EIR(filter(no_fail_runsSQ_groups,
+                                         Time < 525600 * 1.5), 0) %>%
+    mutate(TimeHorizon = 18)
+no_fail_runsSQ_EIR_12mo <- calc_EIR(filter(no_fail_runsSQ_groups,
+                                         Time < 525600), 0) %>%
+    mutate(TimeHorizon = 12)
+no_fail_runsSQ_EIR_6mo <- calc_EIR(filter(no_fail_runsSQ_groups,
+                                        Time < 525600 * .5), 0) %>%
+    mutate(TimeHorizon = 6)
+no_fail_runsSQ_EIR <- bind_rows(no_fail_runsSQ_EIR_24mo,
+                              no_fail_runsSQ_EIR_18mo,
+                              no_fail_runsSQ_EIR_12mo,
+                              no_fail_runsSQ_EIR_6mo)
+    
+no_fail_runsSQ_EIR <-
+    no_fail_runsSQ_EIR%>%
     mutate(Strongest_Storm = 0,
            Worst_Failure = NA,
            End_Rec_Level = NA,
-           Number_Storms = 0,
-           TimeHorizon = "NoStorm")
+           Number_Storms = 0)
 
-all_2yr_runs <- add_nostorm_runs(DF_EIR_FR, no_fail_runs_EIR, 541)
+Qall_sf_runsSQ <- add_nostorm_runs(DF_EIR_FR, no_fail_runsSQ_EIR, 541)
 
-write.csv(all_2yr_runs_SQ, "2yrQfullrecrisingneed.csv")
-done_time <- proc.time() - qt
-print(done_time)
+all_2yr_runsSQ <- add_nostorm_runs(DF_EIR_FR, no_fail_runsSQ_EIR, 541)
 
+write.csv(all_2yr_runsSQ, "2yrQfullrecSQ.csv")
+## done_time <- proc.time() - qt
+## print(done_time)
+## 
 
 ## write.csv(sf_data_groups, "studyData/2yrFullRec/2yr_levelNeedproportionaltotime_groupsFR.csv")
 ## write.csv(all_2yr_runs, "studyData/2yrFullRec/2yr_levelNeedproportionaltotime_resilienceFR.csv")

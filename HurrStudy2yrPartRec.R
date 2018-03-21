@@ -21,15 +21,15 @@ study_files <- c("HurrData547/01MCoutput.xlsx",
                  "HurrData547/10MCoutput.xlsx",
                  "HurrData547/11MCoutput.xlsx",
                  "HurrData547/12MCoutput.xlsx")
-run_profiles <- c("HurrData547/1runProfile.xlsx",
-                  "HurrData547/2runProfile.xlsx",
-                  "HurrData547/3runProfile.xlsx",
-                  "HurrData547/4runProfile.xlsx",
-                  "HurrData547/5runProfile.xlsx",
-                  "HurrData547/6runProfile.xlsx",
-                  "HurrData547/7runProfile.xlsx",
-                  "HurrData547/8runProfile.xlsx",
-                  "HurrData547/9runProfile.xlsx",
+run_profiles <- c("HurrData547/01runProfile.xlsx",
+                  "HurrData547/02runProfile.xlsx",
+                  "HurrData547/03runProfile.xlsx",
+                  "HurrData547/04runProfile.xlsx",
+                  "HurrData547/05runProfile.xlsx",
+                  "HurrData547/06runProfile.xlsx",
+                  "HurrData547/07runProfile.xlsx",
+                  "HurrData547/08runProfile.xlsx",
+                  "HurrData547/09runProfile.xlsx",
                   "HurrData547/10runProfile.xlsx",
                   "HurrData547/11runProfile.xlsx",
                   "HurrData547/12runProfile.xlsx")
@@ -151,30 +151,42 @@ write.csv(Qall_sf_runs, "studyData/2yrPRec/multTHwithNoStormsQ.csv")
 ######################################################################
 ## Build the status quo storm runs (everything equals 1)
 ######################################################################
-noStorms <- filter(mystorms, HurricaneStrength > 24)
 
-no_fail_runs <- zero_storm_profile(DF = sf_data_clean,
-                                   time_hor = max(sf_data_clean$Time),
-                                   emptystormlist = noStorms,
-                                   need_profile= rising_need2yr)
+no_fail_runsSQ <- zero_storm_profile(DF = sf_data_clean,
+                               time_hor = max(sf_data_clean$Time),
+                               emptystormlist = noStorms)
 
-no_fail_runs_groups <- assignGroup(no_fail_runs)
+no_fail_runsSQ_groups <- assignGroup(no_fail_runsSQ)
 
-no_fail_runs_EIR <- calc_EIR(no_fail_runs_groups, 0)
-
-no_fail_runs_EIR <-
-    no_fail_runs_EIR %>%
+no_fail_runsSQ_EIR_24mo <- calc_EIR(no_fail_runsSQ_groups, 0) %>%
+    mutate(TimeHorizon = 24)
+no_fail_runsSQ_EIR_18mo <- calc_EIR(filter(no_fail_runsSQ_groups,
+                                         Time < 525600 * 1.5), 0) %>%
+    mutate(TimeHorizon = 18)
+no_fail_runsSQ_EIR_12mo <- calc_EIR(filter(no_fail_runsSQ_groups,
+                                         Time < 525600), 0) %>%
+    mutate(TimeHorizon = 12)
+no_fail_runsSQ_EIR_6mo <- calc_EIR(filter(no_fail_runsSQ_groups,
+                                        Time < 525600 * .5), 0) %>%
+    mutate(TimeHorizon = 6)
+no_fail_runsSQ_EIR <- bind_rows(no_fail_runsSQ_EIR_24mo,
+                              no_fail_runsSQ_EIR_18mo,
+                              no_fail_runsSQ_EIR_12mo,
+                              no_fail_runsSQ_EIR_6mo)
+    
+no_fail_runsSQ_EIR <-
+    no_fail_runsSQ_EIR%>%
     mutate(Strongest_Storm = 0,
            Worst_Failure = NA,
            End_Rec_Level = NA,
-           Number_Storms = 0,
-           TimeHorizon = "NoStorm")
+           Number_Storms = 0)
 
-all_2yr_runs <- add_nostorm_runs(DF_EIR_FR, no_fail_runs_EIR, 541)
+Qall_sf_runsSQ <- add_nostorm_runs(DF_EIR_FR, no_fail_runsSQ_EIR, 541)
 
-write.csv(all_2yr_runs_SQ, "2yrQfullrecrisingneed.csv")
-done_time <- proc.time() - qt
-print(done_time)
+write.csv(Qall_sf_runsSQ, "studyData/2yrPRec/multTHwithNoStormsQ.csv")
+## write.csv(all_2yr_runs_SQ, "2yrQfullrecrisingneed.csv")
+## done_time <- proc.time() - qt
+## print(done_time)
 
 
 ## write.csv(sf_data_groups, "studyData/2yrPRec/2yr_levelNeedproportionaltotime_groupsFR.csv")

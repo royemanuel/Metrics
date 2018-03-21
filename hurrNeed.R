@@ -88,13 +88,9 @@ build_need <- function(DF,
         need_tbl <- as.tibble(bind_cols(Need = need_vector,
                                         Time = t_vec))
         need_tbl <- filter(need_tbl, Time %% 240 == 0)
-        ## print(need_tbl)
-        print(need_tbl)
         DF_run <- inner_join(DF_run, need_tbl, by = "Time")
         DF_holder <- bind_rows(DF_holder, DF_run)
     }
-    ##setTxtProgressBar(pb2, run)
-    print(DF_holder)
     DF_holder
 }
 
@@ -342,10 +338,8 @@ bld_need_all <- function(DF, time_h, stormlist, need_inf){
         ## Could call a case switch statement for each of the
         ## infrastructures here to calc baseline and year2val if desired
         system_inf <- name_inf[i]
-        print(system_inf)
         bl <-  filter(need_inf, Infrastructure == name_inf[i])$BL
         yr2val <- filter(need_inf, Infrastructure == name_inf[i])$Y2
-        print(paste(bl, yr2val))
         need_DF <- build_need(DF = DF,
                               stormlist = stormlist,
                               system = system_inf,
