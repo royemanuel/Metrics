@@ -352,7 +352,10 @@ calc_EIR <- function(DF, chi){
         summarise(grpInt = (trapz(Time, Performance) /
                             trapz(Time, Need)) *
                       (max(Time) - min(Time) + 1),
-                  grpTime = max(Time) - min(Time))
+                  grpTime = max(Time) - min(Time),
+                  n = n()) %>%
+        filter(n > 1) %>%
+        select(-n)
     DFg <- DFg %>% summarise(ExtendedIntegralResilience =
                                  ifelse(sum(grpInt) / sum(grpTime) < 1,
                                         sum(grpInt) / sum(grpTime),

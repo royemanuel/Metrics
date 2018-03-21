@@ -94,7 +94,7 @@ for(d in 1:length(study_files)){
         sf_EIR1yr <- calc_EIR(filter(sf_data_groups2yr, Time < 525600), 0)
         sf_EIR1yr <- inner_join(sf_EIR1yr, storm_summary, by = "Run")
         sf_EIR1yr <- mutate(sf_EIR1yr, TimeHorizon = 12)
-        sf_EIR18mo <- calc_EIR(filter(sf_data_groups2yr, Time < 525600 * 1.5 - 480), 0)
+        sf_EIR18mo <- calc_EIR(filter(sf_data_groups2yr, Time < 525600 * 1.5), 0)
         sf_EIR18mo <- inner_join(sf_EIR18mo, storm_summary, by = "Run")
         sf_EIR18mo <- mutate(sf_EIR18mo, TimeHorizon = 18)
         sf_EIR2yr <- calc_EIR(sf_data_groups2yr, 0)
@@ -156,8 +156,7 @@ write.csv(Qall_sf_runs, "studyData/2yrFullRec/multTHwithNoStormsQ.csv")
 
 no_fail_runsSQ <- zero_storm_profile(DF = sf_data_clean,
                                time_hor = max(sf_data_clean$Time),
-                               emptystormlist = noStorms,
-                               need_profile = rising_need2yr)
+                               emptystormlist = noStorms)
 
 no_fail_runsSQ_groups <- assignGroup(no_fail_runsSQ)
 
@@ -188,7 +187,7 @@ Qall_sf_runsSQ <- add_nostorm_runs(DF_EIR_FR, no_fail_runsSQ_EIR, 541)
 
 all_2yr_runsSQ <- add_nostorm_runs(DF_EIR_FR, no_fail_runsSQ_EIR, 541)
 
-write.csv(all_2yr_runsSQ, "2yrQfullrecSQ.csv")
+write.csv(all_2yr_runsSQ, "studyData/2yrFullRec/multTHwithNoStormsQ_SQ.csv")
 ## done_time <- proc.time() - qt
 ## print(done_time)
 ## 
