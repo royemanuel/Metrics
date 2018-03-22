@@ -35,6 +35,9 @@ res2yr <- bind_rows(res2yrRisePR, res2yrRiseFR, res2yrSQPR, res2yrSQFR)
 
 res2yr$TimeHorizon <- as.factor(res2yr$TimeHorizon)
 
+res2yr <- res2yr %>% replace_na(list(Strongest_Storm = 0,
+                                     Number_Storms = 0))
+
 need_and_recovery_plot <- ggplot(res2yr, aes(Infrastructure,
                                              ExtendedIntegralResilience,
                                              color = TimeHorizon,
@@ -67,8 +70,9 @@ summary_stats<- function(DF){
                   top    = round(quantile(ExtendedIntegralResilience, probs = 0.75),3),
                   stdev  = round(sd(ExtendedIntegralResilience), 3),
                   Avg    = round(mean(ExtendedIntegralResilience), 3)) %>%
-        mutate(Range = Max - Min)
+        mutate(Range = round(Max - Min), 3)
 }
+
 
 
 r2ss <- summary_stats(res2yr)
@@ -115,24 +119,11 @@ PR_boxplot <-
     geom_boxplot() +
     facet_grid(Need_Profile ~ Infrastructure)
 
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+storm_number_and_strength_plot <-
+    ggplot(filter(res2yr, Recovery_Type == "Partial" &
+                          Need_Profile == "Rising" &
+                          Infrastructure == "Electricity_Availability" &
+                          TimeHorizon == 24),
+           aes(Infrastructure)) +
+    geom_bar() +
+    facet_grid(Number_Storms ~ Strongest_Storm)
