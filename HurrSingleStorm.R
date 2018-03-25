@@ -14,18 +14,10 @@ results_directory <-  "studyData/singlestormResults/"
 file_name <- "10yrPR"
 
     
-study_files <- c(paste0(data_directory,"1singleMCoutput.xlsx"),
-                 paste0(data_directory,"2singleMCoutput.xlsx"),
-                 paste0(data_directory,"3singleMCoutput.xlsx"),
-                 paste0(data_directory,"4singleMCoutput.xlsx"),
-                 paste0(data_directory,"5singleMCoutput.xlsx"),
-                 paste0(data_directory,"6singleMCoutput.xlsx"))
-run_profiles <- c(paste0(data_directory,"1singlerunProfile.xlsx"),
-                  paste0(data_directory,"2singlerunProfile.xlsx"),
-                  paste0(data_directory,"3singlerunProfile.xlsx"),
-                  paste0(data_directory,"4singlerunProfile.xlsx"),
-                  paste0(data_directory,"5singlerunProfile.xlsx"),
-                  paste0(data_directory,"6singlerunProfile.xlsx"))                  
+study_files <- c(paste0(data_directory,"1sMCoutput.xlsx"),
+                 paste0(data_directory,"2sMCoutput.xlsx"))
+run_profiles <- c(paste0(data_directory,"1srunProfile.xlsx"),
+                  paste0(data_directory,"2srunProfile.xlsx"))
  
 
 
@@ -44,6 +36,7 @@ rising_need2yr <- tibble(Infrastructure = c("Electricity_Availability",
                     Y2 = c(1.0, 1.04, .95, 0.96, 1.09, .94, 1.06, 1.2))
 
 DF_EIR_SS <- tibble()
+DF_EIR_SS_SQ <- tibble()
 for(d in 1:length(study_files)){
     sf_data <- ingestHurrDataSS(study_files[d])
     mystorms <- ingest_run_profiles(run_profiles[d])
@@ -72,33 +65,46 @@ for(d in 1:length(study_files)){
         storm <-
             mystorms %>%
             filter(Run == runs[r])
+        if(storm$HurricaneStrength == 1){
+            TH <- storm$RecoveryTime + 6 * 1440 + 8 * 1440
+        } else if (storm$HurricaneStrength == 2){
+            TH <- storm$RecoveryTime + 6 * 1440 + 8 * 1440
+        } else if (storm$HurricaneStrength == 2){
+            TH <- storm$RecoveryTime + 18 * 1440 + 8 * 1440
+        } else {
+            TH <- storm$RecoveryTime + 75 * 1440 + 8 * 1440
+        }
+        rising_need2yr <-
+            rising_need2yr %>%
+            mutate(Y2 = BL + (Y2 - BL) * (TH /5256000))
         sf_data_testneed2yr <- bld_need_all_q(DF = sf_data_run,
-                                           time_h = storm$RecoveryTime + 1440,
+                                           time_h = TH,
                                            stormlist = storm,
                                            need_inf = rising_need2yr)
-        sf_data_SQ <- bld_need_all_q(DF = sf_data_run,
-                                     time_h = storm$RecoveryTime + 1440,
-                                     stormlist = storm)
         storm_run_TN2yr <-
             sf_data_testneed2yr%>%
             group_by(Run)
+        sf_data_groups <- assignGroup_q(sf_data_testneed2yr)
+        sf_EIR <- calc_EIR(sf_data_groups, 0)
+        sf_EIR <- left_join(sf_EIR, storm_summary, by = "Run")
+        R_EIR <- bind_rows(R_EIR, sf_EIR)
+        ## Status quo need portion
+        sf_data_SQ <- sf_data_run %>%
+            mutate(Need = 1) %>%
+            filter(Time < storm$RecoveryTime + 8*1440)
         storm_run_SQ <-
             sf_data_SQ %>%
             group_by(Run)
-        sf_data_groups <- assignGroup_q(sf_data_testneed2yr)
         sf_data_groups_SQ <- assignGroup_q(sf_data_SQ)
-        sf_EIR <- calc_EIR(sf_data_groups, 0)
         sf_EIR_SQ <- calc_EIR(sf_data_groups_SQ, 0)
-        sf_EIR <- left_join(sf_EIR, storm_summary, by = "Run")
         sf_EIR_SQ<- left_join(sf_EIR_SQ, storm_summary, by = "Run")
         cat("\r", "Run ", runs[r], " complete")
-        R_EIR <- bind_rows(R_EIR, sf_EIR)
         R_EIR_SQ <- bind_rows(R_EIR_SQ, sf_EIR_SQ)
         both_EIR <- list(R_EIR, R_EIR_SQ)
     }
     DF_EIR_SS <- bind_rows(DF_EIR_SS, both_EIR[[1]])
-    DF_EIR_SS_SQ <- bind_rows(DF_EIR_SS, both_EIR[[2]])
-    all_results <- list(DF_EIR_SS, DF_EIR_SS_SQ)
+    DF_EIR_SS_SQ <- bind_rows(DF_EIR_SS_SQ, both_EIR[[2]])
+    all_results <- list(rising_need = DF_EIR_SS, status_quo = DF_EIR_SS_SQ)
 }
 
 write.csv(all_results[[1]], "studyData/singlestormResults/risingNeed.csv")

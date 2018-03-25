@@ -100,7 +100,8 @@ build_need_q<- function(DF,
                        # delay, # days
                        baseline,
                        year2val,
-                       time_horizon
+                       time_horizon,
+                       SQ = NA
                        #perturb_level,
                        ##recovertime
                        ){ # days
@@ -127,7 +128,11 @@ build_need_q<- function(DF,
             strength <- storm_run$HurricaneStrength[sr]
             ## Need to vary the recovery time and the perturbation level by
             ## strength of the storm
-            p_vec <- calc_strength_factors(system, strength)
+            if(is.na(SQ)){
+                p_vec <- calc_strength_factors(system, strength)
+            } else {
+                p_vec <- c(0,0,0)
+            }
             ## p_vec[1] is the time to recover (days)
             ## p_vec[2] is the perturbation level
             ## p_vec[3] is the delay time
@@ -351,7 +356,7 @@ bld_need_all <- function(DF, time_h, stormlist, need_inf){
     all_DF
 }
 
-bld_need_all_q<- function(DF, time_h, stormlist, need_inf){
+bld_need_all_q<- function(DF, time_h, stormlist, need_inf, SQ = NA){
     if(missing(need_inf)){
         need_inf <- tibble(Infrastructure = unique(DF$Infrastructure)) %>%
             mutate(BL = 1, Y2 = 1)
@@ -372,7 +377,8 @@ bld_need_all_q<- function(DF, time_h, stormlist, need_inf){
                               system = system_inf,
                               baseline = bl,
                               year2val = yr2val,
-                              time_horizon = time_h)
+                              time_horizon = time_h,
+                              SQ = SQ)
         all_DF <- bind_rows(all_DF, need_DF)
         ## setTxtProgressBar(pb, i)
     }
