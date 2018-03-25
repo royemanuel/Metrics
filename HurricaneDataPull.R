@@ -40,8 +40,20 @@ cleanHurrData <- function(tbl){
     colnames(tbl) <- column_names
     return(tbl)
 }
+cleanHurrDataSS <- function(tbl){
+    run <- tbl$Run[1]
+    tbl <- mutate(tbl, Run = Run[1])
+    column_names <- c("Run", "Time", "Electricity_Availability",
+                      "Communications_Function", "IT_Function",
+                      "Healthcare_Function", "Transportation_Function",
+                      "Emergency_Services_Functionality",
+                      "Critical_Manufacturing_Functionality",
+                      "Water_Functionality")
+    colnames(tbl) <- column_names
+    return(tbl)
+}
 
-ingestHurrData <- function(file_list){
+ingestHurrDataSS <- function(file_list){
     all_data <- tibble()
     ## pb <- txtProgressBar(min = 0, max = length(file_list), style = 3)
     for(f in 1:length(file_list)){
@@ -55,12 +67,13 @@ ingestHurrData <- function(file_list){
         for (s in 1:length(sheets)){
             ## print(s)
             if(dim(sheets[[s]])[1] > 0){
-                temp_data <- cleanHurrData(sheets[[s]])
-                temp_sheet <- rbind(temp_sheet, temp_data)
+                temp_data <- cleanHurrDataSS(sheets[[s]])
+                temp_sheet <- bind_rows(temp_sheet, temp_data)
             }            
         }
         ## setTxtProgressBar(pb, f)
-        all_data <- rbind(all_data, temp_sheet)
+        
+        all_data <- bind_rows(all_data, temp_sheet)
     }
     all_data
 }

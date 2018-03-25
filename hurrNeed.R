@@ -114,7 +114,6 @@ build_need_q<- function(DF,
     ## delay <- delay * 1440
     DF_run <-
         DF
-    ## print(paste("baseline is", baseline, "in run", run))
     need_vector <- seq(from = baseline,
                        to = year2val,
                        length.out = time_horizon)

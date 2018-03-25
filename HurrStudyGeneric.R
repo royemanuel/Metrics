@@ -9,36 +9,23 @@ source("stormDef.R")
 ## Set the data directory, the results directory, and the appendage
 ## to differentiate the files so you can open them in Excel if necessary
 
-data_directory <- "hurr10year/"
+data_directory <- "singlestorm//"
 results_directory <-  "10yrPRTH/"
 file_name <- "10yrPR"
 
     
-study_files <- c(paste0(data_directory,"hurrFullRec2yr/1MCoutput.xlsx",
-                 paste0(data_directory,"hurrFullRec2yr/2MCoutput.xlsx",
-                 paste0(data_directory,"hurrFullRec2yr/3MCoutput.xlsx",
-                 paste0(data_directory,"hurrFullRec2yr/4MCoutput.xlsx",
-                 paste0(data_directory,"hurrFullRec2yr/5MCoutput.xlsx",
-                 paste0(data_directory,"hurrFullRec2yr/6MCoutput.xlsx",
-                 paste0(data_directory,"hurrFullRec2yr/7MCoutput.xlsx",
-                 paste0(data_directory,"hurrFullRec2yr/8MCoutput.xlsx",
-                 paste0(data_directory,"hurrFullRec2yr/9MCoutput.xlsx",
-                 paste0(data_directory,"hurrFullRec2yr/10MCoutput.xlsx",
-                 paste0(data_directory,"hurrFullRec2yr/11MCoutput.xlsx",
-                 paste0(data_directory,"hurrFullRec2yr/12MCoutput.xlsx")
-run_profiles <- c("hurrFullRec2yr/1runProfile.xlsx",
-                  "hurrFullRec2yr/2runProfile.xlsx",
-                  "hurrFullRec2yr/3runProfile.xlsx",
-                  "hurrFullRec2yr/4runProfile.xlsx",
-                  "hurrFullRec2yr/5runProfile.xlsx",
-                  "hurrFullRec2yr/6runProfile.xlsx",
-                  "hurrFullRec2yr/7runProfile.xlsx",
-                  "hurrFullRec2yr/8runProfile.xlsx",
-                  "hurrFullRec2yr/9runProfile.xlsx",
-                  "hurrFullRec2yr/10runProfile.xlsx",
-                  "hurrFullRec2yr/11runProfile.xlsx",
-                  "hurrFullRec2yr/12runProfile.xlsx")
-                  
+study_files <- c(paste0(data_directory,"1singleMCoutput.xlsx"),
+                 paste0(data_directory,"2singleMCoutput.xlsx"),
+                 paste0(data_directory,"3singleMCoutput.xlsx"),
+                 paste0(data_directory,"4singleMCoutput.xlsx"),
+                 paste0(data_directory,"5singleMCoutput.xlsx"),
+                 paste0(data_directory,"6singleMCoutput.xlsx"))
+run_profiles <- c(paste0(data_directory,"1singlerunProfile.xlsx"),
+                  paste0(data_directory,"2singlerunProfile.xlsx"),
+                  paste0(data_directory,"3singlerunProfile.xlsx"),
+                  paste0(data_directory,"4singlerunProfile.xlsx"),
+                  paste0(data_directory,"5singlerunProfile.xlsx"),
+                  paste0(data_directory,"6singlerunProfile.xlsx"))                  
  
 
 
