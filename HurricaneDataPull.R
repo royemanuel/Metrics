@@ -63,7 +63,7 @@ ingestHurrDataSS <- function(file_list){
             set_names() %>%
             map(read_excel, path = file_list[f])
         temp_sheet <- tibble()
-        for (s in 1:20){#length(sheets)){
+        for (s in 1:length(sheets)){
             if(dim(sheets[[s]])[1] > 0){
                 temp_data <- cleanHurrDataSS(sheets[[s]])
                 temp_sheet <- bind_rows(temp_sheet, temp_data)
