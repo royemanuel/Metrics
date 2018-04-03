@@ -14,16 +14,16 @@ results_directory <-  "studyData/singlestormResults/"
 file_name <- "10yrPR"
 
     
-study_files <- c(paste0(data_directory,"1sMCoutput.xlsx"),
-                 paste0(data_directory,"2sMCoutput.xlsx"),
-                 paste0(data_directory,"3sMCoutput.xlsx"),
-                 paste0(data_directory,"4sMCoutput.xlsx"),
-                 paste0(data_directory,"5sMCoutput.xlsx"))
-run_profiles <- c(paste0(data_directory,"1srunProfile.xlsx"),
-                  paste0(data_directory,"2srunProfile.xlsx"),
-                  paste0(data_directory,"3srunProfile.xlsx"),
-                  paste0(data_directory,"4srunProfile.xlsx"),
-                  paste0(data_directory,"5srunProfile.xlsx"))
+study_files <- c(paste0(data_directory,"1sMCoutput.xlsx"))#,
+                 ## paste0(data_directory,"2sMCoutput.xlsx"),
+                 ## paste0(data_directory,"3sMCoutput.xlsx"),
+                 ## paste0(data_directory,"4sMCoutput.xlsx"),
+                 ## paste0(data_directory,"5sMCoutput.xlsx"))
+run_profiles <- c(paste0(data_directory,"1srunProfile.xlsx"))#,
+                  ## paste0(data_directory,"2srunProfile.xlsx"),
+                  ## paste0(data_directory,"3srunProfile.xlsx"),
+                  ## paste0(data_directory,"4srunProfile.xlsx"),
+                  ## paste0(data_directory,"5srunProfile.xlsx"))
  
 
 
@@ -63,14 +63,14 @@ for(d in 1:length(study_files)){
         mutate(Performance = round(Performance / 100, 2))  %>%
         group_by(Run, Infrastructure)
     runs <- unique(sf_data_clean$Run)
-    number_runs <- length(runs)
+    number_runs <- 1#length(runs)
     for(r in 1:number_runs){
         sf_data_run <-
             sf_data_clean %>%
-            filter(Run == runs[r])
+            filter(Run == 20)# runs[r])
         storm <-
             mystorms %>%
-            filter(Run == runs[r])
+            filter(Run == 20)#runs[r])
         if(storm$HurricaneStrength == 1){
             TH <- storm$RecoveryTime + 6 * 1440 + 8 * 1440
         } else if (storm$HurricaneStrength == 2){
@@ -116,6 +116,13 @@ for(d in 1:length(study_files)){
 write.csv(all_results[[1]], "studyData/singlestormResults/risingNeed.csv")
 write.csv(all_results[[2]], "studyData/singlestormResults/statusQuo.csv")
 
+sq_data <- all_results[[2]] %>%
+    mutate(Need_Profile = "Status Quo")
+rn_data <- all_results[[1]] %>%
+    mutate(Need_Profile = "Stakeholder Input")
+all_results_tbl <- bind_rows(sq_data, rn_data)
+
+write.csv(all_results_tbl, "studyData/singlestormResults/allData.csv")
 
 ######################################################################
 ## build the extra runs for each time horizon with the rising need
