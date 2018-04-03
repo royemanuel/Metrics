@@ -15,9 +15,15 @@ file_name <- "10yrPR"
 
     
 study_files <- c(paste0(data_directory,"1sMCoutput.xlsx"),
-                 paste0(data_directory,"2sMCoutput.xlsx"))
+                 paste0(data_directory,"2sMCoutput.xlsx"),
+                 paste0(data_directory,"3sMCoutput.xlsx"),
+                 paste0(data_directory,"4sMCoutput.xlsx"),
+                 paste0(data_directory,"5sMCoutput.xlsx"))
 run_profiles <- c(paste0(data_directory,"1srunProfile.xlsx"),
-                  paste0(data_directory,"2srunProfile.xlsx"))
+                  paste0(data_directory,"2srunProfile.xlsx"),
+                  paste0(data_directory,"3srunProfile.xlsx"),
+                  paste0(data_directory,"4srunProfile.xlsx"),
+                  paste0(data_directory,"5srunProfile.xlsx"))
  
 
 
@@ -82,7 +88,7 @@ for(d in 1:length(study_files)){
                                            stormlist = storm,
                                            need_inf = rising_need2yr)
         storm_run_TN2yr <-
-            sf_data_testneed2yr%>%
+            sf_data_testneed2yr %>%
             group_by(Run)
         sf_data_groups <- assignGroup_q(sf_data_testneed2yr)
         sf_EIR <- calc_EIR(sf_data_groups, 0)
