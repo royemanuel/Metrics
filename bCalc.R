@@ -20,3 +20,25 @@ hurricane <- data.frame(Cat = hurrCat,
                         closeEnough = .99)
 
 hurricane <- bCalculator(hurricane)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
