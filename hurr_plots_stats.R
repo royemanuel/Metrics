@@ -99,8 +99,12 @@ EA2 <- ggplot(filter(sf_data_testneed2yr,
 
 table_summary <- function(tbl){
     tbl <-
-        mutate(TimeHorizon = as.factor(TimeHorizon))
+        tbl %>%
+        mutate(TimeHorizon = as.factor(TimeHorizon)) %>%
         group_by(Infrastructure, TimeHorizon) %>%
-            summarise(avg = mean(ExtendedIntegralResilience),
-                      min = min(ExtendedIntegralResilience),
-                      max = max(ExtendedIntegralResilience))
+        summarise(avg = mean(ExtendedIntegralResilience),
+                  min = min(ExtendedIntegralResilience),
+                  max = max(ExtendedIntegralResilience),
+                  nostorm = sum(is.na(Number_Storms)))
+    
+
