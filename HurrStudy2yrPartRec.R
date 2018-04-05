@@ -49,7 +49,7 @@ rising_need2yr <- tibble(Infrastructure = c("Electricity_Availability",
                                        "Critical_Manufacturing_Functionality",
                                        "Water_Functionality"),
                     BL = c(1.0, 1.0, .95, 0.9, 1.05, .9, 1.0, 1.0),
-                    Y2 = c(1.0, 1.04, .95, 0.96, 1.09, .94, 1.06, 1.2))
+                    Y2 = c(1.0, 1.04, .95, 0.96, 1.08, .94, 1.06, 1.02))
 
 
 DF_EIR_PR <- tibble()

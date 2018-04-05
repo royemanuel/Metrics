@@ -1,5 +1,6 @@
 ## Build the tibble for Maria and Puerto Rico.
-
+library("tidyverse")
+library("lubridate")
 library("readxl")
 source("bCalc.R")
 
@@ -14,7 +15,7 @@ mariaStats <- bCalculator(mariaStats)
 
 maria <-
     maria %>%
-    mutate(Model = 0.958 - (0.958 - 0)*exp(-mariaStats$b * (as.double(Date - Date[11])/(60*1440))))
+    mutate(Model = 0.9 - (0.9 - 0)*exp(-mariaStats$b * (as.double(Date - Date[11])/(60*1440))))
 
 
 maria <-
@@ -25,7 +26,7 @@ maria <-
 
 
 maria_plot <-
-    ggplot(data = filter(maria, Recovery_Measure != "Model"),
+    ggplot(data = maria, #filter(maria, Recovery_Measure != "Model"),
                          aes(x = Date,
                              y = Recovery_Quantity,
                              group = Recovery_Measure,
@@ -58,6 +59,28 @@ rising_need2yr <- tibble(Infrastructure = c("Electricity_Availability",
                     BL = c(1.0, 1.0, .95, 0.9, 1.05, .9, 1.0, 1.0),
                     Y2 = c(1.0, 1.04, .95, 0.96, 1.09, .94, 1.06, 1.2))
 
+######################################################################
+## use the Maria peak load data directly
+maria <-
+    maria %>%
+    mutate(lagDate = lag(Date, 1))
+maria$lagDate[1] <- maria$Date[1]
+maria_peak_power <-
+    maria %>%
+    mutate(Time = (Date[1] %--% Date)/ dminutes(1)) %>%
+    mutate(Infrastructure = Recovery_Measure,
+           Performance = Recovery_Quantity,
+           Need = 1,
+           Run = 1,
+           Grp = 1) %>%
+    select(Time, Infrastructure, Performance, Need, Grp, Run)
+
+maria_resilience <- calc_EIR(maria_peak_power, 0)
+
+
+
+######################################################################
+## Model of a single storm with Maria-like values
 DF_EIR_SS <- tibble()
 DF_EIR_SS_SQ <- tibble()
 for(d in 1:length(study_files)){

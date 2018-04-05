@@ -168,7 +168,6 @@ build_need_q<- function(DF,
                 ## print("yup")
             }
             if(length(demand_vec)>0){
-                print(start_replace)
                 need_vector[start_replace:end_replace] <- demand_vec
                 }
         }
