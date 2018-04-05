@@ -106,5 +106,35 @@ table_summary <- function(tbl){
                   min = min(ExtendedIntegralResilience),
                   max = max(ExtendedIntegralResilience),
                   nostorm = sum(is.na(Number_Storms)))
-    
+}
+
+fix_inf_table <- function(inf_vec){
+    inf_vec <-
+        inf_vec %>%
+        str_remove("(.)Function") %>%
+        str_remove("ality") %>%
+        str_remove(" Availability") %>%
+        str_replace("_", " ") %>%
+        str_replace("IT", "Information Technology")
+}
+
+## want to edit the names for something more useful
+
+
+summary_stats<- function(DF){
+    DF <-
+        DF %>%
+        ungroup() %>%
+        mutate(Infrastructure = fix_inf_table(Infrastructure)) %>%
+        group_by(Infrastructure, TimeHorizon) %>%
+                                        #select(-X) %>%
+        summarise(Max    = round(max(ExtendedIntegralResilience), 3),
+                  Min    = round(min(ExtendedIntegralResilience), 3),
+                  btm    = round(quantile(ExtendedIntegralResilience, probs = 0.25), 3),
+                  median = round(median(ExtendedIntegralResilience),3),
+                  top    = round(quantile(ExtendedIntegralResilience, probs = 0.75),3),
+                  stdev  = round(sd(ExtendedIntegralResilience), 3),
+                  Avg    = round(mean(ExtendedIntegralResilience), 3)) %>%
+        mutate(Range = Max - Min)
+}
 

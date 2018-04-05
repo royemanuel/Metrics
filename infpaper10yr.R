@@ -27,6 +27,42 @@ st10yr2 <- summary_stats(all_10_year) %>%
     select(Infrastructure, TimeHorizon, Avg, Min, Max) %>%
     arrange(TimeHorizon)
 
+cln_all_10yr <-
+    all_10_year %>%
+    mutate(Infrastructure = fix_infrastructure(Infrastructure),
+           Resilience = ExtendedIntegralResilience,
+           Strongest_Storm = ifelse(is.na(Strongest_Storm), 0, Strongest_Storm), 
+           Number_Storms = ifelse(is.na(Number_Storms), 0, Number_Storms)) %>%
+    select(-ExtendedIntegralResilience) %>%
+    group_by(TimeHorizon, Infrastructure)
+
+plt_10yr_by_NS <- ggplot(cln_all_10yr,
+                         aes(x = Infrastructure,
+                             y = Resilience,
+                             group = TimeHorizon,
+                             fill = TimeHorizon)) +
+    geom_boxplot(position = position_dodge()) +
+    facet_wrap(~ Number_Storms)
+
+plt_10yr_by_SS <- ggplot(cln_all_10yr,
+                         aes(x = Infrastructure,
+                             y = Resilience,
+                             group = Infrastructure)) +
+    geom_boxplot(position = position_dodge()) +
+    facet_grid(TimeHorizon ~ Strongest_Storm)
+
+num_storm_summ <-
+    cln_all_10yr %>%
+    group_by(TimeHorizon) %>%
+    filter(Number_Storms == 0,
+           Infrastructure == "Water") %>%
+    summarise(nostorm = n())
+
+storm_max <-
+    cln_all_10yr %>%
+    group_by(TimeHorizon) %>%
+    filter(Infrastructure == "Water") %>%
+    summarize(maxNum = max(Number_Storms))
 
 print.xtable(xtable(st10yr2))
 ## The printout of the above straighted out for easy rectangle mode

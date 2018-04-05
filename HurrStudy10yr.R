@@ -125,7 +125,7 @@ for(d in 1:length(study_files)){
         sf_EIR1yr <- calc_EIR(filter(sf_data_groups10yr, Time < 525600), 0)
         sf_EIR1yr <- left_join(sf_EIR1yr, storm_summary12mo, by = "Run")
         sf_EIR1yr <- mutate(sf_EIR1yr, TimeHorizon = 12)
-        sf_EIR2yr <- calc_EIR(sf_data_groups10yr, 0)
+        sf_EIR2yr <- calc_EIR(filter(sf_data_groups10yr, Time < 525600 * 2), 0)
         sf_EIR2yr <- left_join(sf_EIR2yr, storm_summary24mo, by = "Run")
         sf_EIR2yr <- mutate(sf_EIR2yr, TimeHorizon = 24)
         sf_EIR5yr <- calc_EIR(filter(sf_data_groups10yr, Time < 525600 * 5), 0)
@@ -147,11 +147,20 @@ for(d in 1:length(study_files)){
 
 ## Need to add 18 runs without a storm in 10 years.
 sf_nostorm_data <-
-    sf_data_need10yr %>%
+    sf_data_clean %>%
+    ungroup() %>%
+    filter(Run == 282) %>%
     mutate(Performance = 1,
            Run = 283)
-sf_nostorm_groups <- assignGroup_q(sf_nostorm_data)
+
+sf_nostorm_need10yr <- bld_need_all_q(DF = sf_nostorm_data,
+                                   time_h = 525600 * 10,
+                                   stormlist = filter(storm, b > 100),
+                                   need_inf = rising_need10yr)
+
+sf_nostorm_groups <- assignGroup_q(sf_nostorm_need10yr)
 ns_EIR <- tibble()
+
 for(r in 1:18){
     sf_ns6mo <- calc_EIR(filter(sf_nostorm_groups, Time < 525600 * .5), 0)
     sf_ns6mo <- left_join(sf_ns6mo, storm_summary6mo, by = "Run")
@@ -159,7 +168,7 @@ for(r in 1:18){
     sf_ns1yr <- calc_EIR(filter(sf_nostorm_groups, Time < 525600), 0)
     sf_ns1yr <- left_join(sf_ns1yr, storm_summary12mo, by = "Run")
     sf_ns1yr <- mutate(sf_ns1yr, TimeHorizon = 12)
-    sf_ns2yr <- calc_EIR(sf_nostorm_groups, 0)
+    sf_ns2yr <- calc_EIR(filter(sf_nostorm_groups, Time < 525600 * 2), 0)
     sf_ns2yr <- left_join(sf_ns2yr, storm_summary24mo, by = "Run")
     sf_ns2yr <- mutate(sf_ns2yr, TimeHorizon = 24)
     sf_ns5yr <- calc_EIR(filter(sf_nostorm_groups, Time < 525600 * 5), 0)
@@ -179,6 +188,7 @@ for(r in 1:18){
 }
 
 DF_EIR_PR <- bind_rows(DF_EIR_PR, ns_EIR)
+
 
 
 write.csv(DF_EIR_PR, "studyData/10yrData/MultipleTimeHorizons10yrMax.csv")
