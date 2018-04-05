@@ -134,7 +134,6 @@ for(d in 1:length(study_files)){
         sf_EIR10yr <- calc_EIR(sf_data_groups10yr, 0)
         sf_EIR10yr <- left_join(sf_EIR10yr, storm_summary120mo, by = "Run")
         sf_EIR10yr <- mutate(sf_EIR10yr, TimeHorizon = 120)
-
         cat("\r", "Run ", runs[r], " complete")
         R_EIR <- bind_rows(R_EIR,
                            sf_EIR6mo,
@@ -145,6 +144,42 @@ for(d in 1:length(study_files)){
     }
     DF_EIR_PR <- bind_rows(DF_EIR_PR, R_EIR)
 }
+
+## Need to add 18 runs without a storm in 10 years.
+sf_nostorm_data <-
+    sf_data_need10yr %>%
+    mutate(Performance = 1,
+           Run = 283)
+sf_nostorm_groups <- assignGroup_q(sf_nostorm_data)
+ns_EIR <- tibble()
+for(r in 1:18){
+    sf_ns6mo <- calc_EIR(filter(sf_nostorm_groups, Time < 525600 * .5), 0)
+    sf_ns6mo <- left_join(sf_ns6mo, storm_summary6mo, by = "Run")
+    sf_ns6mo <- mutate(sf_ns6mo, TimeHorizon = 6)
+    sf_ns1yr <- calc_EIR(filter(sf_nostorm_groups, Time < 525600), 0)
+    sf_ns1yr <- left_join(sf_ns1yr, storm_summary12mo, by = "Run")
+    sf_ns1yr <- mutate(sf_ns1yr, TimeHorizon = 12)
+    sf_ns2yr <- calc_EIR(sf_nostorm_groups, 0)
+    sf_ns2yr <- left_join(sf_ns2yr, storm_summary24mo, by = "Run")
+    sf_ns2yr <- mutate(sf_ns2yr, TimeHorizon = 24)
+    sf_ns5yr <- calc_EIR(filter(sf_nostorm_groups, Time < 525600 * 5), 0)
+    sf_ns5yr <- left_join(sf_ns5yr, storm_summary60mo, by = "Run")
+    sf_ns5yr <- mutate(sf_ns5yr, TimeHorizon = 60)
+    sf_ns10yr <- calc_EIR(sf_nostorm_groups, 0)
+    sf_ns10yr <- left_join(sf_ns10yr, storm_summary120mo, by = "Run")
+    sf_ns10yr <- mutate(sf_ns10yr, TimeHorizon = 120)
+    sf_ns <- bind_rows(sf_ns6mo,
+                        sf_ns1yr,
+                        sf_ns2yr,
+                        sf_ns5yr,
+                       sf_ns10yr) %>%
+        ungroup() %>%
+        mutate(Run = 282 + r)
+    ns_EIR <- bind_rows(ns_EIR, sf_ns)
+}
+
+DF_EIR_PR <- bind_rows(DF_EIR_PR, ns_EIR)
+
 
 write.csv(DF_EIR_PR, "studyData/10yrData/MultipleTimeHorizons10yrMax.csv")
 

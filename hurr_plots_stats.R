@@ -96,3 +96,11 @@ EA2 <- ggplot(filter(sf_data_testneed2yr,
                      Infrastructure == "Healthcare_Function" &
                      Run == 1000),
               aes(Time, Performance)) + geom_line() + geom_line(aes(Time, Need))
+
+table_summary <- function(tbl){
+    tbl <-
+        mutate(TimeHorizon = as.factor(TimeHorizon))
+        group_by(Infrastructure, TimeHorizon) %>%
+            summarise(avg = mean(ExtendedIntegralResilience),
+                      min = min(ExtendedIntegralResilience),
+                      max = max(ExtendedIntegralResilience))
