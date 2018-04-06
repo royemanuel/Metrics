@@ -137,9 +137,13 @@ build_need_q<- function(DF,
             ## p_vec[2] is the perturbation level
             ## p_vec[3] is the delay time
             recovertime <- p_vec[1] * 1440
-            perturb_level <- p_vec[2] *
-                filter(DF_run,
-                       Time == round(time / 240) * 240)$Performance
+            ## Old perturb level. Stored for reversion uses performance,
+            ## but it should use demand
+            ## perturb_level <- p_vec[2] *
+            ##     filter(DF_run,
+            ##            Time == round(time / 240) * 240)$Performance
+            ## Switching in the need_vector value instead of performance
+            perturb_level <- p_vec[2] * need_vector[time]
             delay <- p_vec[3] * 1440
                                     # print(sr)
             abs_rec_time <- time + (delay + recovertime)

@@ -17,10 +17,6 @@ format_plot <- function(plt){
 
 
 plot_EIR <- function(DF){
-    DF <-
-        DF %>%
-        mutate(Resilience = ExtendedIntegralResilience) %>%
-        select(-ExtendedIntegralResilience)
     p <- ggplot(DF,
                 aes(Infrastructure, Resilience)) +
         geom_boxplot() +
@@ -68,6 +64,7 @@ fix_infrastructure <- function(listinf){
     vec_inf <- listinf %>%
         str_remove("(.)Function") %>%
         str_remove("ality") %>%
+        str_replace("ity_", "ity")%>%
         str_remove("Availability") %>%
         str_replace("_", "\n") %>%
         str_replace("IT", "Information\nTechnology")

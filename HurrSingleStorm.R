@@ -71,15 +71,7 @@ for(d in 1:length(study_files)){
         storm <-
             mystorms %>%
             filter(Run == runs[r])
-        if(storm$HurricaneStrength == 1){
-            TH <- storm$RecoveryTime + 6 * 1440 + 8 * 1440
-        } else if (storm$HurricaneStrength == 2){
-            TH <- storm$RecoveryTime + 6 * 1440 + 8 * 1440
-        } else if (storm$HurricaneStrength == 2){
-            TH <- storm$RecoveryTime + 18 * 1440 + 8 * 1440
-        } else {
-            TH <- storm$RecoveryTime + 75 * 1440 + 8 * 1440
-        }
+        TH <- storm$RecoveryTime + 6 * 1440 + 8 * 1440
         rising_need2yr <-
             rising_need2yr %>%
             mutate(Y2 = BL + (Y2 - BL) * (TH /5256000))
@@ -95,26 +87,14 @@ for(d in 1:length(study_files)){
         sf_EIR <- left_join(sf_EIR, storm_summary, by = "Run")
         R_EIR <- bind_rows(R_EIR, sf_EIR)
         ## Status quo need portion
-        sf_data_SQ <- sf_data_run %>%
-            mutate(Need = 1) %>%
-            filter(Time < storm$RecoveryTime + 8*1440)
-        storm_run_SQ <-
-            sf_data_SQ %>%
-            group_by(Run)
-        sf_data_groups_SQ <- assignGroup_q(sf_data_SQ)
-        sf_EIR_SQ <- calc_EIR(sf_data_groups_SQ, 0)
-        sf_EIR_SQ<- left_join(sf_EIR_SQ, storm_summary, by = "Run")
         cat("\r", "Run ", runs[r], " complete")
-        R_EIR_SQ <- bind_rows(R_EIR_SQ, sf_EIR_SQ)
-        both_EIR <- list(R_EIR, R_EIR_SQ)
     }
-    DF_EIR_SS <- bind_rows(DF_EIR_SS, both_EIR[[1]])
-    DF_EIR_SS_SQ <- bind_rows(DF_EIR_SS_SQ, both_EIR[[2]])
-    all_results <- list(rising_need = DF_EIR_SS, status_quo = DF_EIR_SS_SQ)
+    DF_EIR_SS <- bind_rows(DF_EIR_SS, R_EIR)
 }
 
-write.csv(all_results[[1]], "studyData/singlestormResults/risingNeed.csv")
-write.csv(all_results[[2]], "studyData/singlestormResults/statusQuo.csv")
+
+
+write.csv(DF_EIR_SS, "studyData/singlestormResults/risingNeedtimeHorIsRecTime.csv")
 
 
 ######################################################################
