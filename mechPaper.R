@@ -173,7 +173,7 @@ resilienceVersusTimeToFail <- function(df, time){
                               group = variable)) +
                                   geom_line(aes(linetype = variable)) +
                                       facet_grid(ResType ~ .)
-    plt <- plt + labs(x = "Fail Time") +
+    plt <- plt + labs(x = "Failure Time") +
     ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 12, base_family = "serif") +
             theme(legend.position = "top",
@@ -269,7 +269,8 @@ resilienceVersusRecoveryLevel <- function(df, time){
     ## scale_linetype_discrete(name = "Metrics") +
         theme_bw(base_size = 12, base_family = "serif") +
             theme(legend.position = "top",
-                  legend.title = element_blank()) + ylim(0, 1.2)
+                  legend.title = element_blank()) + ylim(0, 1.2) +
+        labs(x = "Recovery Level")
 }
 ## Plot resilience as the recovery time changes
 resilienceVersusRecoveryTime <- function(df, time){
@@ -754,7 +755,8 @@ needPlot <- ggplot(allNeed, aes(Need, Resilience, group = variable)) +
             theme_bw(base_size = 11, base_family = "serif") +
                 theme(legend.margin=margin(t = 0, unit = 'cm'),
                       legend.position = "top",
-                      legend.title = element_blank()) + ylim(0, 1.2)
+                      legend.title = element_blank()) + ylim(0, 1.2) +
+    labs(x = "Endogenous Preference")
 
 ggsave(plot = needPlot,
        filename = paste0("Need",
@@ -818,7 +820,9 @@ sigmaPlot <- ggplot(allSigma, aes(Sigma, Resilience, group = variable)) +
             theme_bw(base_size = 11, base_family = "serif") +
                 theme(legend.margin=margin(t = 0, unit = 'cm'),
                       legend.position = "top",
-                      legend.title = element_blank()) + ylim(0, 1.2)
+                      legend.title = element_blank()) + ylim(0, 1.2) +
+    labs(x = "Intertemporal Substitutability") +
+    scale_x_continuous(expand = c(0.1, 0))
 
 ggsave(plot = sigmaPlot,
        filename = paste0("Sigma",
