@@ -147,6 +147,7 @@ build_need_q<- function(DF,
             delay <- p_vec[3] * 1440
                                     # print(sr)
             abs_rec_time <- time + (delay + recovertime)
+            print(abs_rec_time)
             start_replace <- time + delay
             ## cat("\r", system, sr, start_replace)
             ## Need to handle the case when demand does not recover
@@ -156,7 +157,8 @@ build_need_q<- function(DF,
             } else if (abs_rec_time > time_horizon){
                 end_replace <- time_horizon
                 rec_level_future <- (year2val - baseline) / time_horizon *
-                    (time + delay + recovertime)
+                    (time + delay + recovertime) + baseline
+                print(rec_level_future)
                 demand_vec <- seq(from = perturb_level,
                                   to = rec_level_future,
                                   length.out = recovertime )

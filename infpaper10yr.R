@@ -16,8 +16,7 @@ all_10_year <- read_csv(paste0(wd, "MultipleTimeHorizons10yrMax.csv")) %>%
            Strongest_Storm = as.factor(Strongest_Storm),
            Number_Storms = as.factor(Number_Storms))
 
-plot_10yr_res <- plot_EIR(all_10_year) +
-    facet_wrap(~ TimeHorizon)
+
 
 stat_10yr <- table_summary(all_10_year) %>%
     ungroup %>%
@@ -35,6 +34,10 @@ cln_all_10yr <-
            Number_Storms = ifelse(is.na(Number_Storms), 0, Number_Storms)) %>%
     select(-ExtendedIntegralResilience) %>%
     group_by(TimeHorizon, Infrastructure)
+
+plot_10yr_res <- plot_EIR(cln_all_10yr) +
+    facet_wrap(~ TimeHorizon, ncol = 5) +
+    theme(axis.text.x = element_text(angle = -30, vjust = 1, hjust = 0))
 
 plt_10yr_by_NS <- ggplot(cln_all_10yr,
                          aes(x = Infrastructure,
@@ -62,7 +65,44 @@ storm_max <-
     cln_all_10yr %>%
     group_by(TimeHorizon) %>%
     filter(Infrastructure == "Water") %>%
-    summarize(maxNum = max(Number_Storms))
+    summarize(maxNum = max(Number_Storms),
+              Average_Number = mean(Number_Storms),
+              Average_Strength = mean(Strongest_Storm))
+
+timehorizon_storm_date <- example_storm <-
+    cln_all_10yr  %>%
+    filter(TimeHorizon == 120,
+           Number_Storms == 4,
+           Infrastructure == "Healthcare",
+           Strongest_Storm == 4)
+
+
+
+## This found the storm I wanted. I chose run 204
+## Sourcing the following file builds the perf/pref profile
+
+source("example_storm.R")
+
+run204 <-
+    sf_data_need10yr %>%
+    mutate(Infrastructure = fix_infrastructure(Infrastructure),
+           Time = Time / (1440 * 365)) %>%
+    filter(Infrastructure == "Healthcare" |
+           Infrastructure == "Electricity") %>%
+    gather(Profile, Value, -Run, -Time, -Infrastructure)
+
+ex_plot <- ggplot(run204, aes(Time, Value,
+                              group = Profile,
+                              linetype = Profile)) +
+    geom_line() +
+    facet_wrap(~ Infrastructure, ncol = 1) +
+    geom_vline(xintercept = 0.5, alpha = 0.5) +
+    geom_vline(xintercept = 1, alpha = 0.5) +
+    geom_vline(xintercept = 2, alpha = 0.5) +
+    geom_vline(xintercept = 5, alpha = 0.5) +
+    geom_vline(xintercept = 10, alpha = 0.5) +
+    theme_bw()
+
 
 print.xtable(xtable(st10yr2))
 ## The printout of the above straighted out for easy rectangle mode
