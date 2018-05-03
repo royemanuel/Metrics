@@ -45,7 +45,9 @@ single_storm_by_strength <-
                                         vjust = 1,
                                      hjust = 0)) +
     geom_boxplot(position="dodge") +
-    scale_colour_manual(c("grey90", "grey70", "grey50", "grey30"))
+    scale_colour_manual(c("grey90", "grey70", "grey50", "grey30")) +
+    labs(color = "Storm Category")
+    
 
 single_storm_by_inf <- ggplot(all_ss_data) +
     geom_boxplot(mapping = aes(Infrastructure, ExtendedIntegralResilience)) +

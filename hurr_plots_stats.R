@@ -83,16 +83,16 @@ abbrev_inf <- function(listinf){
 }
 
 ## Just an example plot to figure out
-EA <- ggplot(filter(sf_data_SQ,
-                    Infrastructure == "Healthcare_Function" &
-                    Run == 1000),
-             aes(Time, Performance)) + geom_line() + geom_line(aes(Time, Need))
-
-
-EA2 <- ggplot(filter(sf_data_testneed2yr,
-                     Infrastructure == "Healthcare_Function" &
-                     Run == 1000),
-              aes(Time, Performance)) + geom_line() + geom_line(aes(Time, Need))
+## EA <- ggplot(filter(sf_data_SQ,
+##                     Infrastructure == "Healthcare_Function" &
+##                     Run == 1000),
+##              aes(Time, Performance)) + geom_line() + geom_line(aes(Time, Need))
+## 
+## 
+## EA2 <- ggplot(filter(sf_data_testneed2yr,
+##                      Infrastructure == "Healthcare_Function" &
+##                      Run == 1000),
+##               aes(Time, Performance)) + geom_line() + geom_line(aes(Time, Need))
 
 table_summary <- function(tbl){
     tbl <-

@@ -59,7 +59,7 @@ maria_plot <-
     scale_x_date(labels = date_format("%b %Y"))+
     theme_bw() +
     theme(legend.position = c(0.75, .25)) +
-    labs(y = "Percentage", linetype = "Recovery Measure") 
+    labs(y = "Percentage", linetype = "Recovery Measure")
 
 ## You need to clean this up, but this will do for now.
 

@@ -77,7 +77,7 @@ resTriangle <- function(tt,
 ######################################################################
 ## I will need to add a function that pulls the time endpoints and
 ## the interval from the model outputs automatically. This should be
-## somewhat simple. 
+## somewhat simple.
 ######################################################################
 
 ## a quick build for a need column that has a constant value
@@ -223,13 +223,13 @@ totalQR <- function(tt, TH=NULL){
 ## to take VERY long for a large model. What we need is a version That
 ## calculates it at the time horizon. This is what the TQRTimeHorizon
 ## calculates
-###################################################################### 
+######################################################################
 TQRTimeHorizon <- function(tt, time){
-    
+
 }
 
-###################################################################### 
-## Building the ESDF model                                          ## 
+######################################################################
+## Building the ESDF model                                          ##
 ######################################################################
 
 ## Speedfactor is a function that needs the time of the disturbance
@@ -482,8 +482,8 @@ intRes <- function(tt, sigma){
 ##     tt$ETQR[1] <- tt$ETQR[2]
 ##     return(tt)
 ## }
-## 
-## 
+##
+##
 ## }
 
 
