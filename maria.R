@@ -2,6 +2,9 @@
 library("tidyverse")
 library("lubridate")
 library("readxl")
+source("metrics.R")
+source("HurricaneDataPull.R")
+source("hurrNeed.R")
 source("bCalc.R")
 
 ######################################################################
@@ -9,31 +12,55 @@ source("bCalc.R")
 ######################################################################
 maria <- read_excel("Maria.xlsx")
 
-mariaStats <- tibble(Cat = 4, T.rec = 196.3076, hRecLevel = .958, hFLevel = 0, closeEnough = .99)
+mariaStats <- tibble(Cat = 4,
+                     T.rec = 196.3076,
+                     hRecLevel = .958,
+                     hFLevel = 0,
+                     closeEnough = .99)
 
 mariaStats <- bCalculator(mariaStats)
 
 maria <-
     maria %>%
-    mutate(Model = 0.9 - (0.9 - 0)*exp(-mariaStats$b * (as.double(Date - Date[11])/(60*1440))))
-
+    mutate(Model = 0.9 - (0.9 - 0) *
+               exp(-mariaStats$b *
+                   (as.double(Date - Date[11])/(60*1440))))
 
 maria <-
     maria %>%
     gather(Recovery_Measure, Recovery_Quantity, -Date, -CustwithPower) %>%
-    mutate(Recovery_Quantity = ifelse(Recovery_Quantity < 0, 0, Recovery_Quantity))
+    mutate(Recovery_Quantity = ifelse(Recovery_Quantity < 0,
+                                      0,
+                                      Recovery_Quantity))
+
+maria_fix_datalabels <- function(src_vec){
+    src_vec <-
+        src_vec %>%
+        str_replace("Cust_Percentage",
+                    "Percentage of Customers with Electricity") %>%
+        str_replace("Peak_Load", "Percentage of Peak Load Restored") %>%
+        str_replace("Model", "System Dynamics Model Results")
+}
 
 
+maria2 <-
+    maria %>%
+    mutate(Recovery_Measure=maria_fix_datalabels(maria$Recovery_Measure),
+           Recovery_Quantity = Recovery_Quantity * 100,
+           Date = as.Date(Date))
 
 maria_plot <-
-    ggplot(data = maria, #filter(maria, Recovery_Measure != "Model"),
+    ggplot(data = maria2, #filter(maria, Recovery_Measure != "Model"),
                          aes(x = Date,
                              y = Recovery_Quantity,
                              group = Recovery_Measure,
                              linetype = Recovery_Measure)) +
     geom_line() +
+    scale_x_date(labels = date_format("%b %Y"))+
     theme_bw() +
-    theme(legend.position = c(0.75, .25))
+    theme(legend.position = c(0.75, .25)) +
+    labs(y = "Percentage", linetype = "Recovery Measure") 
+
 ## You need to clean this up, but this will do for now.
 
 ##ggsave()
