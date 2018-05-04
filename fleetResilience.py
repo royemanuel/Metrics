@@ -383,6 +383,16 @@ class Scheduler(object):
                                          self.nextStudNo + numClass + 1)})
         self.nextStudNo = max(self.studList.keys())
 
+    # Trying to build a calendar so the weekends aren't flown, 
+    # def calSked(self):
+    #     day = 0
+    #     while True:
+    #         day += 1
+    #         if (day % 7 < 2):
+    #             day += 1
+    #             break
+            
+
 # Goals for this. Pick out a student. Assign an instructor from top of
 # the instructor list. Pick an aircraft at random from the aircraft
 # list. The aircraft list should contain aircraft where status is True

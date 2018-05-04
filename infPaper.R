@@ -20,10 +20,10 @@ source("HurricaneDataPull.R")
 ## studies'
 wd <- "studyData/2yrData/"
 ## need_data <- as.tibble(read.csv(paste0(wd, ".csv")))
-res2yrRise  <- as.tibble(read.csv(paste0("studyData/2yrData/2yr_risingNeedproportionaltotime_resilience.csv")))
-res2yrSQ    <- as.tibble(read.csv(paste0("studyData/2yrData/2yr_levelNeedproportionaltotime_resilience.csv")))
-res10yrRise <- as.tibble(read.csv("studyData/10yrData/10yr_risingNeed_resilience.csv"))
-res10yrSQ   <- as.tibble(read.csv("studyData/10yrData/10yr_statusquoNeed_resilience.csv"))
+res2yrRise  <- read_csv(paste0("studyData/2yrData/2yr_risingNeedproportionaltotime_resilience.csv"))
+res2yrSQ    <- read_csv(paste0("studyData/2yrData/2yr_levelNeedproportionaltotime_resilience.csv"))
+res10yrRise <- read_csv("studyData/10yrData/10yr_risingNeed_resilience.csv")
+res10yrSQ   <- read_csv("studyData/10yrData/10yr_statusquoNeed_resilience.csv")
                          
 ## Infrastructure plots of Resilience
 res2yrRise$Infrastructure  <- abbrev_inf(fix_infrastructure(res2yrRise$Infrastructure))
@@ -47,10 +47,10 @@ resPlot_byInf_res10yrSQ   <- plot_EIR(res10yrSQ  ) +
     labs(title = "10 Year Status Quo") +
     theme(plot.title = element_text(face = "bold", size = 12, hjust = .5))
 
-ggsave(filename = "resPlot_byInf_res2yrRise.png", plot = resPlot_byInf_res2yrRise , width = 3, height = 2, units = "in")
-ggsave(filename = "resPlot_byInf_res2yrSQ.png", plot = resPlot_byInf_res2yrSQ   , width = 3, height = 2, units = "in")
-ggsave(filename = "resPlot_byInf_res10yrRise.png", plot = resPlot_byInf_res10yrRise, width = 3, height = 2, units = "in")
-ggsave(filename = "resPlot_byInf_res10yrSQ.png", plot = resPlot_byInf_res10yrSQ  , width = 3, height = 2, units = "in")
+ggsave(filename = "resPlotB_byInf_res2yrRise.png", plot = resPlot_byInf_res2yrRise , width = 3, height = 2, units = "in")
+ggsave(filename = "resPlotB_byInf_res2yrSQ.png", plot = resPlot_byInf_res2yrSQ   , width = 3, height = 2, units = "in")
+ggsave(filename = "resPlotB_byInf_res10yrRise.png", plot = resPlot_byInf_res10yrRise, width = 3, height = 2, units = "in")
+ggsave(filename = "resPlotB_byInf_res10yrSQ.png", plot = resPlot_byInf_res10yrSQ  , width = 3, height = 2, units = "in")
 
 ######################################################################
 ## drawings with the full recovery of the electrical system
@@ -83,10 +83,10 @@ FRresPlot_byInf_res10yrSQ   <- plot_EIR(res10yrSQ  ) +
     labs(title = "10 Year Status Quo") +
     theme(plot.title = element_text(face = "bold", size = 12, hjust = .5))
 
-ggsave(filename = "FRresPlot_byInf_res2yrRise.png",  plot = FRresPlot_byInf_res2yrRise , width = 3, height = 2, units = "in")
-ggsave(filename = "FRresPlot_byInf_res2yrSQ.png",    plot = FRresPlot_byInf_res2yrSQ   , width = 3, height = 2, units = "in")
-ggsave(filename = "FRresPlot_byInf_res10yrRise.png", plot = FRresPlot_byInf_res10yrRise, width = 3, height = 2, units = "in")
-ggsave(filename = "FRresPlot_byInf_res10yrSQ.png",   plot = FRresPlot_byInf_res10yrSQ  , width = 3, height = 2, units = "in")
+ggsave(filename = "FRresPlotB_byInf_res2yrRise.png",  plot = FRresPlot_byInf_res2yrRise , width = 3, height = 2, units = "in")
+ggsave(filename = "FRresPlotB_byInf_res2yrSQ.png",    plot = FRresPlot_byInf_res2yrSQ   , width = 3, height = 2, units = "in")
+ggsave(filename = "FRresPlotB_byInf_res10yrRise.png", plot = FRresPlot_byInf_res10yrRise, width = 3, height = 2, units = "in")
+ggsave(filename = "FRresPlotB_byInf_res10yrSQ.png",   plot = FRresPlot_byInf_res10yrSQ  , width = 3, height = 2, units = "in")
 
 
 

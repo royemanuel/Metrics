@@ -16,8 +16,6 @@ all_10_year <- read_csv(paste0(wd, "MultipleTimeHorizons10yrMax.csv")) %>%
            Strongest_Storm = as.factor(Strongest_Storm),
            Number_Storms = as.factor(Number_Storms))
 
-
-
 stat_10yr <- table_summary(all_10_year) %>%
     ungroup %>%
     mutate(Infrastructure = fix_infrastructure(Infrastructure))
@@ -35,9 +33,57 @@ cln_all_10yr <-
     select(-ExtendedIntegralResilience) %>%
     group_by(TimeHorizon, Infrastructure)
 
-plot_10yr_res <- plot_EIR(cln_all_10yr) +
+ssr10yr <-
+    cln_all_10yr %>%
+    summarise(minY = min(Resilience),
+              maxY = max(Resilience),
+              lowerY = quantile(Resilience, 0.25),
+              middleY = median(Resilience),
+              upperY = quantile(Resilience, 0.75))
+
+ssr10yr <- inner_join(cln_all_10yr, ssr10yr)
+
+plot_10yr_res <-
+    ## New method with whiskers that cover the range
+    ggplot(ssr10yr,
+           aes(x = TimeHorizon,
+               y = Resilience)) +
+    theme_bw() +
+    geom_boxplot(position="dodge",
+                 aes(ymin = minY,
+                     ymax = maxY,
+                     lower = lowerY,
+                     middle = middleY,
+                     upper = upperY),
+                     stat = "identity") +
+    theme(axis.text.x = element_text(angle = -45,
+                                        vjust = 1,
+                                     hjust = 0),
+          legend.position = c(.2, .2)) +
+    ylim(c(0, 1.05)) +
     facet_wrap(~ TimeHorizon, ncol = 5) +
     theme(axis.text.x = element_text(angle = -30, vjust = 1, hjust = 0))
+
+    ## Old method
+    ## plot_EIR(ssr10yr) +
+    ## facet_wrap(~ TimeHorizon, ncol = 5) +
+    ## theme(axis.text.x = element_text(angle = -30, vjust = 1, hjust = 0))
+
+plot_10yr_by_inf <-
+    ggplot(ssr10yr,
+           aes(TimeHorizon, Resilience)) +
+    geom_boxplot(position="dodge",
+                 aes(ymin = minY,
+                     ymax = maxY,
+                     lower = lowerY,
+                     middle = middleY,
+                     upper = upperY),
+                     stat = "identity") +
+    facet_wrap(~ Infrastructure, ncol = 4) +
+    theme_bw() +
+    ylim(c(0,1)) +
+    xlab("Time Horizon (Months)")
+    
 
 plt_10yr_by_NS <- ggplot(cln_all_10yr,
                          aes(x = Infrastructure,
@@ -69,7 +115,7 @@ storm_max <-
               Average_Number = mean(Number_Storms),
               Average_Strength = mean(Strongest_Storm))
 
-timehorizon_storm_date <- example_storm <-
+timehorizon_storm_date <- 
     cln_all_10yr  %>%
     filter(TimeHorizon == 120,
            Number_Storms == 4,
@@ -86,22 +132,25 @@ source("example_storm.R")
 run204 <-
     sf_data_need10yr %>%
     mutate(Infrastructure = fix_infrastructure(Infrastructure),
-           Time = Time / (1440 * 365)) %>%
-    filter(Infrastructure == "Healthcare" |
-           Infrastructure == "Electricity") %>%
-    gather(Profile, Value, -Run, -Time, -Infrastructure)
+           Years = Time / (1440 * 365)) %>%
+    select(-Time) %>%
+    #filter(Infrastructure == "Healthcare" |
+    #       Infrastructure == "Electricity") %>%
+    gather(Profile, Resilience, -Run, -Years, -Infrastructure)
 
-ex_plot <- ggplot(run204, aes(Time, Value,
+ex_plot <- ggplot(run204, aes(Years, Resilience,
                               group = Profile,
                               linetype = Profile)) +
     geom_line() +
-    facet_wrap(~ Infrastructure, ncol = 1) +
+    facet_wrap(~ Infrastructure, ncol = 4) +
     geom_vline(xintercept = 0.5, alpha = 0.5) +
     geom_vline(xintercept = 1, alpha = 0.5) +
     geom_vline(xintercept = 2, alpha = 0.5) +
     geom_vline(xintercept = 5, alpha = 0.5) +
     geom_vline(xintercept = 10, alpha = 0.5) +
-    theme_bw()
+    theme_bw() +
+    theme(legend.position = "top",
+          legend.title = element_blank())
 
 
 print.xtable(xtable(st10yr2))
