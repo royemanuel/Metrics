@@ -38,7 +38,9 @@ class Part(object):
         self.history = pd.DataFrame()
         # hardcoding this in to demo failtTime
         self.endtime = 25
+        self.lifetime = 100
         self.fltFail = self.failTime(env, **{"endTime": self.endtime})
+        self.SLEP_limit = 1000
         
     # Define a fail time for the particular part.
     def failTime(self, env, **kwargs):
@@ -75,6 +77,21 @@ class Part(object):
                                                 "fhSinceFail": self.fltHrsSinceFail},
                                                 ignore_index=True)
 
+    # Check if the part needs to go to SLEP. Intend each part to call
+    # its specific SLEP line and to compute the amount of time to
+    # SLEP it.
+    def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
+        if (self.fltHours > self.SLEP_limit):
+            self.status = False
+            request = SLEP_line.request()
+            yield request
+            yield env.timeout(SLEP_TTR)
+            self.lifetime += SLEP_addition
+            SLEP_line.release(request)
+            self.status = True
+            self.SLEP_limit = self.lifetime + 100
+
+
 
 
 # The parts have different types of parts. I think this is the way
@@ -86,6 +103,7 @@ class Airframe(Part):
         self.obj = "Airframe"
         super().__init__(env, ID)
         self.ageFail = 100
+        self.SLEP_limit = 5000
         # This needs to be a call to a method for part. ID the parameters
         # in the particular part
         self.fltFail = np.random.randint(1, 25 + 1)
@@ -101,7 +119,8 @@ class Avionics(Part):
         self.obj = "Avionics"
         super().__init__(env, ID)
         self.ageFail = 10
-        self.fltFail = np.random.randint(1, 25 + 1) 
+        self.fltFail = np.random.randint(1, 25 + 1)
+        self.SLEP_limit = 80
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -111,6 +130,7 @@ class Propulsion(Part):
         self.obj = "Propulsion"
         super().__init__(env, ID)
         self.ageFail = 10
+        self.SLEP_limit = 5000
         self.fltFail = np.random.randint(1, 25 + 1)
         print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
@@ -192,6 +212,9 @@ class Aircraft(object):
         tmpBB = self.blueBook.copy()
         self.fltHours = tmpBB.dropna(subset=["Flight Date"]).sum().FlightHours
 
+
+        
+
             
     def flyAircraft(self, env, fltTime, stud, inst):
         # Check to see if any of the parts failed in flight
@@ -242,6 +265,15 @@ class Aircraft(object):
             stud.checkGraduate(env)
         else:
             stud.flightLog(env, fltTime, self.BuNo, "Incomplete")
+
+    # run the slep line check. inputs for the function
+    # def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
+    # I'm hard-coding in the slep-lines because I don't know what else
+    # to do right now.                  af_SLEPline,
+    def SLEPcheck(self, env):
+        self.av.SLEP_Part(env, av_SLEPline, 300, 150)
+        self.af.SLEP_Part(env, af_SLEPline, 300, 150)
+        self.puls.SLEP_Part(env, puls_SLEPline, 300, 150)
 
 
 
@@ -363,7 +395,8 @@ def grading(self, env, stud, attrit, fltTime):
 
 
 class Scheduler(object):
-    def __init__(self, env, fl, studList, instList, indocPeriod):
+    def __init__(self, env, fl, studList, instList, indocPeriod, SLEP_af,
+                 SLEP_av, SLEP_puls):
         self.env = env
         self.studList = studList
         self.nextStudNo = max(self.studList.keys())
@@ -457,6 +490,9 @@ class Scheduler(object):
                         boneYard.update({int(ac.BuNo[2:]):
                                          self.flightLine.pop(int(ac.BuNo[2:]))})
                         print("Aircraft " + str(ac.BuNo) + " is off to Davis-Monthan")
+                    # Call a method that will check each part whether it
+                    # needs to be SLEP'ed or not
+                    ac.SLEPcheck(env)
                     # self.flightLine.append(ac)
                     # self.studList.extend([fltStud])
                     # print(str(self.studList[0].ID) + str(self.studList[1].ID))
@@ -474,10 +510,12 @@ class Scheduler(object):
                         nextEvent = 12
                         print("Break Time")
                         i = 0
+            
             yield env.timeout(nextEvent)
             if len(flightLine) == 0:
                 print(env.now)
                 break
+
 
 
 
@@ -487,8 +525,8 @@ def buildAC(env, numAC, fl):
     for n in range(numAC):
         af = "af" + str(n)
         av = "av" + str(n)
-        eng = "eng" + str(n)
-        fl[n] = Aircraft(env, af, av, eng)
+        puls = "puls" + str(n)
+        fl[n] = Aircraft(env, af, av, puls)
         
 
 
@@ -538,6 +576,11 @@ flightLine = {}
 boneYard = {}
 buildAC(env, NUM_AIRCRAFT, flightLine)
 
+af_SLEPline = simpy.Resource(env, capacity=4)
+av_SLEPline = simpy.Resource(env, capacity=4)
+puls_SLEPline = simpy.Resource(env, capacity=4)
+
+
 studList = {0: Student(env, 0),
             1: Student(env, 1),
             2: Student(env, 2),
@@ -562,7 +605,14 @@ instList = {0: Instructor(env, 10, 10),
             7: Instructor(env, 17, 10),
             8: Instructor(env, 18, 10),
             9: Instructor(env, 19, 10)}
-sked = Scheduler(env, flightLine, studList, instList, indocPeriod)
+sked = Scheduler(env,
+                 flightLine,
+                 studList,
+                 instList,
+                 indocPeriod,
+                 SLEP_af = af_SLEPline,
+                 SLEP_av = av_SLEPline,
+                 SLEP_puls = puls_SLEPline)
 env.run(until=2500)
 
 ######################################################################
