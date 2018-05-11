@@ -56,7 +56,7 @@ maria_plot <-
                              group = Recovery_Measure,
                              linetype = Recovery_Measure)) +
     geom_line() +
-    scale_x_date(labels = date_format("%b %Y"))+
+    scale_x_date(date_breaks = "1 month", date_labels = "%b %Y")+
     theme_bw() +
     theme(legend.position = c(0.75, .25)) +
     labs(y = "Percentage", linetype = "Recovery Measure")

@@ -20,8 +20,8 @@ source("HurricaneDataPull.R")
 ## studies'
 wd <- "studyData/2yrData/"
 ## need_data <- as.tibble(read.csv(paste0(wd, ".csv")))
-res2yrRise  <- read_csv(paste0("studyData/2yrData/2yr_risingNeedproportionaltotime_resilience.csv"))
-res2yrSQ    <- read_csv(paste0("studyData/2yrData/2yr_levelNeedproportionaltotime_resilience.csv"))
+res2yrRise  <- read_csv("studyData/2yrData/2yr_risingNeedproportionaltotime_resilience.csv")
+res2yrSQ    <- read_csv("studyData/2yrData/2yr_levelNeedproportionaltotime_resilience.csv")
 res10yrRise <- read_csv("studyData/10yrData/10yr_risingNeed_resilience.csv")
 res10yrSQ   <- read_csv("studyData/10yrData/10yr_statusquoNeed_resilience.csv")
                          
