@@ -505,7 +505,7 @@ class Scheduler(object):
             availInst = self.instList.copy()
             AClist = self.flightLine.copy()
             availAC = {}
-            for num, ac in AClist.iter():
+            for num, ac in AClist.items():
                 if ac.SLEP == False:
                     availAC[num] = ac
             # if (len(availStuds) == 0 or
