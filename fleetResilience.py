@@ -28,9 +28,10 @@ time.perf_counter()
 # Build an aircraft part
 # an aircraft part needs to work, fail, and be part of an aircraft
 class Part(object):
-    def __init__(self, env, ID, SLEP_limit, lifeTime):
+    def __init__(self, env, ID, SLEP_limit, SLEPtime, lifeTime):
         self.ID = ID
-        self.bornDate = env.now
+        self.env = env
+        self.bornDate = self.env.now
         self.age = 0
         self.fltHours = 0
         self.fltHrsSinceFail = 0
@@ -42,7 +43,8 @@ class Part(object):
         self.fltFail = self.failTime(env, **{"endTime": self.endtime})
         self.SLEP_limit = SLEP_limit
         self.SLEP = False
-        self.SLEPtime = 20000
+        self.SLEPtime = SLEPtime
+        self.request = None
         
     # Define a fail time for the particular part.
     def failTime(self, env, **kwargs):
@@ -58,7 +60,7 @@ class Part(object):
         if (np.allclose(self.fltFail, fltTime)):
             self.fltHours += self.fltFail
             self.status = False
-            self.age = env.now - self.bornDate
+            self.age = self.env.now - self.bornDate
             self.history = self.history.append({"ID": self.ID,
                                                 "Age": self.age,
                                                 "FlightHours": self.fltHours,
@@ -71,7 +73,7 @@ class Part(object):
         else:
             self.fltFail -= fltTime
             self.fltHours += fltTime
-            self.age = env.now - self.bornDate
+            self.age = self.env.now - self.bornDate
             self.history = self.history.append({"ID": self.ID,
                                                 "Age": self.age,
                                                 "FlightHours": self.fltHours,
@@ -80,13 +82,6 @@ class Part(object):
                                                 ignore_index=True)
 
     # Check if the part needs to go to SLEP. Intend each part to call
-    def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
-        request = SLEP_line.request()
-        yield request
-        self.SLEPtime = env.now + SLEP_TTR
-        print(self.SLEPtime)
-        yield env.timeout(self.SLEPtime)
-        yield SLEP_line.release(request)
 
 
 
@@ -104,12 +99,15 @@ class Airframe(Part):
     def __init__(self, env, ID):
         self.env = env
         self.obj = "Airframe"
-        super().__init__(env, ID, SLEP_limit = 80, lifeTime = 100)
+        super().__init__(env, ID,
+                         SLEP_limit = 80,
+                         SLEPtime = 50,
+                         lifeTime = 100)
         self.ageFail = 100
         # This needs to be a call to a method for part. ID the parameters
         # in the particular part
         self.fltFail = np.random.randint(1, 25 + 1)
-        print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
+        # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
         
 
 # Avionics and Propusion behave the same. They will just draw from
@@ -119,20 +117,26 @@ class Avionics(Part):
     def __init__(self, env, ID):
         self.env = env
         self.obj = "Avionics"
-        super().__init__(env, ID, SLEP_limit = 120, lifeTime = 10000)
+        super().__init__(env, ID,
+                         SLEP_limit = 120,
+                         SLEPtime = 20000,
+                         lifeTime = 10000)
         self.ageFail = 10
         self.fltFail = np.random.randint(1, 25 + 1)
-        print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
+        # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
 class Propulsion(Part):
     def __init__(self, env, ID):
         self.env = env
         self.obj = "Propulsion"
-        super().__init__(env, ID, SLEP_limit = 120, lifeTime = 10000)
+        super().__init__(env, ID,
+                         SLEP_limit = 120,
+                         SLEPtime = 20000,
+                         lifeTime = 10000)
         self.ageFail = 10
         self.fltFail = np.random.randint(1, 25 + 1)
-        print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
+        # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
 class Aircraft(object):
@@ -144,10 +148,13 @@ class Aircraft(object):
         self.puls = Propulsion(env, puls)
         self.BuNo = self.af.ID
         self.status = self.af.status & self.av.status & self.puls.status
-        self.bornDate = env.now
+        self.bornDate = self.env.now
         self.blueBook = pd.DataFrame()
         self.lifeTime = self.af.lifeTime
         self.fltHours = 0
+        self.SLEP = False
+        self.boneYard = False
+        self.boneYardTime = None
 
     def updateBlueBook(self, env, fltTime):
         # print("Updating Blue Book")
@@ -161,7 +168,7 @@ class Aircraft(object):
                                               "Propulsion ID": self.puls.ID,
                                               "Propulsion Status": self.puls.status,
                                               "SLEP Status": self.af.SLEP,
-                                              "Flight Date": env.now},
+                                              "Flight Date": self.env.now},
                                              ignore_index=True)
         if self.status is False:
         #     if self.af.status is False:
@@ -188,19 +195,19 @@ class Aircraft(object):
             if self.af.status is False:
                 afRepTime = 15
                 self.af.status = True
-                print("The Airframe was broken, but we bent some metal")
+                # print("The Airframe was broken, but we bent some metal")
             if self.av.status is False:
                 avRepTime = 15
                 self.av.status = True
-                print("The instruments were down. Up and at'em")
+                # print("The instruments were down. Up and at'em")
             if self.puls.status is False:
                 pulsRepTime = 15
                 self.puls.status  = True
-                print("The Engine busted, so now it purrs like a kitten")
+                # print("The Engine busted, so now it purrs like a kitten")
             repTime = max(afRepTime,
                               avRepTime,
                               pulsRepTime)
-            yield env.timeout(repTime)
+            yield self.env.timeout(repTime)
             self.status = self.af.status & self.av.status & self.puls.status
             self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
                                                   "FlightHours": fltTime,
@@ -214,6 +221,18 @@ class Aircraft(object):
         self.fltHours = tmpBB.dropna(subset=["Flight Date"]).sum().FlightHours
         self.lifeTime = self.af.lifeTime
 
+    def SLEP_Aircraft(self, SLEP_line, SLEP_TTR, SLEP_addition):
+        with SLEP_line.request() as req:
+            yield req
+            print('%d of %d slots are allocated.' % (af_SLEPline.count,
+                                                     af_SLEPline.capacity))
+            self.af.SLEPtime = SLEP_TTR
+            print(self.af.SLEPtime)
+            yield self.env.timeout(self.af.SLEPtime)
+            # yield SLEP_line.release(self.request)
+            print("releasing " + self.BuNo + "at time %d" %self.env.now)
+            self.af.SLEP_limit = 20000
+            self.af.lifeTime = 150
 
         
 
@@ -259,7 +278,7 @@ class Aircraft(object):
         stud.hours += fltTime
         inst.hours = inst.hours + fltTime
         inst.flightLog(env, fltTime, self.BuNo, "NA")
-        env.process(self.updateBlueBook(env, fltTime))
+        self.env.process(self.updateBlueBook(env, fltTime))
         # add the event to the student's flight log with the result
         if self.status is True:
             grading(self, env, stud, attrit, fltTime)
@@ -268,12 +287,7 @@ class Aircraft(object):
         else:
             stud.flightLog(env, fltTime, self.BuNo, "Incomplete")
 
-    # run the slep line check. inputs for the function
-    # def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
-    # I'm hard-coding in the slep-lines because I don't know what else
-    # to do right now.                  af_SLEPline,
-
-
+   
 
 ######################################################################
 # People                                                             #
@@ -284,6 +298,7 @@ class Aircraft(object):
 # Each flight has an instructor and a student. A student is complete.
 class Aircrew(object):
     def __init__(self, env, ID):
+        self.env = env
         self.ID = ID
         self.hours = 0
         self.dailyFlights = 0
@@ -295,7 +310,7 @@ class Aircrew(object):
                                               "Flight Time": fltTime,
                                               "Aircraft": ac,
                                               # "Result":,
-                                              "Takeoff Time": env.now,
+                                              "Takeoff Time": self.env.now,
                                               "Outcome": result},
                                              ignore_index=True)
 
@@ -309,22 +324,25 @@ class Student(Aircrew):
         self.syllabus = 0
         self.downs = 0
         self.graduated = False
-        self.gradDate = "learning, yo"
+        self.gradDate = None
         self.attrited = False
+        self.attritDate = None
 
     def checkGraduate(self, env):
         if self.syllabus > 15:
             self.graduated = True
-            self.gradDate = env.now
-            print("I'm going to TOPGUN!!")
+            self.gradDate = self.env.now
+            # print("I'm going to TOPGUN!!")
             gradStuds.update({self.ID: studList.pop(self.ID)})
-            # gradStuds[self.ID] = env.now()
+            # gradStuds[self.ID] = self.env.now()
 
     def checkAttrite(self, env):
         if self.downs > 4:
             self.attrited = True
-            print("Truck driving school for me.")
-            print("<sad trombone>")
+            self.attritDate = self.env.now
+            self.graduated = False
+            # print("Truck driving school for me.")
+            # print("<sad trombone>")
             attritStuds.update({self.ID: studList.pop(self.ID)})
 
 
@@ -400,7 +418,7 @@ class Scheduler(object):
         self.nextStudNo = max(self.studList.keys())
         self.flightLine = fl
         self.instList = instList
-        self.action = env.process(self.dailyFlightSked())
+        self.action = self.env.process(self.dailyFlightSked(SLEP_af))
         self.indocPeriod = indocPeriod
         self.nextIndoc = indocPeriod
         self.eventsPerDay = 4
@@ -409,7 +427,7 @@ class Scheduler(object):
     # Build a class of students to start flight training
     def fltClassIndoc(self, env, minSize, maxSize):
         numClass = np.random.randint(minSize, maxSize)
-        print("Adding " + str(numClass) + " more idiots.")
+        # print("Adding " + str(numClass) + " more idiots.")
         self.studList.update({x: Student(env, x) for
                               x in range(self.nextStudNo + 1,
                                          self.nextStudNo + numClass + 1)})
@@ -423,24 +441,45 @@ class Scheduler(object):
     #         if (day % 7 < 2):
     #             day += 1
     #             break
-    def SLEPcheck(self, env):
+    def SLEPcheck(self, SLEP_af):
         fl = self.flightLine.copy()
         for num, ac in fl.items():
             if(ac.af.fltHours > ac.af.SLEP_limit):
+                print("flightline has %d aircraft; SLEP has %d aircraft" %(len(flightLine),len(SLEPlist)))
+                print("Aircraft " + str(ac.BuNo) + " is off to the FST at time " +
+                      str(self.env.now))
+                self.SLEPlist.update({int(ac.BuNo[2:]):
+                                      self.flightLine.pop(int(ac.BuNo[2:]))})
                 self.env.process(ac.af.SLEP_Part(env,
                                 SLEP_line = af_SLEPline,
                                 SLEP_TTR = 50,
                                 SLEP_addition = 150))
-                print("Aircraft " + str(ac.BuNo) + " is off to the FST")
-                self.SLEPlist.update({int(ac.BuNo[2:]):
-                                      self.flightLine.pop(int(ac.BuNo[2:]))})
-                print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
+                print("SLEPline")
+                for bn, ac in self.SLEPlist.items():
+                    print(bn)
+                print("flightline")
+                for bn, ac in self.flightLine.items():
+                    print(bn)
+                with SLEP_af.request() as req:
+                    yield req
+                    print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capac))
+                    ac.af.SLEPtime = 50 #ac.env.now + 50 #SLEP_TTR
+                    print(ac.af.SLEPtime)
+                    yield ac.env.timeout(ac.af.SLEPtime)
+                    # yield SLEP_line.release(self.request)
+                    print("releasing " + ac.BuNo + "at time %d" %ac.env.now)
+                    print("Aircraft " + str(ac.BuNo) + " is back from SLEP at time " +
+                          str(ac.env.now))
+                    self.flightLine.update({int(ac.BuNo[2:]):
+                                            self.SLEPlist.pop(int(ac.BuNo[2:]))})
+                    print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
 
     def returnAC(self, env):
         sl = self.SLEPlist.copy()
         for num, SLEPac in sl.items():
-            if (SLEPac.af.SLEPtime < env.now):
-                print("Aircraft " + str(SLEPac.BuNo) + " is back from SLEP")
+            if (SLEPac.af.SLEPtime < self.env.now):
+                print("Aircraft " + str(SLEPac.BuNo) + " is back from SLEP at time " +
+                      str(self.env.now))
                 SLEPac.af.SLEP_limit = 20000
                 SLEPac.af.lifeTime = 150
                 self.flightLine.update({int(SLEPac.BuNo[2:]):
@@ -451,7 +490,7 @@ class Scheduler(object):
 # Goals for this. Pick out a student. Assign an instructor from top of
 # the instructor list. Pick an aircraft at random from the aircraft
 # list. The aircraft list should contain aircraft where status is True
-    def dailyFlightSked(self):
+    def dailyFlightSked(self, SLEP_af):
         i = 0
         while True:
             # numStuds = len(self.studList)
@@ -460,33 +499,37 @@ class Scheduler(object):
             # this for-loop is intended to get the entire flightLine
             # in the air. We can make it a percentage
             # This is the start of the day
-            self.SLEPcheck(self.env)
-            self.returnAC(self.env)
+            # self.env.process(self.SLEPcheck(SLEP_af))
+            # self.returnAC(self.env)
             availStuds = self.studList.copy()
             availInst = self.instList.copy()
-            availAC = self.flightLine.copy()
+            AClist = self.flightLine.copy()
+            availAC = {}
+            for num, ac in AClist.iter():
+                if ac.SLEP == False:
+                    availAC[num] = ac
             # if (len(availStuds) == 0 or
             #     len(availInst) == 0 or
             #     len(availAC) == 0):
-            #     yield env.timeout(1)
+            #     yield self.env.timeout(1)
             i += 1
-            print("Ready to fly! for event" + str(i) + " at time " +
-                      str(env.now))
+            # print("Ready to fly! for event" + str(i) + " at time " +
+                    #  str(self.env.now))
             for flt in range(len(self.flightLine)):
                 # if (len(availStuds) > 0 and
                 #         len(availInst) > 0 and
                 #         len(availAC) > 0):
                 if (len(availStuds) == 0):
-                    print("At Time " + str(env.now) + "All the students are flying")
-                    # yield env.timeout(1)
+                    # print("At Time " + str(self.env.now) + "All the students are flying")
+                    # yield self.env.timeout(1)
                     break
                 elif (len(availInst) == 0):
-                    print("At Time " + str(env.now) + "No one is left to teach!")
-                    # yield env.timeout(1)
+                    # print("At Time " + str(self.env.now) + "No one is left to teach!")
+                    # yield self.env.timeout(1)
                     break
                 elif (len(availAC) == 0):
-                    print("At Time " + str(env.now) + "Nothing to fly!")
-                    # yield env.timeout(1)
+                    # print("At Time " + str(self.env.now) + "Nothing to fly!")
+                    # yield self.env.timeout(1)
                     break
                 fltStud = availStuds.pop(random.choice(list(availStuds.keys())))
                 if (fltStud.graduated == False and
@@ -511,29 +554,31 @@ class Scheduler(object):
                     ## has, it is placed in the boneYard list and removed from the
                     ## flightLine list
                     if (ac.lifeTime < ac.fltHours):
-                        boneYard.update({int(ac.BuNo[2:]):
-                                         self.flightLine.pop(int(ac.BuNo[2:]))})
+                        ac.boneYard = True
+                        ac.boneYardTime = ac.env.now
+                        # boneYard.update({int(ac.BuNo[2:]):
+                        #                  self.flightLine.pop(int(ac.BuNo[2:]))})
                         print("Aircraft " + str(ac.BuNo) + " is off to Davis-Monthan")
                     # self.flightLine.append(ac)
                     # self.studList.extend([fltStud])
                     # print(str(self.studList[0].ID) + str(self.studList[1].ID))
                     # self.instList.extend([fltInst])
                     # print(str(self.instList[0].ID) + str(self.instList[1].ID))
-            nextEvent =  3 if int(env.now) % 3 == 0 else env.now % 3
-            outOfPipeline = len(gradStuds) + len(attritStuds)
+            nextEvent =  3 if int(self.env.now) % 3 == 0 else self.env.now % 3
+            # outOfPipeline = len(gradStuds) + len(attritStuds)
             if (len(studList) == 0):
-                print("There is no one left to learn at time " + str(env.now))
-                yield env.timeout(10)
-                if (env.now > self.nextIndoc):
+                # print("There is no one left to learn at time " + str(self.env.now))
+                yield self.env.timeout(10)
+                if (self.env.now > self.nextIndoc):
                     self.fltClassIndoc(env, 3, 10)
-                    self.nextIndoc = env.now + self.indocPeriod
+                    self.nextIndoc = self.env.now + self.indocPeriod
                     if i > 4:
                         nextEvent = 12
-                        print("Break Time")
+                        # print("Break Time")
                         # Not sure why I started recounting events
                         # i = 0
             
-            yield env.timeout(nextEvent)
+            yield self.env.timeout(nextEvent)
             if len(flightLine) == 0 and len(self.SLEPlist) > 0:
                 next_SLEP_complete_dict = {}
                 for num, ac in self.SLEPlist.items():
@@ -541,7 +586,7 @@ class Scheduler(object):
                 t = next_SLEP_complete_dict[max(next_SLEP_complete_dict)]    
                 yield self.env.timeout(t)
             if len(self.flightLine) == 0 and len(self.SLEPlist) == 0:
-                print(env.now)
+                # print(self.env.now)
                 break
 
 
