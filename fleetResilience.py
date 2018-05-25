@@ -1,3 +1,18 @@
+######################################################################
+## NOTES From 25 MAY.
+## in the SLEP portion I have been very sloppy with who "self" refers to
+## inspect this carefully. It is important that the aircraft/part is
+## the owner of the environment. I am having problems popping aircraft out
+## of lists. I am thinking this is linear, and it isn't It may be easier
+## to identify the SLEP aircraft and the flying aircraft and the boneyard
+## aircraft in separate dictionaries at the beginning of every
+## flight event. That should be fairly simple. Then from there use the
+##  appropriate list for the flight schedule. The SLEP list should just
+## be a holding pen. In fact, SLEP and FLE complete aircraft should just
+## be taken off the list before every flight event. When they are good to
+## go, their SLEP flag should return to True. That will do some good.
+######################################################################
+
 
 # Simulate the behavior of a fleet of aircraft. Begin by
 # importing what we need.
