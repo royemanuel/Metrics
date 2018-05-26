@@ -17,7 +17,8 @@
 
 # Simulate the behavior of a fleet of aircraft. Begin by
 # importing what we need.
-
+import time
+import os
 import simpy
 import numpy as np
 # import scipy.stats as st
@@ -236,7 +237,7 @@ class Aircraft(object):
             
     def flyAircraft(self, env, fltTime, stud, inst):
         # Check to see if any of the parts failed in flight
-        attrit = .2
+        attrit = .1
         # print("flight time = " +str(fltTime))
         # print("av " + str(self.av.fltFail))
         # print("af " + str(self.af.fltFail))
@@ -558,7 +559,8 @@ class Scheduler(object):
                           'boneYard':[len(boneYard)],
                           'students':[len(self.studList)],
                           'graduates':[len(gradStuds)],
-                          'instructors':[len(self.instList)]
+                          'instructors':[len(self.instList)],
+                          'attrites':[len(attritStuds)]
             }
             status_now = pd.DataFrame(data=status_now)
             self.tracker = self.tracker.append(status_now,
@@ -681,24 +683,69 @@ env.run(until=5000)
 #                    Data Collection                                 #
 ######################################################################
 
-partHistory = pd.DataFrame()
-studHistory = pd.DataFrame()
-instHistory = pd.DataFrame()
-aircraftHistory = pd.DataFrame()
-
-for stud in studList:
-    studHistory = studHistory.append(studList[stud].flightDF)
-
-for grad in gradStuds:
-    studHistory = studHistory.append(gradStuds[grad].flightDF)
-
-for flnk in attritStuds:
-    studHistory = studHistory.append(attritStuds[flnk].flightDF)
-
-for inst in instList:
-    instHistory = instHistory.append(instList[inst].flightDF)
-
-for ac in flightLine:
-    aircraftHistory = aircraftHistory.append(flightLine[ac].blueBook)
+# partHistory = pd.DataFrame()
+# studHistory = pd.DataFrame()
+# instHistory = pd.DataFrame()
+# aircraftHistory = pd.DataFrame()
+# 
+# for stud in studList:
+#     studHistory = studHistory.append(studList[stud].flightDF)
+# 
+# for grad in gradStuds:
+#     studHistory = studHistory.append(gradStuds[grad].flightDF)
+# 
+# for flnk in attritStuds:
+#     studHistory = studHistory.append(attritStuds[flnk].flightDF)
+# 
+# for inst in instList:
+#     instHistory = instHistory.append(instList[inst].flightDF)
+# 
+# for ac in flightLine:
+#     aircraftHistory = aircraftHistory.append(flightLine[ac].blueBook)
 print(time.process_time())
 print(time.perf_counter())
+
+timeNow = time.strftime("%Y%m%d-%H%M%S")
+os.makedirs(timeNow)
+os.path.join(timeNow +'/')
+
+
+def allBB(acDict):
+    for num, ac in acDict.items():
+        filename = timeNow + '/AC' + str(num) + '.csv'
+        ac.blueBook.to_csv(filename)
+
+def concBB(acDict, sr):
+    df = []
+    for num, ac in acDict.items():
+        df.append(ac.blueBook)
+    filename = timeNow + '/ALL' + sr + '.csv'
+    if len(df) > 0:
+        dfcsv = pd.concat(df)
+        dfcsv.to_csv(filename)
+        return(dfcsv)
+
+def buildFiles(acListDict):
+    masterDF = []
+    for lname, lobject in acListDict.items():
+        allBB(lobject)
+        g = concBB(lobject, lname)
+        masterDF.append(g)
+    masterDF = pd.concat(masterDF)
+    fn = timeNow + '/ALL.csv'
+    masterDF.to_csv(fn)
+    fnst = timeNow + '/skedTracker.csv'
+    sked.tracker.to_csv(fnst)
+
+        
+# allBB(boneYard)
+# allBB(flightLine)
+# allBB(SLEPlist)
+# 
+# concBB(boneYard, 'BY')
+# concBB(flightLine, 'FL')
+# g = concBB(SLEPlist, 'SLEP')
+
+buildFiles({'BY' : boneYard,
+            'FL' : flightLine,
+            'SLEP' : SLEPlist})
