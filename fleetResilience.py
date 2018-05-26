@@ -11,6 +11,7 @@
 ## be a holding pen. In fact, SLEP and FLE complete aircraft should just
 ## be taken off the list before every flight event. When they are good to
 ## go, their SLEP flag should return to True. That will do some good.
+## The first thing to try though is the TTR + env.now. That is wrong for certain
 ######################################################################
 
 
@@ -98,7 +99,7 @@ class Part(object):
     def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
         request = SLEP_line.request()
         yield request
-        self.SLEPtime = env.now + SLEP_TTR
+        self.SLEPtime = SLEP_TTR
         print(self.SLEPtime)
         yield env.timeout(self.SLEPtime)
         yield SLEP_line.release(request)
@@ -108,7 +109,7 @@ class Part(object):
 
 def print_stats(res):
     print('%d of %d slots are allocated.' % (res.count, res.capacity))
-    print('  Users:', res.users)
+    print('  Uses:', res.users)
     print('  Queued events:', res.queue)
 
 
@@ -475,6 +476,7 @@ class Scheduler(object):
             # this for-loop is intended to get the entire flightLine
             # in the air. We can make it a percentage
             # This is the start of the day
+            # 
             self.SLEPcheck(self.env)
             self.returnAC(self.env)
             availStuds = self.studList.copy()
@@ -600,7 +602,7 @@ def buildAC(env, numAC, fl):
 ######################################################################
 
 RANDOM_SEED = 42
-NUM_AIRCRAFT = 20
+NUM_AIRCRAFT = 15
 NUM_STUDENT = 1
 NUM_INSTRUCTOR = 1
 
