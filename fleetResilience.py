@@ -555,7 +555,11 @@ class Scheduler(object):
             status_now = {'Time':[self.env.now],
                           'flightLine':[len(self.flightLine)],
                           'SLEPlist':[len(self.SLEPlist)],
-                          'boneYard':[len(boneYard)]}
+                          'boneYard':[len(boneYard)],
+                          'students':[len(self.studList)],
+                          'graduates':[len(gradStuds)],
+                          'instructors':[len(self.instList)]
+            }
             status_now = pd.DataFrame(data=status_now)
             self.tracker = self.tracker.append(status_now,
                                                ignore_index = True)
