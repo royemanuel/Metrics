@@ -421,6 +421,7 @@ class Scheduler(object):
         self.nextIndoc = indocPeriod
         self.eventsPerDay = 4
         self.SLEPlist = SLEPlist
+        self.tracker = pd.DataFrame()
 
     # Build a class of students to start flight training
     def fltClassIndoc(self, env, minSize, maxSize):
@@ -476,7 +477,9 @@ class Scheduler(object):
             # this for-loop is intended to get the entire flightLine
             # in the air. We can make it a percentage
             # This is the start of the day
-            # 
+            ##################################################
+            # At the start of the flight period, we will record the
+            # aircraft in the SLEPlist, flightLine, and boneYard
             self.SLEPcheck(self.env)
             self.returnAC(self.env)
             availStuds = self.studList.copy()
@@ -549,6 +552,13 @@ class Scheduler(object):
                         print("Break Time")
                         # Not sure why I started recounting events
                         # i = 0
+            status_now = {'Time':[self.env.now],
+                          'flightLine':[len(self.flightLine)],
+                          'SLEPlist':[len(self.SLEPlist)],
+                          'boneYard':[len(boneYard)]}
+            status_now = pd.DataFrame(data=status_now)
+            self.tracker = self.tracker.append(status_now,
+                                               ignore_index = True)
             
             yield env.timeout(nextEvent)
             if len(flightLine) == 0 and len(self.SLEPlist) > 0:
@@ -626,6 +636,7 @@ af_SLEPline = simpy.Resource(env, capacity=4)
 av_SLEPline = simpy.Resource(env, capacity=4)
 puls_SLEPline = simpy.Resource(env, capacity=4)
 
+ac_status_history = []
 
 studList = {0: Student(env, 0),
             1: Student(env, 1),
