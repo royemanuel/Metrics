@@ -568,6 +568,8 @@ class Scheduler(object):
                                                ignore_index = True)
             
             yield env.timeout(nextEvent)
+            if self.env.now %% 100 == 0:
+                print("Simulation at time " + str(self.env.now), end='\r')
             if len(flightLine) == 0 and len(self.SLEPlist) > 0:
                 next_SLEP_complete_dict = {}
                 for num, ac in self.SLEPlist.items():
@@ -619,7 +621,7 @@ def buildAC(env, numAC, fl):
 ######################################################################
 
 RANDOM_SEED = 42
-NUM_AIRCRAFT = 15
+NUM_AIRCRAFT = [15, 3, 80]
 NUM_STUDENT = 1
 NUM_INSTRUCTOR = 1
 rand_list = [42, 3834782]
@@ -629,130 +631,134 @@ rand_list = [42, 3834782]
 ######################################################################
 
 
-np.random.seed([RANDOM_SEED])
-random.seed(RANDOM_SEED)
-
-
-# def repair(env, ac)
-env = simpy.Environment()
-flightLine = {}
-boneYard = {}
-SLEPlist = {}
-buildAC(env, NUM_AIRCRAFT, flightLine)
-
-af_SLEPline = simpy.Resource(env, capacity=4)
-av_SLEPline = simpy.Resource(env, capacity=4)
-puls_SLEPline = simpy.Resource(env, capacity=4)
-indocPeriod = 300
-ac_status_history = []
-
-studList = {0: Student(env, 0),
-            1: Student(env, 1),
-            2: Student(env, 2),
-            3: Student(env, 3),
-            4: Student(env, 4),
-            5: Student(env, 5),
-            6: Student(env, 6),
-            7: Student(env, 7),
-            8: Student(env, 8),
-            9: Student(env, 9)}
-
-
-gradStuds = {}
-attritStuds = {}
-instList = {0: Instructor(env, 10, 10),
-            1: Instructor(env, 11, 10),
-            2: Instructor(env, 12, 10),
-            3: Instructor(env, 13, 10),
-            4: Instructor(env, 14, 10),
-            5: Instructor(env, 15, 10),
-            6: Instructor(env, 16, 10),
-            7: Instructor(env, 17, 10),
-            8: Instructor(env, 18, 10),
-            9: Instructor(env, 19, 10)}
-sked = Scheduler(env,
-                 flightLine,
-                 studList,
-                 instList,
-                 indocPeriod,
-                 SLEP_af = af_SLEPline,
-                 SLEP_av = av_SLEPline,
-                 SLEP_puls = puls_SLEPline,
-                 SLEPlist = SLEPlist)
-
+# np.random.seed([RANDOM_SEED])
+# random.seed(RANDOM_SEED)
+# 
+# 
+# # def repair(env, ac)
+# env = simpy.Environment()
+# flightLine = {}
+# boneYard = {}
+# SLEPlist = {}
+# buildAC(env, NUM_AIRCRAFT, flightLine)
+# 
+# af_SLEPline = simpy.Resource(env, capacity=4)
+# av_SLEPline = simpy.Resource(env, capacity=4)
+# puls_SLEPline = simpy.Resource(env, capacity=4)
+# indocPeriod = 300
+# ac_status_history = []
+# 
+# studList = {0: Student(env, 0),
+#             1: Student(env, 1),
+#             2: Student(env, 2),
+#             3: Student(env, 3),
+#             4: Student(env, 4),
+#             5: Student(env, 5),
+#             6: Student(env, 6),
+#             7: Student(env, 7),
+#             8: Student(env, 8),
+#             9: Student(env, 9)}
+# 
+# 
+# gradStuds = {}
+# attritStuds = {}
+# instList = {0: Instructor(env, 10, 10),
+#             1: Instructor(env, 11, 10),
+#             2: Instructor(env, 12, 10),
+#             3: Instructor(env, 13, 10),
+#             4: Instructor(env, 14, 10),
+#             5: Instructor(env, 15, 10),
+#             6: Instructor(env, 16, 10),
+#             7: Instructor(env, 17, 10),
+#             8: Instructor(env, 18, 10),
+#             9: Instructor(env, 19, 10)}
+# sked = Scheduler(env,
+#                  flightLine,
+#                  studList,
+#                  instList,
+#                  indocPeriod,
+#                  SLEP_af = af_SLEPline,
+#                  SLEP_av = av_SLEPline,
+#                  SLEP_puls = puls_SLEPline,
+#                  SLEPlist = SLEPlist)
+# 
 #env.run(until=5)
 
+rl = [42, 3, 23545]
+ip = [300, 150, 300]
 
-def run_the_sim(rl, NUM_STUDS, NUM_INSTRUCTOR, ip, NUM_AIRCRAFT):
-    i = 0
-    for r in range(len(rl)):
-        np.random.seed([rl[r]])
-        random.seed(rl[r])
-        # Make all variables None to start it out
-        env = None
-        flightLine = None
-        boneYard = None
-        SLEPlist = None
-        af_SLEPline = None
-        av_SLEPline = None
-        puls_SLEPline = None
-        indocPeriod = None
-        studList = None
-        gradStuds = None
-        attritStuds = None
-        instList = None
-        sked = None
-        timeNow = None
-        # Build everything again
-        env = simpy.Environment()
-        flightLine = {}
-        boneYard = {}
-        SLEPlist = {}
-        buildAC(env, NUM_AIRCRAFT[r], flightLine)
-        af_SLEPline = simpy.Resource(env, capacity=4)
-        av_SLEPline = simpy.Resource(env, capacity=4)
-        puls_SLEPline = simpy.Resource(env, capacity=4)
-        ac_status_history = []
-        indocPeriod = ip[r]
-        studList = {0: Student(env, 0),
-                    1: Student(env, 1),
-                    2: Student(env, 2),
-                    3: Student(env, 3),
-                    4: Student(env, 4),
-                    5: Student(env, 5),
-                    6: Student(env, 6),
-                    7: Student(env, 7),
-                    8: Student(env, 8),
-                    9: Student(env, 9)}
-        gradStuds = {}
-        attritStuds = {}
-        instList = {0: Instructor(env, 10, 10),
-                    1: Instructor(env, 11, 10),
-                    2: Instructor(env, 12, 10),
-                    3: Instructor(env, 13, 10),
-                    4: Instructor(env, 14, 10),
-                    5: Instructor(env, 15, 10),
-                    6: Instructor(env, 16, 10),
-                    7: Instructor(env, 17, 10),
-                    8: Instructor(env, 18, 10),
-                    9: Instructor(env, 19, 10)}
-        sked = Scheduler(env,
-                         flightLine,
-                         studList,
-                         instList,
-                         indocPeriod,
-                         SLEP_af = af_SLEPline,
-                         SLEP_av = av_SLEPline,
-                         SLEP_puls = puls_SLEPline,
-                         SLEPlist = SLEPlist)
-        env.run(until=5000)
-        timeNow = time.strftime("%Y%m%d-%H%M%S")
-        os.makedirs(timeNow)
-        os.path.join(timeNow +'/')
-        buildFiles({'BY' : boneYard,
-            'FL' : flightLine,
-            'SLEP' : SLEPlist})
-        i += 1
+for r in range(len(rl)):
+    np.random.seed([rl[r]])
+    random.seed(rl[r])
+    # Make all variables None to start it out
+    env = None
+    flightLine = None
+    boneYard = None
+    SLEPlist = None
+    af_SLEPline = None
+    av_SLEPline = None
+    puls_SLEPline = None
+    indocPeriod = None
+    studList = None
+    gradStuds = None
+    attritStuds = None
+    instList = None
+    sked = None
+    timeNow = None
+    # Build everything again
+    env = simpy.Environment()
+    flightLine = {}
+    boneYard = {}
+    SLEPlist = {}
+    buildAC(env, NUM_AIRCRAFT[r], flightLine)
+    af_SLEPline = simpy.Resource(env, capacity=4)
+    av_SLEPline = simpy.Resource(env, capacity=4)
+    puls_SLEPline = simpy.Resource(env, capacity=4)
+    ac_status_history = []
+    indocPeriod = ip[r]
+    studList = {0: Student(env, 0),
+                1: Student(env, 1),
+                2: Student(env, 2),
+                3: Student(env, 3),
+                4: Student(env, 4),
+                5: Student(env, 5),
+                6: Student(env, 6),
+                7: Student(env, 7),
+                8: Student(env, 8),
+                9: Student(env, 9)}
+    gradStuds = {}
+    attritStuds = {}
+    instList = {0: Instructor(env, 10, 10),
+                1: Instructor(env, 11, 10),
+                2: Instructor(env, 12, 10),
+                3: Instructor(env, 13, 10),
+                4: Instructor(env, 14, 10),
+                5: Instructor(env, 15, 10),
+                6: Instructor(env, 16, 10),
+                7: Instructor(env, 17, 10),
+                8: Instructor(env, 18, 10),
+                9: Instructor(env, 19, 10)}
+    sked = Scheduler(env,
+                     flightLine,
+                     studList,
+                     instList,
+                     indocPeriod,
+                     SLEP_af = af_SLEPline,
+                     SLEP_av = av_SLEPline,
+                     SLEP_puls = puls_SLEPline,
+                     SLEPlist = SLEPlist)
+    env.run(until=5000)
+    timeNow = time.strftime("%Y%m%d-%H%M%S")
+    os.makedirs(timeNow)
+    os.path.join(timeNow +'/')
+    buildFiles({'BY' : boneYard,
+        'FL' : flightLine,
+        'SLEP' : SLEPlist})
+    print(time.process_time())
+    print(time.perf_counter())
+    print('Completed Run ' + str(r + 1) + ' of ' + str(len(rl)))
+
+
 
 
         
@@ -785,12 +791,10 @@ def run_the_sim(rl, NUM_STUDS, NUM_INSTRUCTOR, ip, NUM_AIRCRAFT):
 # 
 # for ac in flightLine:
 #     aircraftHistory = aircraftHistory.append(flightLine[ac].blueBook)
-print(time.process_time())
-print(time.perf_counter())
 
-timeNow = time.strftime("%Y%m%d-%H%M%S")
-os.makedirs(timeNow)
-os.path.join(timeNow +'/')
+# timeNow = time.strftime("%Y%m%d-%H%M%S")
+# os.makedirs(timeNow)
+# os.path.join(timeNow +'/')
 
 
 def allBB(acDict):
@@ -829,6 +833,6 @@ def buildFiles(acListDict):
 # concBB(flightLine, 'FL')
 # g = concBB(SLEPlist, 'SLEP')
 
-buildFiles({'BY' : boneYard,
-            'FL' : flightLine,
-            'SLEP' : SLEPlist})
+# buildFiles({'BY' : boneYard,
+#            'FL' : flightLine,
+#             'SLEP' : SLEPlist})
