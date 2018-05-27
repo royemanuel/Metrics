@@ -615,6 +615,76 @@ def buildAC(env, numAC, fl):
 #     elif item.obj == "Aircraft":
 #         aircraftHistory == aircraftHistory.append(vars(item))
 
+######################################################################
+#                    Data Collection                                 #
+######################################################################
+
+# partHistory = pd.DataFrame()
+# studHistory = pd.DataFrame()
+# instHistory = pd.DataFrame()
+# aircraftHistory = pd.DataFrame()
+# 
+# for stud in studList:
+#     studHistory = studHistory.append(studList[stud].flightDF)
+# 
+# for grad in gradStuds:
+#     studHistory = studHistory.append(gradStuds[grad].flightDF)
+# 
+# for flnk in attritStuds:
+#     studHistory = studHistory.append(attritStuds[flnk].flightDF)
+# 
+# for inst in instList:
+#     instHistory = instHistory.append(instList[inst].flightDF)
+# 
+# for ac in flightLine:
+#     aircraftHistory = aircraftHistory.append(flightLine[ac].blueBook)
+
+timeNow = time.strftime("%Y%m%d-%H%M%S")
+os.makedirs(timeNow)
+os.path.join(timeNow +'/')
+
+
+def allBB(sim_run, acDict):
+    for num, ac in acDict.items():
+        filename = timeNow + '/AC' + str(num) + 'run' + str(sim_run) + '.csv'
+        ac.blueBook.to_csv(filename)
+
+def concBB(sim_run, acDict, sr):
+    df = []
+    for num, ac in acDict.items():
+        df.append(ac.blueBook)
+    if len(df) > 0:
+        dfcsv = pd.concat(df)
+        filename = timeNow + '/ALL' + sr + 'run' + str(sim_run) + '.csv'
+        dfcsv.to_csv(filename)
+        return(dfcsv)
+
+def buildFiles(sim_run, acListDict):
+    masterDF = []
+    for lname, lobject in acListDict.items():
+        if len(lobject) > 0:
+            allBB(sim_run, lobject)
+            g = concBB(sim_run, lobject, lname)
+            masterDF.append(g)
+    masterDF = pd.concat(masterDF)
+    fn = timeNow + '/ALL' + 'run' + str(sim_run) + '.csv'
+    masterDF.to_csv(fn)
+    fnst = timeNow + '/skedTracker' + 'run' + str(sim_run) + '.csv'
+    sked.tracker.to_csv(fnst)
+
+        
+# allBB(boneYard)
+# allBB(flightLine)
+# allBB(SLEPlist)
+# 
+# concBB(boneYard, 'BY')
+# concBB(flightLine, 'FL')
+# g = concBB(SLEPlist, 'SLEP')
+
+# buildFiles({'BY' : boneYard,
+#            'FL' : flightLine,
+#             'SLEP' : SLEPlist})
+
 
 ######################################################################
 # Constants                                                          #
@@ -687,6 +757,10 @@ rand_list = [42, 3834782]
 rl = [42, 3, 23545]
 ip = [300, 150, 300]
 
+# timeNow = time.strftime("%Y%m%d-%H%M%S")
+# os.makedirs(timeNow)
+# os.path.join(timeNow +'/')
+
 for r in range(len(rl)):
     np.random.seed([rl[r]])
     random.seed(rl[r])
@@ -704,7 +778,6 @@ for r in range(len(rl)):
     attritStuds = None
     instList = None
     sked = None
-    timeNow = None
     # Build everything again
     env = simpy.Environment()
     flightLine = {}
@@ -747,13 +820,13 @@ for r in range(len(rl)):
                      SLEP_av = av_SLEPline,
                      SLEP_puls = puls_SLEPline,
                      SLEPlist = SLEPlist)
-    env.run(until=5000)
-    timeNow = time.strftime("%Y%m%d-%H%M%S")
-    os.makedirs(timeNow)
-    os.path.join(timeNow +'/')
-    buildFiles({'BY' : boneYard,
-        'FL' : flightLine,
-        'SLEP' : SLEPlist})
+    env.run(until=50)
+    current_run = r + 1
+    print(current_run)
+    buildFiles(current_run,
+               {'BY' : boneYard,
+                'FL' : flightLine,
+                'SLEP' : SLEPlist})
     print(time.process_time())
     print(time.perf_counter())
     print('Completed Run ' + str(r + 1) + ' of ' + str(len(rl)))
@@ -767,72 +840,3 @@ for r in range(len(rl)):
     
 
 
-
-######################################################################
-#                    Data Collection                                 #
-######################################################################
-
-# partHistory = pd.DataFrame()
-# studHistory = pd.DataFrame()
-# instHistory = pd.DataFrame()
-# aircraftHistory = pd.DataFrame()
-# 
-# for stud in studList:
-#     studHistory = studHistory.append(studList[stud].flightDF)
-# 
-# for grad in gradStuds:
-#     studHistory = studHistory.append(gradStuds[grad].flightDF)
-# 
-# for flnk in attritStuds:
-#     studHistory = studHistory.append(attritStuds[flnk].flightDF)
-# 
-# for inst in instList:
-#     instHistory = instHistory.append(instList[inst].flightDF)
-# 
-# for ac in flightLine:
-#     aircraftHistory = aircraftHistory.append(flightLine[ac].blueBook)
-
-# timeNow = time.strftime("%Y%m%d-%H%M%S")
-# os.makedirs(timeNow)
-# os.path.join(timeNow +'/')
-
-
-def allBB(acDict):
-    for num, ac in acDict.items():
-        filename = timeNow + '/AC' + str(num) + '.csv'
-        ac.blueBook.to_csv(filename)
-
-def concBB(acDict, sr):
-    df = []
-    for num, ac in acDict.items():
-        df.append(ac.blueBook)
-    filename = timeNow + '/ALL' + sr + '.csv'
-    if len(df) > 0:
-        dfcsv = pd.concat(df)
-        dfcsv.to_csv(filename)
-        return(dfcsv)
-
-def buildFiles(acListDict):
-    masterDF = []
-    for lname, lobject in acListDict.items():
-        allBB(lobject)
-        g = concBB(lobject, lname)
-        masterDF.append(g)
-    masterDF = pd.concat(masterDF)
-    fn = timeNow + '/ALL.csv'
-    masterDF.to_csv(fn)
-    fnst = timeNow + '/skedTracker.csv'
-    sked.tracker.to_csv(fnst)
-
-        
-# allBB(boneYard)
-# allBB(flightLine)
-# allBB(SLEPlist)
-# 
-# concBB(boneYard, 'BY')
-# concBB(flightLine, 'FL')
-# g = concBB(SLEPlist, 'SLEP')
-
-# buildFiles({'BY' : boneYard,
-#            'FL' : flightLine,
-#             'SLEP' : SLEPlist})
