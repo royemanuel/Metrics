@@ -101,7 +101,7 @@ class Part(object):
         request = SLEP_line.request()
         yield request
         self.SLEPtime = SLEP_TTR
-        print(self.SLEPtime)
+        # print(self.SLEPtime)
         yield env.timeout(self.SLEPtime)
         yield SLEP_line.release(request)
 
@@ -126,7 +126,7 @@ class Airframe(Part):
         # This needs to be a call to a method for part. ID the parameters
         # in the particular part
         self.fltFail = np.random.randint(1, 25 + 1)
-        print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
+        # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
         
 
 # Avionics and Propusion behave the same. They will just draw from
@@ -139,7 +139,7 @@ class Avionics(Part):
         super().__init__(env, ID, SLEP_limit = 120, lifeTime = 10000)
         self.ageFail = 10
         self.fltFail = np.random.randint(1, 25 + 1)
-        print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
+        # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
 class Propulsion(Part):
@@ -149,7 +149,7 @@ class Propulsion(Part):
         super().__init__(env, ID, SLEP_limit = 120, lifeTime = 10000)
         self.ageFail = 10
         self.fltFail = np.random.randint(1, 25 + 1)
-        print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
+        # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
 class Aircraft(object):
@@ -205,15 +205,15 @@ class Aircraft(object):
             if self.af.status is False:
                 afRepTime = 15
                 self.af.status = True
-                print("The Airframe was broken, but we bent some metal")
+                # print("The Airframe was broken, but we bent some metal")
             if self.av.status is False:
                 avRepTime = 15
                 self.av.status = True
-                print("The instruments were down. Up and at'em")
+                # print("The instruments were down. Up and at'em")
             if self.puls.status is False:
                 pulsRepTime = 15
                 self.puls.status  = True
-                print("The Engine busted, so now it purrs like a kitten")
+                # print("The Engine busted, so now it purrs like a kitten")
             repTime = max(afRepTime,
                               avRepTime,
                               pulsRepTime)
@@ -333,15 +333,15 @@ class Student(Aircrew):
         if self.syllabus > 15:
             self.graduated = True
             self.gradDate = env.now
-            print("I'm going to TOPGUN!!")
+            # print("I'm going to TOPGUN!!")
             gradStuds.update({self.ID: studList.pop(self.ID)})
             # gradStuds[self.ID] = env.now()
 
     def checkAttrite(self, env):
         if self.downs > 4:
             self.attrited = True
-            print("Truck driving school for me.")
-            print("<sad trombone>")
+            # print("Truck driving school for me.")
+            # print("<sad trombone>")
             attritStuds.update({self.ID: studList.pop(self.ID)})
 
 
@@ -427,7 +427,7 @@ class Scheduler(object):
     # Build a class of students to start flight training
     def fltClassIndoc(self, env, minSize, maxSize):
         numClass = np.random.randint(minSize, maxSize)
-        print("Adding " + str(numClass) + " more idiots.")
+        # print("Adding " + str(numClass) + " more idiots.")
         self.studList.update({x: Student(env, x) for
                               x in range(self.nextStudNo + 1,
                                          self.nextStudNo + numClass + 1)})
@@ -449,21 +449,21 @@ class Scheduler(object):
                                 SLEP_line = af_SLEPline,
                                 SLEP_TTR = 50,
                                 SLEP_addition = 150))
-                print("Aircraft " + str(ac.BuNo) + " is off to the FST")
+                # print("Aircraft " + str(ac.BuNo) + " is off to the FST")
                 self.SLEPlist.update({int(ac.BuNo[2:]):
                                       self.flightLine.pop(int(ac.BuNo[2:]))})
-                print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
+                # print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
 
     def returnAC(self, env):
         sl = self.SLEPlist.copy()
         for num, SLEPac in sl.items():
             if (SLEPac.af.SLEPtime < env.now):
-                print("Aircraft " + str(SLEPac.BuNo) + " is back from SLEP")
+                # print("Aircraft " + str(SLEPac.BuNo) + " is back from SLEP")
                 SLEPac.af.SLEP_limit = 20000
                 SLEPac.af.lifeTime = 150
                 self.flightLine.update({int(SLEPac.BuNo[2:]):
                                         self.SLEPlist.pop(int(SLEPac.BuNo[2:]))})
-                print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
+                # print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
          
 
 # Goals for this. Pick out a student. Assign an instructor from top of
@@ -491,22 +491,22 @@ class Scheduler(object):
             #     len(availAC) == 0):
             #     yield env.timeout(1)
             i += 1
-            print("Ready to fly! for event" + str(i) + " at time " +
-                      str(env.now))
+            # print("Ready to fly! for event" + str(i) + " at time " +
+                  # str(env.now))
             for flt in range(len(self.flightLine)):
                 # if (len(availStuds) > 0 and
                 #         len(availInst) > 0 and
                 #         len(availAC) > 0):
                 if (len(availStuds) == 0):
-                    print("At Time " + str(env.now) + "All the students are flying")
+                    # print("At Time " + str(env.now) + "All the students are flying")
                     # yield env.timeout(1)
                     break
                 elif (len(availInst) == 0):
-                    print("At Time " + str(env.now) + "No one is left to teach!")
+                    # print("At Time " + str(env.now) + "No one is left to teach!")
                     # yield env.timeout(1)
                     break
                 elif (len(availAC) == 0):
-                    print("At Time " + str(env.now) + "Nothing to fly!")
+                    # print("At Time " + str(env.now) + "Nothing to fly!")
                     # yield env.timeout(1)
                     break
                 fltStud = availStuds.pop(random.choice(list(availStuds.keys())))
@@ -534,7 +534,7 @@ class Scheduler(object):
                     if (ac.lifeTime < ac.fltHours):
                         boneYard.update({int(ac.BuNo[2:]):
                                          self.flightLine.pop(int(ac.BuNo[2:]))})
-                        print("Aircraft " + str(ac.BuNo) + " is off to Davis-Monthan")
+                        # print("Aircraft " + str(ac.BuNo) + " is off to Davis-Monthan")
                     # self.flightLine.append(ac)
                     # self.studList.extend([fltStud])
                     # print(str(self.studList[0].ID) + str(self.studList[1].ID))
@@ -543,14 +543,14 @@ class Scheduler(object):
             nextEvent =  3 if int(env.now) % 3 == 0 else env.now % 3
             outOfPipeline = len(gradStuds) + len(attritStuds)
             if (len(studList) == 0):
-                print("There is no one left to learn at time " + str(env.now))
+                # print("There is no one left to learn at time " + str(env.now))
                 yield env.timeout(10)
                 if (env.now > self.nextIndoc):
                     self.fltClassIndoc(env, 8, 15)
                     self.nextIndoc = env.now + self.indocPeriod
                     if i > 4:
                         nextEvent = 12
-                        print("Break Time")
+                        # print("Break Time")
                         # Not sure why I started recounting events
                         # i = 0
             stat_prv = self.tracker.tail(1)
@@ -568,7 +568,7 @@ class Scheduler(object):
                                                ignore_index = True)
             
             yield env.timeout(nextEvent)
-            if self.env.now %% 100 == 0:
+            if self.env.now % 100 == 0:
                 print("Simulation at time " + str(self.env.now), end='\r')
             if len(flightLine) == 0 and len(self.SLEPlist) > 0:
                 next_SLEP_complete_dict = {}
