@@ -695,6 +695,8 @@ NUM_AIRCRAFT = [15, 3, 80]
 NUM_STUDENT = 1
 NUM_INSTRUCTOR = 1
 rand_list = [42, 3834782]
+rl = [42, 3, 23545]
+ip = [300, 150, 300]
 
 ######################################################################
 # Build Aircraft, Students, and instructors                          #
@@ -754,8 +756,6 @@ rand_list = [42, 3834782]
 # 
 #env.run(until=5)
 
-rl = [42, 3, 23545]
-ip = [300, 150, 300]
 
 # timeNow = time.strftime("%Y%m%d-%H%M%S")
 # os.makedirs(timeNow)
