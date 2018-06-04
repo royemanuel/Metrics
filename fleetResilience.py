@@ -203,21 +203,22 @@ class Aircraft(object):
             avRepTime = 0
             pulsRepTime = 0
             if self.af.status is False:
-                afRepTime = 15
+                afRepTime = 16
                 self.af.status = True
-                # print("The Airframe was broken, but we bent some metal")
+                # print("The Airframe was broken, but we bent some metal %d" % self.env.now)
             if self.av.status is False:
-                avRepTime = 15
+                avRepTime = 13
                 self.av.status = True
-                # print("The instruments were down. Up and at'em")
+                # print("The instruments were down. Up and at'em %d" % self.env.now)
             if self.puls.status is False:
-                pulsRepTime = 15
+                pulsRepTime = 14
                 self.puls.status  = True
-                # print("The Engine busted, so now it purrs like a kitten")
+                # print("The Engine busted, so now it purrs like a kitten %d" % self.env.now)
             repTime = max(afRepTime,
                               avRepTime,
                               pulsRepTime)
-            yield env.timeout(repTime)
+            yield self.env.timeout(repTime)
+            print("fixed at %d" % self.env.now)
             self.status = self.af.status & self.av.status & self.puls.status
             self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
                                                   "FlightHours": fltTime,
@@ -235,7 +236,7 @@ class Aircraft(object):
         
 
             
-    def flyAircraft(self, env, fltTime, stud, inst):
+    def flyAircraft(self, env, fltTime, stud, inst, day):
         # Check to see if any of the parts failed in flight
         attrit = .1
         # print("flight time = " +str(fltTime))
@@ -275,15 +276,15 @@ class Aircraft(object):
         # print("flight time" + str(fltTime))
         stud.hours += fltTime
         inst.hours = inst.hours + fltTime
-        inst.flightLog(env, fltTime, self.BuNo, "NA")
+        inst.flightLog(env, fltTime, self.BuNo, "NA", day)
         env.process(self.updateBlueBook(env, fltTime))
         # add the event to the student's flight log with the result
         if self.status is True:
-            grading(self, env, stud, attrit, fltTime)
+            grading(self, env, stud, attrit, fltTime, day)
             stud.checkAttrite(env)
             stud.checkGraduate(env)
         else:
-            stud.flightLog(env, fltTime, self.BuNo, "Incomplete")
+            stud.flightLog(env, fltTime, self.BuNo, "Incomplete", day)
 
     # run the slep line check. inputs for the function
     # def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
@@ -306,13 +307,14 @@ class Aircrew(object):
         self.dailyFlights = 0
         self.flightDF = pd.DataFrame()
 
-    def flightLog(self, env, fltTime, ac, result):
+    def flightLog(self, env, fltTime, ac, result, day):
         # print("Updating Flight Log")
-        self.flightDF = self.flightDF.append({"Aircrew ID": self.ID,
-                                              "Flight Time": fltTime,
+        self.flightDF = self.flightDF.append({"Aircrew_ID": self.ID,
+                                              "Flight_Time": fltTime,
                                               "Aircraft": ac,
                                               # "Result":,
-                                              "Takeoff Time": env.now,
+                                              "Takeoff_Time": env.now,
+                                              "Day": day,
                                               "Outcome": result},
                                              ignore_index=True)
 
@@ -333,15 +335,15 @@ class Student(Aircrew):
         if self.syllabus > 15:
             self.graduated = True
             self.gradDate = env.now
-            # print("I'm going to TOPGUN!!")
+            print("I'm going to TOPGUN!!")
             gradStuds.update({self.ID: studList.pop(self.ID)})
             # gradStuds[self.ID] = env.now()
 
     def checkAttrite(self, env):
         if self.downs > 4:
             self.attrited = True
-            # print("Truck driving school for me.")
-            # print("<sad trombone>")
+            print("Truck driving school for me.")
+            print("<sad trombone>")
             attritStuds.update({self.ID: studList.pop(self.ID)})
 
 
@@ -385,11 +387,11 @@ class AvMech(Maintainer):
 # Processes Defined                                                  #
 ######################################################################
 
-def flight(env, ac, stud, inst):
+def flight(env, ac, stud, inst, day):
     if ac.status:
         ft = np.random.randint(low=5, high=20, size=1) / 10
         ft = ft[0]
-        ac.flyAircraft(env, ft, stud, inst)
+        ac.flyAircraft(env, ft, stud, inst, day)
         # print(inst.ID, "and", stud.ID, "tempted death again in aircraft",
         #       ac.BuNo, "at time", env.now, "for", ft, "hours!")
         yield env.timeout(0)
@@ -399,14 +401,14 @@ def flight(env, ac, stud, inst):
     yield env.timeout(0)
 
 
-def grading(self, env, stud, attrit, fltTime):
+def grading(self, env, stud, attrit, fltTime, day):
     grade = np.random.random(1)
     if (grade > attrit):
         stud.syllabus += 1
-        stud.flightLog(env, fltTime, self.BuNo, "Pass")
+        stud.flightLog(env, fltTime, self.BuNo, "Pass", day)
     else:
         stud.downs += 1
-        stud.flightLog(env, fltTime, self.BuNo, "Down")
+        stud.flightLog(env, fltTime, self.BuNo, "Down", day)
 
 
 class Scheduler(object):
@@ -427,7 +429,7 @@ class Scheduler(object):
     # Build a class of students to start flight training
     def fltClassIndoc(self, env, minSize, maxSize):
         numClass = np.random.randint(minSize, maxSize)
-        # print("Adding " + str(numClass) + " more idiots.")
+        print("Adding " + str(numClass) + " more idiots.")
         self.studList.update({x: Student(env, x) for
                               x in range(self.nextStudNo + 1,
                                          self.nextStudNo + numClass + 1)})
@@ -449,21 +451,21 @@ class Scheduler(object):
                                 SLEP_line = af_SLEPline,
                                 SLEP_TTR = 50,
                                 SLEP_addition = 150))
-                # print("Aircraft " + str(ac.BuNo) + " is off to the FST")
+                print("Aircraft " + str(ac.BuNo) + " is off to the FST")
                 self.SLEPlist.update({int(ac.BuNo[2:]):
                                       self.flightLine.pop(int(ac.BuNo[2:]))})
-                # print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
+                print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
 
     def returnAC(self, env):
         sl = self.SLEPlist.copy()
         for num, SLEPac in sl.items():
             if (SLEPac.af.SLEPtime < env.now):
-                # print("Aircraft " + str(SLEPac.BuNo) + " is back from SLEP")
+                print("Aircraft " + str(SLEPac.BuNo) + " is back from SLEP")
                 SLEPac.af.SLEP_limit = 20000
                 SLEPac.af.lifeTime = 150
                 self.flightLine.update({int(SLEPac.BuNo[2:]):
                                         self.SLEPlist.pop(int(SLEPac.BuNo[2:]))})
-                # print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
+                print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
          
 
 # Goals for this. Pick out a student. Assign an instructor from top of
@@ -492,22 +494,22 @@ class Scheduler(object):
             #     len(availAC) == 0):
             #     yield env.timeout(1)
             i += 1
-            # print("Ready to fly! for event" + str(i) + " at time " +
-                  # str(env.now))
+            print("Ready to fly! for event" + str(i) + " at time " +
+                  str(env.now))
             for flt in range(len(self.flightLine)):
                 # if (len(availStuds) > 0 and
                 #         len(availInst) > 0 and
                 #         len(availAC) > 0):
                 if (len(availStuds) == 0):
-                    # print("At Time " + str(env.now) + "All the students are flying")
+                    print("At Time " + str(env.now) + "All the students are flying")
                     # yield env.timeout(1)
                     break
                 elif (len(availInst) == 0):
-                    # print("At Time " + str(env.now) + "No one is left to teach!")
+                    print("At Time " + str(env.now) + "No one is left to teach!")
                     # yield env.timeout(1)
                     break
                 elif (len(availAC) == 0):
-                    # print("At Time " + str(env.now) + "Nothing to fly!")
+                    print("At Time " + str(env.now) + "Nothing to fly!")
                     # yield env.timeout(1)
                     break
                 fltStud = availStuds.pop(random.choice(list(availStuds.keys())))
@@ -528,7 +530,8 @@ class Scheduler(object):
                     yield self.env.process(flight(self.env,
                                                   ac,
                                                   fltStud,
-                                                  fltInst))
+                                                  fltInst,
+                                                  daytrack))
                     ## Check to see if the aircraft has used up its lifetime. If it
                     ## has, it is placed in the boneYard list and removed from the
                     ## flightLine list
@@ -541,26 +544,10 @@ class Scheduler(object):
                     # print(str(self.studList[0].ID) + str(self.studList[1].ID))
                     # self.instList.extend([fltInst])
                     # print(str(self.instList[0].ID) + str(self.instList[1].ID))
-            nextEvent =  3 if int(env.now) % 3 == 0 else env.now % 3
             outOfPipeline = len(gradStuds) + len(attritStuds)
-            # This if statement generates new students. I don't think
-            # this will do for the long run, and should probably be removed
-            # in favor of a periodic introduction of students that is
-            # a method or something.
-            if (len(studList) == 0):
-                # print("There is no one left to learn at time " + str(env.now))
-                yield env.timeout(10)
-                if (env.now > self.nextIndoc):
-                    self.fltClassIndoc(env, 8, 15)
-                    self.nextIndoc = env.now + self.indocPeriod
-                    # Pretty sure this if statement is in the wrong place
-                    # if i > 4:
-                    #    nextEvent = 12
-                        # print("Break Time")
-                        # Not sure why I started recounting events
-                        # i = 0
             stat_prv = self.tracker.tail(1)
             status_now = {'Time':[self.env.now],
+                          'Day':[daytrack],
                           'flightLine':[len(self.flightLine)],
                           'SLEPlist':[len(self.SLEPlist)],
                           'boneYard':[len(boneYard)],
@@ -572,20 +559,38 @@ class Scheduler(object):
             status_now = pd.DataFrame(data=status_now)
             self.tracker = self.tracker.append(status_now,
                                                ignore_index = True)
+            # This if statement generates new students. I don't think
+            # this will do for the long run, and should probably be removed
+            # in favor of a periodic introduction of students that is
+            # a method or something.
+            if (len(studList) == 0 and env.now > self.nextIndoc):
+                print("There is no one left to learn at time " + str(env.now))
+                self.fltClassIndoc(env, 8, 15)
+                self.nextIndoc = env.now + self.indocPeriod
+                # Pretty sure this if statement is in the wrong place
+                # if i > 4:
+                #    nextEvent = 12
+                # print("Break Time")
+                # Not sure why I started recounting events
+                # i = 0
+
             # Build the clock for weekends and off hours. We will say that
             # there are 5 events/day. Events occur every 3 hours. We have that already.
             # 0 is Monday... 5 is Saturday, 6 is Sunday.
             time_of_day = self.env.now % 24
-            if (time_of_day == 12 and daytrack % 7 == 4):
+            if (time_of_day >= 12 and daytrack % 7 == 4):
                 # skip the date to Monday and yield the environment
                 # to Monday at time 0
                 daytrack += 3
-                yield self.env.timeout(60)
-            elif (time_of_day == 12):
+                skiptime = 24 * 7 - self.env.now % (24 * 7)
+                yield self.env.timeout(skiptime)
+            elif (time_of_day >= 12):
                 # yield the environment to the next day
                 daytrack += 1
-                yield self.env.timeout(12)
+                skiptime = 24 - self.env.now % 24
+                yield self.env.timeout(skiptime)
             else:
+                nextEvent =  3 if int(env.now) % 3 == 0 else env.now % 3                
                 yield self.env.timeout(nextEvent)
 
             if self.env.now % 100 == 0:
@@ -711,12 +716,12 @@ def buildFiles(sim_run, acListDict):
 ######################################################################
 
 RANDOM_SEED = 42
-NUM_AIRCRAFT = [15, 3, 80]
+NUM_AIRCRAFT = [15]#, 3, 80]
 NUM_STUDENT = 1
 NUM_INSTRUCTOR = 1
 rand_list = [42, 3834782]
-rl = [42, 3, 23545]
-ip = [300, 150, 300]
+rl = [42]#, 3, 23545]
+ip = [300]#, 150, 300]
 
 ######################################################################
 # Build Aircraft, Students, and instructors                          #
@@ -840,7 +845,7 @@ for r in range(len(rl)):
                      SLEP_av = av_SLEPline,
                      SLEP_puls = puls_SLEPline,
                      SLEPlist = SLEPlist)
-    env.run(until=5000)
+    env.run(until=500)
     current_run = r + 1
     print(current_run)
     buildFiles(current_run,
