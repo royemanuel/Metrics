@@ -471,6 +471,7 @@ class Scheduler(object):
 # list. The aircraft list should contain aircraft where status is True
     def dailyFlightSked(self):
         i = 0
+        daytrack = 0
         while True:
             # numStuds = len(self.studList)
             # numAC = len(self.flightLine)
@@ -542,14 +543,19 @@ class Scheduler(object):
                     # print(str(self.instList[0].ID) + str(self.instList[1].ID))
             nextEvent =  3 if int(env.now) % 3 == 0 else env.now % 3
             outOfPipeline = len(gradStuds) + len(attritStuds)
+            # This if statement generates new students. I don't think
+            # this will do for the long run, and should probably be removed
+            # in favor of a periodic introduction of students that is
+            # a method or something.
             if (len(studList) == 0):
                 # print("There is no one left to learn at time " + str(env.now))
                 yield env.timeout(10)
                 if (env.now > self.nextIndoc):
                     self.fltClassIndoc(env, 8, 15)
                     self.nextIndoc = env.now + self.indocPeriod
-                    if i > 4:
-                        nextEvent = 12
+                    # Pretty sure this if statement is in the wrong place
+                    # if i > 4:
+                    #    nextEvent = 12
                         # print("Break Time")
                         # Not sure why I started recounting events
                         # i = 0
@@ -566,8 +572,22 @@ class Scheduler(object):
             status_now = pd.DataFrame(data=status_now)
             self.tracker = self.tracker.append(status_now,
                                                ignore_index = True)
-            
-            yield env.timeout(nextEvent)
+            # Build the clock for weekends and off hours. We will say that
+            # there are 5 events/day. Events occur every 3 hours. We have that already.
+            # 0 is Monday... 5 is Saturday, 6 is Sunday.
+            time_of_day = self.env.now % 24
+            if (time_of_day == 12 and daytrack % 7 == 4):
+                # skip the date to Monday and yield the environment
+                # to Monday at time 0
+                daytrack += 3
+                yield self.env.timeout(60)
+            elif (time_of_day == 12):
+                # yield the environment to the next day
+                daytrack += 1
+                yield self.env.timeout(12)
+            else:
+                yield self.env.timeout(nextEvent)
+
             if self.env.now % 100 == 0:
                 print("Simulation at time " + str(self.env.now), end='\r')
             if len(flightLine) == 0 and len(self.SLEPlist) > 0:
@@ -577,7 +597,7 @@ class Scheduler(object):
                 t = next_SLEP_complete_dict[max(next_SLEP_complete_dict)]    
                 yield self.env.timeout(t)
             if len(self.flightLine) == 0 and len(self.SLEPlist) == 0:
-                print(env.now)
+                print(self.env.now)
                 break
 
 
@@ -820,7 +840,7 @@ for r in range(len(rl)):
                      SLEP_av = av_SLEPline,
                      SLEP_puls = puls_SLEPline,
                      SLEPlist = SLEPlist)
-    env.run(until=50)
+    env.run(until=5000)
     current_run = r + 1
     print(current_run)
     buildFiles(current_run,
