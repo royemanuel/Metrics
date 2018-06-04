@@ -449,7 +449,7 @@ class Scheduler(object):
         numClass = np.random.randint(minSize, maxSize)
         print("Adding " + str(numClass) + " more idiots.")
         for newStud in range(numClass):
-            studID = self.nextStudNo + newStud
+            studID = int(self.nextStudNo[:-1]) + newStud + 1
             studList[str(studID) + "S"] = Student(env,
                                                   str(studID) +"S",
                                                   env.now)
@@ -544,10 +544,10 @@ class Scheduler(object):
                     elif (len(availStuds) == 0):
                         print("At Time " + str(env.now) + "All the students are tired")
                         break
-                if len(availStuds) == 0:
-                    print("At time " +str(self.env.now) + "all studs have 2 flights")
-                    break
-                elif (fltStud.graduated == False and
+                # if len(availStuds) == 0:
+                #     # print("At time " +str(self.env.now) + "all studs have 2 flights")
+                #     break
+                if (fltStud.graduated == False and
                         fltStud.attrited == False):
                     # SElect an instructor. Supposed to randomly draw
                     # the instructor list, check if they have more than
