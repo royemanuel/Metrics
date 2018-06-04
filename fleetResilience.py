@@ -17,6 +17,7 @@
 
 # Simulate the behavior of a fleet of aircraft. Begin by
 # importing what we need.
+print("starting simulation...")
 import time
 import os
 import simpy
@@ -121,11 +122,11 @@ class Airframe(Part):
     def __init__(self, env, ID):
         self.env = env
         self.obj = "Airframe"
-        super().__init__(env, ID, SLEP_limit = 80, lifeTime = 100)
-        self.ageFail = 100
+        super().__init__(env, ID, SLEP_limit = 14000, lifeTime = 14400)
+        self.ageFail = 1000
         # This needs to be a call to a method for part. ID the parameters
         # in the particular part
-        self.fltFail = np.random.randint(1, 25 + 1)
+        self.fltFail = np.random.randint(1, 100 + 1)
         # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
         
 
@@ -137,8 +138,8 @@ class Avionics(Part):
         self.env = env
         self.obj = "Avionics"
         super().__init__(env, ID, SLEP_limit = 120, lifeTime = 10000)
-        self.ageFail = 10
-        self.fltFail = np.random.randint(1, 25 + 1)
+        self.ageFail = 20
+        self.fltFail = np.random.randint(1, 20 + 1)
         # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -147,8 +148,8 @@ class Propulsion(Part):
         self.env = env
         self.obj = "Propulsion"
         super().__init__(env, ID, SLEP_limit = 120, lifeTime = 10000)
-        self.ageFail = 10
-        self.fltFail = np.random.randint(1, 25 + 1)
+        self.ageFail = 30
+        self.fltFail = np.random.randint(1, 30 + 1)
         # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
@@ -474,8 +475,8 @@ class Scheduler(object):
             if(ac.af.fltHours > ac.af.SLEP_limit):
                 self.env.process(ac.af.SLEP_Part(env,
                                 SLEP_line = af_SLEPline,
-                                SLEP_TTR = 50,
-                                SLEP_addition = 150))
+                                SLEP_TTR = 1000,
+                                                 SLEP_addition = 19800))
                 # print("Aircraft " + str(ac.BuNo) + " is off to the FST")
                 self.SLEPlist.update({int(ac.BuNo[2:]):
                                       self.flightLine.pop(int(ac.BuNo[2:]))})
@@ -487,7 +488,7 @@ class Scheduler(object):
             if (SLEPac.af.SLEPtime < env.now):
                 # print("Aircraft " + str(SLEPac.BuNo) + " is back from SLEP")
                 SLEPac.af.SLEP_limit = 20000
-                SLEPac.af.lifeTime = 150
+                SLEPac.af.lifeTime = 19800
                 self.flightLine.update({int(SLEPac.BuNo[2:]):
                                         self.SLEPlist.pop(int(SLEPac.BuNo[2:]))})
                 # print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
@@ -815,12 +816,12 @@ def studInfo(sim_run, studs, grads, attrits):
 # Constants                                                          #
 ######################################################################
 
-NUM_AIRCRAFT = [15, 30, 80]
-NUM_STUDENT = [20, 30, 50]
-NUM_INSTRUCTOR = [15, 25, 50]
-s_o_c = [20, 30, 50]
-rl = [42, 42, 42]
-ip = [720, 720, 720]
+NUM_AIRCRAFT =   [234]#    [15, 30, 80]
+NUM_STUDENT =    [100]#    [20, 30, 50]
+NUM_INSTRUCTOR = [80] #    [15, 25, 50]
+s_o_c =          [100]#    [20, 30, 50]
+rl =             [42] #    [42, 42, 42]
+ip =             [720]   #  [720, 720, 720]
 
 ######################################################################
 # Build Aircraft, Students, and instructors                          #
@@ -931,7 +932,7 @@ for r in range(len(rl)):
                      SLEP_av = av_SLEPline,
                      SLEP_puls = puls_SLEPline,
                      SLEPlist = SLEPlist)
-    env.run(until=50)
+    env.run(until=24*365*25)
     current_run = r + 1
     print(current_run)
     buildFiles(current_run,
