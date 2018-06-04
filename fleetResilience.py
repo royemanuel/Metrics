@@ -276,6 +276,8 @@ class Aircraft(object):
         # print("flight time" + str(fltTime))
         stud.hours += fltTime
         inst.hours = inst.hours + fltTime
+        stud.timeInSquadron = env.now - stud.gainDate
+        inst.timeInSquadron = env.now - inst.gainDate
         inst.flightLog(env, fltTime, self.BuNo, "NA", day)
         env.process(self.updateBlueBook(env, fltTime))
         # add the event to the student's flight log with the result
@@ -283,6 +285,7 @@ class Aircraft(object):
             grading(self, env, stud, attrit, fltTime, day)
             stud.checkAttrite(env)
             stud.checkGraduate(env)
+            # inst.checkNewOrders(env)
         else:
             stud.flightLog(env, fltTime, self.BuNo, "Incomplete", day)
 
@@ -301,7 +304,7 @@ class Aircraft(object):
 # Class of Aircrew which will be tied to an aircraft for an event.
 # Each flight has an instructor and a student. A student is complete.
 class Aircrew(object):
-    def __init__(self, env, ID):
+    def __init__(self, env, ID, gainDate):
         self.ID = ID
         self.hours = 0
         self.dailyFlights = 0
@@ -312,6 +315,8 @@ class Aircrew(object):
                                               "Takeoff_Time": [],
                                               "Day": [],
                                               "Outcome": []})
+        self.gainDate = gainDate
+        self.timeInSquadron = 0
 
     def flightLog(self, env, fltTime, ac, result, day):
         # print("Updating Flight Log")
@@ -328,9 +333,9 @@ class Aircrew(object):
 # A student collects a number ofsyllabus events and graduates
 # A student is limited to 2 daily flights
 class Student(Aircrew):
-    def __init__(self, env, ID):
+    def __init__(self, env, ID, gainDate):
         self.obj = "Student"
-        super().__init__(env, ID)
+        super().__init__(env, ID, gainDate)
         self.syllabus = 0
         self.downs = 0
         self.graduated = False
@@ -359,11 +364,18 @@ class Student(Aircrew):
 # (qual set to True)
 # An instructor is limited to 3 daily flights
 class Instructor(Aircrew):
-    def __init__(self, env, ID, syl):
+    def __init__(self, env, ID, syl, gainDate):
         self.obj = "Instructor"
-        super().__init__(env, ID)
+        super().__init__(env, ID, gainDate)
         self.syllabus = syl
         self.qual = self.syllabus > 9
+    #    self.action = env.process(self.checkNewOrders(env))
+
+
+    # def checkNewOrders(self, env):
+    #     if self.timeInSquadron > 24 :
+    #         inactiveInstList.update({self.ID: instList.pop(self.ID)})
+
 
 
 # Defining the maintainers although this might need to be a resource.
@@ -425,7 +437,7 @@ class Scheduler(object):
         self.nextStudNo = max(self.studList.keys())
         self.flightLine = fl
         self.instList = instList
-        self.action = env.process(self.dailyFlightSked())
+        self.env.process(self.dailyFlightSked())
         self.indocPeriod = indocPeriod
         self.nextIndoc = indocPeriod
         self.eventsPerDay = 4
@@ -436,9 +448,14 @@ class Scheduler(object):
     def fltClassIndoc(self, env, minSize, maxSize):
         numClass = np.random.randint(minSize, maxSize)
         print("Adding " + str(numClass) + " more idiots.")
-        self.studList.update({x: Student(env, x) for
-                              x in range(self.nextStudNo + 1,
-                                         self.nextStudNo + numClass + 1)})
+        for newStud in range(numClass):
+            studID = self.nextStudNo + newStud
+            studList[str(studID) + "S"] = Student(env,
+                                                  str(studID) +"S",
+                                                  env.now)
+        # self.studList.update({x: Student(env, x, env.now) for
+        #                       x in range(self.nextStudNo + 1,
+        #                                  self.nextStudNo + numClass + 1)})
         self.nextStudNo = max(self.studList.keys())
 
     # Trying to build a calendar so the weekends aren't flown, 
@@ -532,7 +549,22 @@ class Scheduler(object):
                     break
                 elif (fltStud.graduated == False and
                         fltStud.attrited == False):
-                    fltInst = availInst.pop(random.choice(list(availInst.keys())))
+                    # SElect an instructor. Supposed to randomly draw
+                    # the instructor list, check if they have more than
+                    # four flights for the day. If yes, pick aonother
+                    # one until it is empty. If not continue with that instructor
+                    j = 0
+                    while j == 0:
+                        fltInst = availInst.pop(random.choice(list(availInst.keys())))
+                        if len(fltInst.flightDF.loc[fltInst.flightDF['Day'] == daytrack]) < 5:
+                            print("Instructor ID " + str(fltInst.ID))
+                            j = 1
+                        elif (len(availInst) == 0):
+                            print("At Time " + str(env.now) + "All the instructors are tired")
+                            break
+                        if len(availInst) == 0:
+                            print("At time " +str(self.env.now) + "all insts have 4 flights")
+                            break
                     # acPull = np.random.randint(0, len(flightLine))
                     # ac = self.flightLine[acPull]
                     ## modifying the above acPull to use popitem()
@@ -544,7 +576,9 @@ class Scheduler(object):
                     # print(vars(fltStud))
                     # print("Inst Vars ")
                     # print(vars(fltInst))
-                    print(str(fltStud.ID) + "is flying")
+                    print(str(fltStud.ID) + "instructed by " +
+                          str(fltInst.ID) + " in " + str(ac.BuNo) +
+                          " at time " + str(env.now))
                     yield self.env.process(flight(self.env,
                                                   ac,
                                                   fltStud,
@@ -635,6 +669,16 @@ def buildAC(env, numAC, fl):
         puls = "puls" + str(n)
         fl[n] = Aircraft(env, af, av, puls)
         
+
+def newStuds(env, listname, numStud):
+    for s in range(numStud + len(listname)):
+        listname[str(s) + "S"] = Student(env, str(s) + "S", env.now)
+
+
+def newInsts(env, listname, numInst, syllabus):
+    for i in range(numInst + len(listname)):
+        listname[str(i) + "I"] = Instructor(env, str(i) + "I", syllabus, env.now )
+
 
 
 ######################################################################
@@ -735,8 +779,8 @@ def buildFiles(sim_run, acListDict):
 
 RANDOM_SEED = 42
 NUM_AIRCRAFT = [15]#, 3, 80]
-NUM_STUDENT = 1
-NUM_INSTRUCTOR = 1
+NUM_STUDENT = 10
+NUM_INSTRUCTOR = 10
 rand_list = [42, 3834782]
 rl = [42]#, 3, 23545]
 ip = [300]#, 150, 300]
@@ -820,6 +864,7 @@ for r in range(len(rl)):
     gradStuds = None
     attritStuds = None
     instList = None
+    inactiveInstList = None
     sked = None
     # Build everything again
     env = simpy.Environment()
@@ -832,28 +877,13 @@ for r in range(len(rl)):
     puls_SLEPline = simpy.Resource(env, capacity=4)
     ac_status_history = []
     indocPeriod = ip[r]
-    studList = {0: Student(env, 0),
-                1: Student(env, 1),
-                2: Student(env, 2),
-                3: Student(env, 3),
-                4: Student(env, 4),
-                5: Student(env, 5),
-                6: Student(env, 6),
-                7: Student(env, 7),
-                8: Student(env, 8),
-                9: Student(env, 9)}
+    studList = {}
+    newStuds(env, studList, NUM_STUDENT)
     gradStuds = {}
     attritStuds = {}
-    instList = {0: Instructor(env, 10, 10),
-                1: Instructor(env, 11, 10),
-                2: Instructor(env, 12, 10),
-                3: Instructor(env, 13, 10),
-                4: Instructor(env, 14, 10),
-                5: Instructor(env, 15, 10),
-                6: Instructor(env, 16, 10),
-                7: Instructor(env, 17, 10),
-                8: Instructor(env, 18, 10),
-                9: Instructor(env, 19, 10)}
+    inactiveInstList = {}
+    instList = {}
+    newInsts(env, instList, NUM_INSTRUCTOR, 0)
     sked = Scheduler(env,
                      flightLine,
                      studList,
@@ -863,7 +893,7 @@ for r in range(len(rl)):
                      SLEP_av = av_SLEPline,
                      SLEP_puls = puls_SLEPline,
                      SLEPlist = SLEPlist)
-    env.run(until=500)
+    env.run(until=600)
     current_run = r + 1
     print(current_run)
     buildFiles(current_run,
