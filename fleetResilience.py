@@ -305,7 +305,13 @@ class Aircrew(object):
         self.ID = ID
         self.hours = 0
         self.dailyFlights = 0
-        self.flightDF = pd.DataFrame()
+        self.flightDF = pd.DataFrame({"Aircrew_ID": [],
+                                              "Flight_Time": [],
+                                              "Aircraft": [],
+                                              # "Result":,
+                                              "Takeoff_Time": [],
+                                              "Day": [],
+                                              "Outcome": []})
 
     def flightLog(self, env, fltTime, ac, result, day):
         # print("Updating Flight Log")
@@ -512,8 +518,19 @@ class Scheduler(object):
                     print("At Time " + str(env.now) + "Nothing to fly!")
                     # yield env.timeout(1)
                     break
-                fltStud = availStuds.pop(random.choice(list(availStuds.keys())))
-                if (fltStud.graduated == False and
+                k = 0
+                while k == 0:
+                    fltStud = availStuds.pop(random.choice(list(availStuds.keys())))
+                    if len(fltStud.flightDF.loc[fltStud.flightDF['Day'] == daytrack]) < 2:
+                        print("Student ID " + str(fltStud.ID))
+                        k = 1
+                    elif (len(availStuds) == 0):
+                        print("At Time " + str(env.now) + "All the students are tired")
+                        break
+                if len(availStuds) == 0:
+                    print("At time " +str(self.env.now) + "all studs have 2 flights")
+                    break
+                elif (fltStud.graduated == False and
                         fltStud.attrited == False):
                     fltInst = availInst.pop(random.choice(list(availInst.keys())))
                     # acPull = np.random.randint(0, len(flightLine))
@@ -527,6 +544,7 @@ class Scheduler(object):
                     # print(vars(fltStud))
                     # print("Inst Vars ")
                     # print(vars(fltInst))
+                    print(str(fltStud.ID) + "is flying")
                     yield self.env.process(flight(self.env,
                                                   ac,
                                                   fltStud,
