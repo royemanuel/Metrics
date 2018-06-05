@@ -163,24 +163,24 @@ class Aircraft(object):
         self.BuNo = self.af.ID
         self.status = self.af.status & self.av.status & self.puls.status
         self.bornDate = env.now
-        self.blueBook = pd.DataFrame()
+        #self.blueBook = pd.DataFrame()
         self.lifeTime = self.af.lifeTime
         self.fltHours = 0
 
     def updateBlueBook(self, env, fltTime):
         # print("Updating Blue Book")
-        self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
-                                              "FlightHours": fltTime,
-                                              "AC Status": self.status,
-                                              "Airframe ID": self.af.ID,
-                                              "Airframe Status": self.af.status,
-                                              "Avionics ID": self.av.ID,
-                                              "Avionics Status": self.av.status,
-                                              "Propulsion ID": self.puls.ID,
-                                              "Propulsion Status": self.puls.status,
-                                              "SLEP Status": self.af.SLEP,
-                                              "Flight Date": env.now},
-                                             ignore_index=True)
+        # self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
+        #                                       "FlightHours": fltTime,
+        #                                       "AC Status": self.status,
+        #                                       "Airframe ID": self.af.ID,
+        #                                       "Airframe Status": self.af.status,
+        #                                       "Avionics ID": self.av.ID,
+        #                                       "Avionics Status": self.av.status,
+        #                                       "Propulsion ID": self.puls.ID,
+        #                                       "Propulsion Status": self.puls.status,
+        #                                       "SLEP Status": self.af.SLEP,
+        #                                       "Flight Date": env.now},
+        #                                      ignore_index=True)
         if self.status is False:
         #     if self.af.status is False:
         #         repTime = 15
@@ -221,17 +221,17 @@ class Aircraft(object):
             yield self.env.timeout(repTime)
             # print("fixed at %d" % self.env.now)
             self.status = self.af.status & self.av.status & self.puls.status
-            self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
-                                                  "FlightHours": fltTime,
-                                                  "AC Status": self.status,
-                                                  "Airframe Status": self.af.status,
-                                                  "Avionics Status": self.av.status,
-                                                  "Propulsion Status": self.puls.status,
-                                                  "RepairTime": repTime},
-                                                 ignore_index=True)
-        tmpBB = self.blueBook.copy()
-        self.fltHours = tmpBB.dropna(subset=["Flight Date"]).sum().FlightHours
-        self.lifeTime = self.af.lifeTime
+            # self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
+            #                                       "FlightHours": fltTime,
+            #                                       "AC Status": self.status,
+            #                                       "Airframe Status": self.af.status,
+            #                                       "Avionics Status": self.av.status,
+            #                                       "Propulsion Status": self.puls.status,
+            #                                       "RepairTime": repTime},
+            #                                      ignore_index=True)
+        # tmpBB = self.blueBook.copy()
+        # self.fltHours = tmpBB.dropna(subset=["Flight Date"]).sum().FlightHours
+        # self.lifeTime = self.af.lifeTime
 
 
         
@@ -279,7 +279,7 @@ class Aircraft(object):
         inst.hours = inst.hours + fltTime
         stud.timeInSquadron = env.now - stud.gainDate
         inst.timeInSquadron = env.now - inst.gainDate
-        inst.flightLog(env, fltTime, self.BuNo, "NA", day)
+        #inst.flightLog(env, fltTime, self.BuNo, "NA", day)
         env.process(self.updateBlueBook(env, fltTime))
         # add the event to the student's flight log with the result
         if self.status is True:
@@ -287,8 +287,8 @@ class Aircraft(object):
             stud.checkAttrite(env)
             stud.checkGraduate(env)
             # inst.checkNewOrders(env)
-        else:
-            stud.flightLog(env, fltTime, self.BuNo, "Incomplete", day)
+        #else:
+            #stud.flightLog(env, fltTime, self.BuNo, "Incomplete", day)
 
     # run the slep line check. inputs for the function
     # def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
@@ -309,26 +309,26 @@ class Aircrew(object):
         self.ID = ID
         self.hours = 0
         self.dailyFlights = 0
-        self.flightDF = pd.DataFrame({"Aircrew_ID": [],
-                                              "Flight_Time": [],
-                                              "Aircraft": [],
-                                              # "Result":,
-                                              "Takeoff_Time": [],
-                                              "Day": [],
-                                              "Outcome": []})
+        # self.flightDF = pd.DataFrame({"Aircrew_ID": [],
+        #                                       "Flight_Time": [],
+        #                                       "Aircraft": [],
+        #                                       # "Result":,
+        #                                       "Takeoff_Time": [],
+        #                                       "Day": [],
+        #                                       "Outcome": []})
         self.gainDate = gainDate
         self.timeInSquadron = 0
 
-    def flightLog(self, env, fltTime, ac, result, day):
-        # print("Updating Flight Log")
-        self.flightDF = self.flightDF.append({"Aircrew_ID": self.ID,
-                                              "Flight_Time": fltTime,
-                                              "Aircraft": ac,
-                                              # "Result":,
-                                              "Takeoff_Time": env.now,
-                                              "Day": day,
-                                              "Outcome": result},
-                                             ignore_index=True)
+    # def flightLog(self, env, fltTime, ac, result, day):
+    #     # print("Updating Flight Log")
+    #     self.flightDF = self.flightDF.append({"Aircrew_ID": self.ID,
+    #                                           "Flight_Time": fltTime,
+    #                                           "Aircraft": ac,
+    #                                           # "Result":,
+    #                                           "Takeoff_Time": env.now,
+    #                                           "Day": day,
+    #                                           "Outcome": result},
+    #                                          ignore_index=True)
 
 
 # A student collects a number ofsyllabus events and graduates
@@ -424,10 +424,10 @@ def grading(self, env, stud, attrit, fltTime, day):
     grade = np.random.random(1)
     if (grade > attrit):
         stud.syllabus += 1
-        stud.flightLog(env, fltTime, self.BuNo, "Pass", day)
+        #stud.flightLog(env, fltTime, self.BuNo, "Pass", day)
     else:
         stud.downs += 1
-        stud.flightLog(env, fltTime, self.BuNo, "Down", day)
+        #stud.flightLog(env, fltTime, self.BuNo, "Down", day)
 
 
 class Scheduler(object):
@@ -736,31 +736,31 @@ os.makedirs(timeNow)
 os.path.join(timeNow +'/')
 
 
-def allBB(sim_run, acDict):
-    for num, ac in acDict.items():
-        filename = timeNow + '/AC' + str(num) + 'run' + str(sim_run) + '.csv'
-        ac.blueBook.to_csv(filename)
-
-def concBB(sim_run, acDict, sr):
-    df = []
-    for num, ac in acDict.items():
-        df.append(ac.blueBook)
-    if len(df) > 0:
-        dfcsv = pd.concat(df)
-        filename = timeNow + '/ALL' + sr + 'run' + str(sim_run) + '.csv'
-        dfcsv.to_csv(filename)
-        return(dfcsv)
+# def allBB(sim_run, acDict):
+#     for num, ac in acDict.items():
+#         filename = timeNow + '/AC' + str(num) + 'run' + str(sim_run) + '.csv'
+#         ac.blueBook.to_csv(filename)
+# 
+# def concBB(sim_run, acDict, sr):
+#     df = []
+#     for num, ac in acDict.items():
+#         df.append(ac.blueBook)
+#     if len(df) > 0:
+#         dfcsv = pd.concat(df)
+#         filename = timeNow + '/ALL' + sr + 'run' + str(sim_run) + '.csv'
+#         dfcsv.to_csv(filename)
+#         return(dfcsv)
 
 def buildFiles(sim_run, acListDict, st, gr, at):
-    masterDF = []
-    for lname, lobject in acListDict.items():
-        if len(lobject) > 0:
-            allBB(sim_run, lobject)
-            g = concBB(sim_run, lobject, lname)
-            masterDF.append(g)
-    masterDF = pd.concat(masterDF)
-    fn = timeNow + '/ALL' + 'run' + str(sim_run) + '.csv'
-    masterDF.to_csv(fn)
+    # masterDF = []
+    # for lname, lobject in acListDict.items():
+    #     if len(lobject) > 0:
+    #         allBB(sim_run, lobject)
+    #         g = concBB(sim_run, lobject, lname)
+    #         masterDF.append(g)
+    # masterDF = pd.concat(masterDF)
+    # fn = timeNow + '/ALL' + 'run' + str(sim_run) + '.csv'
+    # masterDF.to_csv(fn)
     fnst = timeNow + '/skedTracker' + 'run' + str(sim_run) + '.csv'
     sked.tracker.to_csv(fnst)
     aircrewInfo = studInfo(sim_run, st, gr, at)
@@ -819,7 +819,7 @@ def studInfo(sim_run, studs, grads, attrits):
 NUM_AIRCRAFT =   [234]#    [15, 30, 80]
 NUM_STUDENT =    [100]#    [20, 30, 50]
 NUM_INSTRUCTOR = [80] #    [15, 25, 50]
-s_o_c =          [100]#    [20, 30, 50]
+s_o_c =          [50]#    [20, 30, 50]
 rl =             [42] #    [42, 42, 42]
 ip =             [720]   #  [720, 720, 720]
 
