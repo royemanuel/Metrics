@@ -344,7 +344,7 @@ class Student(Aircrew):
         self.attrited = False
 
     def checkGraduate(self, env):
-        if self.syllabus > 15:
+        if self.syllabus > 61:
             self.graduated = True
             self.gradDate = env.now
             # print("I'm going to TOPGUN!!")
@@ -618,7 +618,10 @@ class Scheduler(object):
             # this will do for the long run, and should probably be removed
             # in favor of a periodic introduction of students that is
             # a method or something.
-            if (len(studList) == 0 and env.now > self.nextIndoc):
+            # Old method that waited until students were gone
+            # if (len(studList) == 0 and env.now > self.nextIndoc):
+            # new method that introduces classes on schedule
+            if (env.now > self.nextIndoc):
                 # print("There is no one left to learn at time " + str(env.now))
                 self.fltClassIndoc(env,
                                    self.classSize * .7,
@@ -816,10 +819,10 @@ def studInfo(sim_run, studs, grads, attrits):
 # Constants                                                          #
 ######################################################################
 
-NUM_AIRCRAFT =   [234]#    [15, 30, 80]
-NUM_STUDENT =    [100]#    [20, 30, 50]
-NUM_INSTRUCTOR = [80] #    [15, 25, 50]
-s_o_c =          [100]#    [20, 30, 50]
+NUM_AIRCRAFT =   [120]#    [15, 30, 80]
+NUM_STUDENT =    [50]#    [20, 30, 50]
+NUM_INSTRUCTOR = [40] #    [15, 25, 50]
+s_o_c =          [50]#    [20, 30, 50]
 rl =             [42] #    [42, 42, 42]
 ip =             [720]   #  [720, 720, 720]
 
@@ -886,7 +889,10 @@ ip =             [720]   #  [720, 720, 720]
 # os.makedirs(timeNow)
 # os.path.join(timeNow +'/')
 
+timer = []
+
 for r in range(len(rl)):
+    tic = time.clock()
     np.random.seed([rl[r]])
     random.seed(rl[r])
     # Make all variables None to start it out
@@ -932,7 +938,7 @@ for r in range(len(rl)):
                      SLEP_av = av_SLEPline,
                      SLEP_puls = puls_SLEPline,
                      SLEPlist = SLEPlist)
-    env.run(until=24*365*25)
+    env.run(until=24*365)
     current_run = r + 1
     print(current_run)
     buildFiles(current_run,
@@ -940,8 +946,9 @@ for r in range(len(rl)):
                 'FL' : flightLine,
                 'SLEP' : SLEPlist},
                studList, gradStuds, attritStuds)
-    print(time.process_time())
-    print(time.perf_counter())
+    toc = time.clock()
+    print("This run took " + str(toc - tic) + " seconds.")
+    timer.append(toc-tic)
     print('Completed Run ' + str(r + 1) + ' of ' + str(len(rl)))
 
 
