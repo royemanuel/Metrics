@@ -18,6 +18,7 @@
 # Simulate the behavior of a fleet of aircraft. Begin by
 # importing what we need.
 print("starting simulation...")
+tic = time.clock()
 import time
 import os
 import simpy
@@ -344,7 +345,7 @@ class Student(Aircrew):
         self.attrited = False
 
     def checkGraduate(self, env):
-        if self.syllabus > 15:
+        if self.syllabus > 61:
             self.graduated = True
             self.gradDate = env.now
             # print("I'm going to TOPGUN!!")
@@ -500,6 +501,9 @@ class Scheduler(object):
     def dailyFlightSked(self):
         i = 0
         daytrack = 0
+        todaytrack = 0
+        flownStuds = {}
+        flownInsts = {}
         while True:
             # numStuds = len(self.studList)
             # numAC = len(self.flightLine)
@@ -515,6 +519,12 @@ class Scheduler(object):
             availStuds = self.studList.copy()
             availInst = self.instList.copy()
             availAC = self.flightLine.copy()
+            # Keep track of the current day so we can assess whether
+            # student has flown or not
+            if todaytrack != daytrack:
+                flownStuds = {}
+                flownInsts = {}
+                todaytrack = daytrack
             # if (len(availStuds) == 0 or
             #     len(availInst) == 0 or
             #     len(availAC) == 0):
@@ -541,15 +551,19 @@ class Scheduler(object):
                 k = 0
                 while k == 0:
                     fltStud = availStuds.pop(random.choice(list(availStuds.keys())))
-                    if len(fltStud.flightDF.loc[fltStud.flightDF['Day'] == daytrack]) < 2:
-                        # print("Student ID " + str(fltStud.ID))
+                    fltStudID = fltStud.ID
+                    if fltStudID in flownStuds and flownStuds[fltStudID] < 2:
+                        flownStuds[fltStudID] += 1
+                        k = 1
+                    elif fltStudID not in flownStuds:
+                        flownStuds[fltStudID] = 1
                         k = 1
                     elif (len(availStuds) == 0):
                         # print("At Time " + str(env.now) + "All the students are tired")
                         break
-                # if len(availStuds) == 0:
-                #     # print("At time " +str(self.env.now) + "all studs have 2 flights")
-                #     break
+                #if len(availStuds) == 0:
+                    # print("At time " +str(self.env.now) + "all studs have 2 flights")
+                #    break
                 if (fltStud.graduated == False and
                         fltStud.attrited == False):
                     # SElect an instructor. Supposed to randomly draw
@@ -559,14 +573,18 @@ class Scheduler(object):
                     j = 0
                     while j == 0:
                         fltInst = availInst.pop(random.choice(list(availInst.keys())))
-                        if len(fltInst.flightDF.loc[fltInst.flightDF['Day'] == daytrack]) < 5:
-                            # print("Instructor ID " + str(fltInst.ID))
-                            j = 1
+                        fltInstID = fltInst.ID
+                        if fltInstID in flownInsts and flownInsts[fltInstID] < 4:
+                            flownInsts[fltInstID] += 1
+                            k = 1
+                        elif fltInstID not in flownInsts:
+                            flownInsts[fltInstID] = 1
+                            k = 1
                         elif (len(availInst) == 0):
-                            # print("At Time " + str(env.now) + "All the instructors are tired")
+                            # print("At Time " + str(env.now) + "All the students are tired")
                             break
-                        if len(availInst) == 0:
-                            # print("At time " +str(self.env.now) + "all insts have 4 flights")
+                        if (len(availInst) == 0):
+                            # print("At Time " + str(env.now) + "All the students are tired")
                             break
                     # acPull = np.random.randint(0, len(flightLine))
                     # ac = self.flightLine[acPull]
@@ -579,9 +597,9 @@ class Scheduler(object):
                     # print(vars(fltStud))
                     # print("Inst Vars ")
                     # print(vars(fltInst))
-                    # print(str(fltStud.ID) + "instructed by " +
-                    #       str(fltInst.ID) + " in " + str(ac.BuNo) +
-                    #       " at time " + str(env.now)
+                    print(str(fltStud.ID) + "instructed by " +
+                          str(fltInst.ID) + " in " + str(ac.BuNo) +
+                          " at time " + str(env.now))
                     yield self.env.process(flight(self.env,
                                                   ac,
                                                   fltStud,
@@ -601,9 +619,14 @@ class Scheduler(object):
                     # print(str(self.instList[0].ID) + str(self.instList[1].ID))
             outOfPipeline = len(gradStuds) + len(attritStuds)
             stat_prv = self.tracker.tail(1)
+            upAC = 0
+            for key, item in self.flightLine.items():
+                if item.status:
+                    upAC += 1
             status_now = {'Time':[self.env.now],
                           'Day':[daytrack],
                           'flightLine':[len(self.flightLine)],
+                          'upAircraft':[upAC],
                           'SLEPlist':[len(self.SLEPlist)],
                           'boneYard':[len(boneYard)],
                           'students':[len(self.studList)],
@@ -618,7 +641,7 @@ class Scheduler(object):
             # this will do for the long run, and should probably be removed
             # in favor of a periodic introduction of students that is
             # a method or something.
-            if (len(studList) == 0 and env.now > self.nextIndoc):
+            if (env.now > self.nextIndoc):
                 # print("There is no one left to learn at time " + str(env.now))
                 self.fltClassIndoc(env,
                                    self.classSize * .7,
@@ -819,7 +842,7 @@ def studInfo(sim_run, studs, grads, attrits):
 NUM_AIRCRAFT =   [234]#    [15, 30, 80]
 NUM_STUDENT =    [100]#    [20, 30, 50]
 NUM_INSTRUCTOR = [80] #    [15, 25, 50]
-s_o_c =          [50]#    [20, 30, 50]
+s_o_c =          [100]#    [20, 30, 50]
 rl =             [42] #    [42, 42, 42]
 ip =             [720]   #  [720, 720, 720]
 
@@ -932,7 +955,7 @@ for r in range(len(rl)):
                      SLEP_av = av_SLEPline,
                      SLEP_puls = puls_SLEPline,
                      SLEPlist = SLEPlist)
-    env.run(until=24*365*25)
+    env.run(until=24)
     current_run = r + 1
     print(current_run)
     buildFiles(current_run,
@@ -940,9 +963,9 @@ for r in range(len(rl)):
                 'FL' : flightLine,
                 'SLEP' : SLEPlist},
                studList, gradStuds, attritStuds)
-    print(time.process_time())
-    print(time.perf_counter())
-    print('Completed Run ' + str(r + 1) + ' of ' + str(len(rl)))
+    toc = time.clock()    
+    print('Completed Run ' + str(r + 1) + ' of ' + str(len(rl)) +
+          ' in ' + str(toc-tic) + ' seconds.')
 
 
 
