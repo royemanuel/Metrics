@@ -576,10 +576,10 @@ class Scheduler(object):
                         fltInstID = fltInst.ID
                         if fltInstID in flownInsts and flownInsts[fltInstID] < 4:
                             flownInsts[fltInstID] += 1
-                            k = 1
+                            j = 1
                         elif fltInstID not in flownInsts:
                             flownInsts[fltInstID] = 1
-                            k = 1
+                            j = 1
                         elif (len(availInst) == 0):
                             # print("At Time " + str(env.now) + "All the students are tired")
                             break
@@ -597,9 +597,9 @@ class Scheduler(object):
                     # print(vars(fltStud))
                     # print("Inst Vars ")
                     # print(vars(fltInst))
-                    print(str(fltStud.ID) + "instructed by " +
-                          str(fltInst.ID) + " in " + str(ac.BuNo) +
-                          " at time " + str(env.now))
+                    # print(str(fltStud.ID) + "instructed by " +
+                    #       str(fltInst.ID) + " in " + str(ac.BuNo) +
+                    #       " at time " + str(env.now))
                     yield self.env.process(flight(self.env,
                                                   ac,
                                                   fltStud,
@@ -955,7 +955,7 @@ for r in range(len(rl)):
                      SLEP_av = av_SLEPline,
                      SLEP_puls = puls_SLEPline,
                      SLEPlist = SLEPlist)
-    env.run(until=24)
+    env.run(until=24*25*365)
     current_run = r + 1
     print(current_run)
     buildFiles(current_run,
