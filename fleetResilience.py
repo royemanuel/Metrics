@@ -18,7 +18,6 @@
 # Simulate the behavior of a fleet of aircraft. Begin by
 # importing what we need.
 print("starting simulation...")
-tic = time.clock()
 import time
 import os
 import simpy
@@ -27,7 +26,7 @@ import numpy as np
 import pandas as pd
 # import pdb
 import random
-import time
+tic = time.clock()
 time.process_time()
 time.perf_counter()
 # pdb.set_trace()
