@@ -123,7 +123,7 @@ class Airframe(Part):
     def __init__(self, env, ID):
         self.env = env
         self.obj = "Airframe"
-        super().__init__(env, ID, SLEP_limit = 14000, lifeTime = 14400)
+        super().__init__(env, ID, SLEP_limit = 7000, lifeTime = 7200)
         self.ageFail = 1000
         # This needs to be a call to a method for part. ID the parameters
         # in the particular part
@@ -155,7 +155,7 @@ class Propulsion(Part):
 
 
 class Aircraft(object):
-    def __init__(self, env, af, av, puls):
+    def __init__(self, env, af, av, puls, attrit):
         self.env = env
         self.obj = "Aircraft"
         self.af = Airframe(env, af)
@@ -167,6 +167,7 @@ class Aircraft(object):
         #self.blueBook = pd.DataFrame()
         self.lifeTime = self.af.lifeTime
         self.fltHours = 0
+        self.attrit = attrit
 
     def updateBlueBook(self, env, fltTime):
         # print("Updating Blue Book")
@@ -240,7 +241,7 @@ class Aircraft(object):
             
     def flyAircraft(self, env, fltTime, stud, inst, day):
         # Check to see if any of the parts failed in flight
-        attrit = .1
+        attrit = .02
         # print("flight time = " +str(fltTime))
         # print("av " + str(self.av.fltFail))
         # print("af " + str(self.af.fltFail))
@@ -284,7 +285,7 @@ class Aircraft(object):
         env.process(self.updateBlueBook(env, fltTime))
         # add the event to the student's flight log with the result
         if self.status is True:
-            grading(self, env, stud, attrit, fltTime, day)
+            grading(self, env, stud, self.attrit, fltTime, day)
             stud.checkAttrite(env)
             stud.checkGraduate(env)
             # inst.checkNewOrders(env)
@@ -477,7 +478,7 @@ class Scheduler(object):
                 self.env.process(ac.af.SLEP_Part(env,
                                 SLEP_line = af_SLEPline,
                                 SLEP_TTR = 1000,
-                                                 SLEP_addition = 19800))
+                                                 SLEP_addition = 9900))
                 # print("Aircraft " + str(ac.BuNo) + " is off to the FST")
                 self.SLEPlist.update({int(ac.BuNo[2:]):
                                       self.flightLine.pop(int(ac.BuNo[2:]))})
@@ -690,12 +691,12 @@ class Scheduler(object):
 
 
 # Build an aircraft. If it is the start, it will build 
-def buildAC(env, numAC, fl):
+def buildAC(env, numAC, fl, attrit):
     for n in range(numAC):
         af = "af" + str(n)
         av = "av" + str(n)
         puls = "puls" + str(n)
-        fl[n] = Aircraft(env, af, av, puls)
+        fl[n] = Aircraft(env, af, av, puls, attrit)
         
 
 def newStuds(env, listname, numStud):
@@ -839,12 +840,20 @@ def studInfo(sim_run, studs, grads, attrits):
 # Constants                                                          #
 ######################################################################
 
-NUM_AIRCRAFT =   [234]#    [15, 30, 80]
-NUM_STUDENT =    [100]#    [20, 30, 50]
-NUM_INSTRUCTOR = [80] #    [15, 25, 50]
-s_o_c =          [100]#    [20, 30, 50]
-rl =             [42] #    [42, 42, 42]
-ip =             [720]   #  [720, 720, 720]
+NUM_AIRCRAFT =   [100, 100, 100, 100, 100, 100]#    [15, 30, 80]
+NUM_STUDENT =    [100, 100, 100, 100, 100, 100]#    [20, 30, 50]
+NUM_INSTRUCTOR = [70, 80, 70, 80, 70, 80] #    [15, 25, 50]
+s_o_c =          [25, 25, 25, 25, 25, 25]#    [20, 30, 50]
+rl =             [42, 42, 23, 23, 122809, 122809] #    [42, 42, 42]
+ip =             [720, 720, 720, 720, 720, 720]   #  [720, 720, 720]
+attrit =         [.035, .035, .035, .035, .035, .035]
+time_line =      [30*24*365,
+                  30*24*365,
+                  30*24*365,
+                  30*24*365,
+                  30*24*365,
+                  30*24*365]
+SLEPspots =      [4, 8, 4, 8, 4, 8]
 
 ######################################################################
 # Build Aircraft, Students, and instructors                          #
@@ -910,6 +919,7 @@ ip =             [720]   #  [720, 720, 720]
 # os.path.join(timeNow +'/')
 
 for r in range(len(rl)):
+    tic_run = time.clock()
     np.random.seed([rl[r]])
     random.seed(rl[r])
     # Make all variables None to start it out
@@ -932,10 +942,10 @@ for r in range(len(rl)):
     flightLine = {}
     boneYard = {}
     SLEPlist = {}
-    buildAC(env, NUM_AIRCRAFT[r], flightLine)
-    af_SLEPline = simpy.Resource(env, capacity=4)
-    av_SLEPline = simpy.Resource(env, capacity=4)
-    puls_SLEPline = simpy.Resource(env, capacity=4)
+    buildAC(env, NUM_AIRCRAFT[r], flightLine, attrit[r])
+    af_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
+    av_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
+    puls_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
     ac_status_history = []
     indocPeriod = ip[r]
     studList = {}
@@ -955,7 +965,7 @@ for r in range(len(rl)):
                      SLEP_av = av_SLEPline,
                      SLEP_puls = puls_SLEPline,
                      SLEPlist = SLEPlist)
-    env.run(until=24*25*365)
+    env.run(until=time_line[r])
     current_run = r + 1
     print(current_run)
     buildFiles(current_run,
@@ -963,10 +973,12 @@ for r in range(len(rl)):
                 'FL' : flightLine,
                 'SLEP' : SLEPlist},
                studList, gradStuds, attritStuds)
-    toc = time.clock()    
+    toc_run = time.clock()    
     print('Completed Run ' + str(r + 1) + ' of ' + str(len(rl)) +
-          ' in ' + str(toc-tic) + ' seconds.')
+          ' in ' + str(toc_run - tic_run) + ' seconds.')
 
+toc = time.clock()    
+print('Completed all runs in ' + str(toc - tic) + ' seconds.')
 
 
 
