@@ -78,11 +78,11 @@ class Part(object):
             self.fltHours += self.fltFail
             self.status = False
             self.age = env.now - self.bornDate
-            self.history = self.history.append({"ID": self.ID,
-                                                "Age": self.age,
-                                                "FlightHours": self.fltHours,
-                                                "TimeToFail": self.fltFail},
-                                               ignore_index=True)
+            # self.history = self.history.append({"ID": self.ID,
+            #                                     "Age": self.age,
+            #                                     "FlightHours": self.fltHours,
+            #                                     "TimeToFail": self.fltFail},
+            #                                    ignore_index=True)
             # THis section will go with a repair function, but for now
             # I want to check the validity
             self.failTime(env, **{"endTime": self.endtime})
@@ -91,12 +91,12 @@ class Part(object):
             self.fltFail -= fltTime
             self.fltHours += fltTime
             self.age = env.now - self.bornDate
-            self.history = self.history.append({"ID": self.ID,
-                                                "Age": self.age,
-                                                "FlightHours": self.fltHours,
-                                                "TimeToFail": self.fltFail,
-                                                "fhSinceFail": self.fltHrsSinceFail},
-                                                ignore_index=True)
+            # self.history = self.history.append({"ID": self.ID,
+            #                                     "Age": self.age,
+            #                                     "FlightHours": self.fltHours,
+            #                                     "TimeToFail": self.fltFail,
+            #                                     "fhSinceFail": self.fltHrsSinceFail},
+            #                                     ignore_index=True)
 
     # Check if the part needs to go to SLEP. Intend each part to call
     def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
@@ -847,12 +847,12 @@ s_o_c =          [25, 25, 25, 25, 25, 25]#    [20, 30, 50]
 rl =             [42, 42, 23, 23, 122809, 122809] #    [42, 42, 42]
 ip =             [720, 720, 720, 720, 720, 720]   #  [720, 720, 720]
 attrit =         [.035, .035, .035, .035, .035, .035]
-time_line =      [30*24*365,
-                  30*24*365,
-                  30*24*365,
-                  30*24*365,
-                  30*24*365,
-                  30*24*365]
+time_line =      [3*24*365,
+                  3*24*365,
+                  3*24*365,
+                  3*24*365,
+                  3*24*365,
+                  3*24*365]
 SLEPspots =      [4, 8, 4, 8, 4, 8]
 
 ######################################################################
