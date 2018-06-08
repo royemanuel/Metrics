@@ -63,8 +63,9 @@ class Part(object):
         
     # Define a fail time for the particular part.
     def failTime(self, env, **kwargs):
-        time_of_failure = np.random.randint(1, kwargs['endTime']) + env.now
-        # print(self.fltFail)
+        print("from failTime" + str(kwargs['endTime']))
+        time_of_failure = np.ceil(np.random.exponential(kwargs['endTime'])) + env.now
+        print(self.obj + " will fail at time " + str(time_of_failure))
         return(time_of_failure)
         # for kw in kwargs:
         #     if kwargs[kw] == "endTime":
@@ -79,25 +80,27 @@ class Part(object):
             self.status = False
             self.age = env.now - self.bornDate
             #??# Commented out data storage sections for easy removal.
-            #??# self.history = self.history.append({"ID": self.ID,
-            #??#                                     "Age": self.age,
-            #??#                                     "FlightHours": self.fltHours,
-            #??#                                     "TimeToFail": self.fltFail},
-            #??#                                    ignore_index=True)
+            self.history = self.history.append({"ID": self.ID,
+                                                "Age": self.age,
+                                                "FlightHours": self.fltHours,
+                                                "TimeToFail": self.fltFail},
+                                               ignore_index=True)
             # THis section will go with a repair function, but for now
             # I want to check the validity
-            self.failTime(env, **{"endTime": self.endTime})
+            print("from failFlight " + self.obj + str(self.endTime))
+            self.fltFail = self.failTime(env, **{"endTime": self.endTime})
             self.fltHrsSinceFail = 0
         else:
             self.fltFail -= fltTime
             self.fltHours += fltTime
             self.age = env.now - self.bornDate
-            #??# self.history = self.history.append({"ID": self.ID,
-            #??#                                     "Age": self.age,
-            #??#                                     "FlightHours": self.fltHours,
-            #??#                                     "TimeToFail": self.fltFail,
-            #??#                                     "fhSinceFail": self.fltHrsSinceFail},
-            #??#                                     ignore_index=True)
+            #??# Commented out data storage sections for easy removal.
+            self.history = self.history.append({"ID": self.ID,
+                                                "Age": self.age,
+                                                "FlightHours": self.fltHours,
+                                                "TimeToFail": self.fltFail,
+                                                "fhSinceFail": self.fltHrsSinceFail},
+                                                ignore_index=True)
 
     # Check if the part needs to go to SLEP. Intend each part to call
     def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
@@ -213,15 +216,18 @@ class Aircraft(object):
             if self.af.status is False:
                 afRepTime = np.random.randint(1, self.af.repTime)
                 self.af.status = True
-                # print("The Airframe was broken, but we bent some metal %d" % self.env.now)
+                print("The Airframe was broken, but we bent some metal %d" % self.env.now)
+                print("Airframe won't break again until %d." % self.af.fltFail)
             if self.av.status is False:
                 avRepTime = np.random.randint(1, self.av.repTime)
                 self.av.status = True
-                # print("The instruments were down. Up and at'em %d" % self.env.now)
+                print("The instruments were down. Up and at'em %d" % self.env.now)
+                print("Avionics won't break again until %d." % self.av.fltFail)
             if self.puls.status is False:
                 pulsRepTime = np.random.randint(1, self.puls.repTime)
                 self.puls.status  = True
-                # print("The Engine busted, so now it purrs like a kitten %d" % self.env.now)
+                print("The Engine busted, so now it purrs like a kitten %d. " % self.env.now)
+                print("Engine won't break again until" + str(self.puls.fltFail))
             repTime = max(afRepTime,
                               avRepTime,
                               pulsRepTime)
@@ -266,6 +272,7 @@ class Aircraft(object):
         self.puls.failFlight(env, fltTime)
         # Update the aircraft status
         self.status = self.af.status & self.av.status & self.puls.status
+        #??# Commented out data storage sections for easy removal.
         #??# self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
         #??#                                       "FlightHours": fltTime,
         #??#                                       "AC Status": self.status,
@@ -845,27 +852,27 @@ def studInfo(sim_run, studs, grads, attrits):
 # Constants                                                          #
 ######################################################################
 
-NUM_AIRCRAFT =   [100, 100, 100, 100, 100, 100]#    [15, 30, 80]
-NUM_STUDENT =    [100, 100, 100, 100, 100, 100]#    [20, 30, 50]
-NUM_INSTRUCTOR = [70, 80, 70, 80, 70, 80] #    [15, 25, 50]
-s_o_c =          [25, 25, 25, 25, 25, 25]#    [20, 30, 50]
-rl =             [42, 42, 23, 23, 122809, 122809] #    [42, 42, 42]
-ip =             [720, 720, 720, 720, 720, 720]   #  [720, 720, 720]
-attrit =         [.035, .035, .035, .035, .035, .035]
-time_line =      [3*24*365,
-                  3*24*365,
-                  3*24*365,
-                  3*24*365,
-                  3*24*365,
-                  3*24*365]
+NUM_AIRCRAFT =   [10]#, 100, 100, 100, 100, 100]#    [15, 30, 80]
+NUM_STUDENT =    [10]#, 100, 100, 100, 100, 100]#    [20, 30, 50]
+NUM_INSTRUCTOR = [7]#, 80, 70, 80, 70, 80] #    [15, 25, 50]
+s_o_c =          [5]#, 25, 25, 25, 25, 25]#    [20, 30, 50]
+rl =             [42]#, 42, 23, 23, 122809, 122809] #    [42, 42, 42]
+ip =             [720]#, 720, 720, 720, 720, 720]   #  [720, 720, 720]
+attrit =         [.035]#, .035, .035, .035, .035, .035]
+time_line =      [365]#,
+                  # 3*24*365,
+                  # 3*24*365,
+                  # 3*24*365,
+                  # 3*24*365,
+                  # 3*24*365]
 et = {'af':720,
-      'av':120,
-      'puls':120}
-rt = {'af':296,
-      'av':120,
-      'puls':120}
+      'av':240,
+      'puls':360}
+rt = {'af':24,
+      'av':6,
+      'puls':6}
       
-SLEPspots =      [4, 8, 4, 8, 4, 8]
+SLEPspots =      [4]#, 8, 4, 8, 4, 8]
 
 ######################################################################
 # Build Aircraft, Students, and instructors                          #
