@@ -46,25 +46,26 @@ time.perf_counter()
 # Build an aircraft part
 # an aircraft part needs to work, fail, and be part of an aircraft
 class Part(object):
-    def __init__(self, env, ID, SLEP_limit, lifeTime):
-        self.ID = ID
+    def __init__(self, env, ID, SLEP_limit, lifeTime, endTime, repTime):
         self.bornDate = env.now
+        self.ID = ID
+        self.SLEP_limit = SLEP_limit
+        self.lifeTime = lifeTime
+        self.endTime = endTime
+        self.repTime = repTime
         self.age = 0
         self.fltHours = 0
         self.fltHrsSinceFail = 0
         self.status = True
         self.history = pd.DataFrame()
-        # hardcoding this in to demo failtTime
-        self.endtime = 25
-        self.lifeTime = lifeTime
-        self.fltFail = self.failTime(env, **{"endTime": self.endtime})
-        self.SLEP_limit = SLEP_limit
         self.SLEP = False
         self.SLEPtime = 20000
         
     # Define a fail time for the particular part.
     def failTime(self, env, **kwargs):
-        self.fltFail = np.random.randint(1, 25)
+        time_of_failure = np.random.randint(1, kwargs['endTime']) + env.now
+        # print(self.fltFail)
+        return(time_of_failure)
         # for kw in kwargs:
         #     if kwargs[kw] == "endTime":
         #         print("rollin' the dice")
@@ -77,25 +78,26 @@ class Part(object):
             self.fltHours += self.fltFail
             self.status = False
             self.age = env.now - self.bornDate
-            # self.history = self.history.append({"ID": self.ID,
-            #                                     "Age": self.age,
-            #                                     "FlightHours": self.fltHours,
-            #                                     "TimeToFail": self.fltFail},
-            #                                    ignore_index=True)
+            #??# Commented out data storage sections for easy removal.
+            #??# self.history = self.history.append({"ID": self.ID,
+            #??#                                     "Age": self.age,
+            #??#                                     "FlightHours": self.fltHours,
+            #??#                                     "TimeToFail": self.fltFail},
+            #??#                                    ignore_index=True)
             # THis section will go with a repair function, but for now
             # I want to check the validity
-            self.failTime(env, **{"endTime": self.endtime})
+            self.failTime(env, **{"endTime": self.endTime})
             self.fltHrsSinceFail = 0
         else:
             self.fltFail -= fltTime
             self.fltHours += fltTime
             self.age = env.now - self.bornDate
-            # self.history = self.history.append({"ID": self.ID,
-            #                                     "Age": self.age,
-            #                                     "FlightHours": self.fltHours,
-            #                                     "TimeToFail": self.fltFail,
-            #                                     "fhSinceFail": self.fltHrsSinceFail},
-            #                                     ignore_index=True)
+            #??# self.history = self.history.append({"ID": self.ID,
+            #??#                                     "Age": self.age,
+            #??#                                     "FlightHours": self.fltHours,
+            #??#                                     "TimeToFail": self.fltFail,
+            #??#                                     "fhSinceFail": self.fltHrsSinceFail},
+            #??#                                     ignore_index=True)
 
     # Check if the part needs to go to SLEP. Intend each part to call
     def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
@@ -119,14 +121,21 @@ def print_stats(res):
 # to nest or do the inheritance part of OOP.
 # Airframes are the source of the BuNo
 class Airframe(Part):
-    def __init__(self, env, ID):
+    def __init__(self, env, ID, endTime, repTime):
         self.env = env
         self.obj = "Airframe"
-        super().__init__(env, ID, SLEP_limit = 7000, lifeTime = 7200)
         self.ageFail = 1000
+        self.fltFail = 0
+        self.fltFail = self.failTime(env, **{"endTime": endTime})
+        super().__init__(env,
+                         ID,
+                         SLEP_limit = 7000,
+                         lifeTime = 7200,
+                         endTime = endTime,
+                         repTime = repTime)
         # This needs to be a call to a method for part. ID the parameters
         # in the particular part
-        self.fltFail = np.random.randint(1, 100 + 1)
+        # self.fltFail = np.random.randint(1, 100 + 1)
         # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
         
 
@@ -134,32 +143,47 @@ class Airframe(Part):
 # different distributions and be party to different updates / Tech
 # refreshes.
 class Avionics(Part):
-    def __init__(self, env, ID):
+    def __init__(self, env, ID, endTime, repTime):
         self.env = env
         self.obj = "Avionics"
-        super().__init__(env, ID, SLEP_limit = 120, lifeTime = 10000)
+        self.fltFail = 0
+        super().__init__(env,
+                         ID,
+                         SLEP_limit = 120,
+                         lifeTime = 10000,
+                         endTime = endTime,
+                         repTime = repTime)
         self.ageFail = 20
-        self.fltFail = np.random.randint(1, 20 + 1)
+        self.fltFail = self.failTime(env, **{"endTime": self.endTime})
+        # self.fltFail = np.random.randint(1, 20 + 1)
         # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
 class Propulsion(Part):
-    def __init__(self, env, ID):
+    def __init__(self, env, ID, endTime, repTime):
         self.env = env
         self.obj = "Propulsion"
-        super().__init__(env, ID, SLEP_limit = 120, lifeTime = 10000)
+        self.fltFail = 0
+        self.fltFail = self.failTime(env, **{"endTime": endTime})
+        super().__init__(env,
+                         ID,
+                         SLEP_limit = 120,
+                         lifeTime = 10000,
+                         endTime = endTime,
+                         repTime = repTime)
         self.ageFail = 30
-        self.fltFail = np.random.randint(1, 30 + 1)
+        self.fltFail = self.failTime(env, **{"endTime": self.endTime})
+        # self.fltFail = np.random.randint(1, 30 + 1)
         # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
 class Aircraft(object):
-    def __init__(self, env, af, av, puls, attrit):
+    def __init__(self, env, af, av, puls, attrit, endTime, repTime):
         self.env = env
         self.obj = "Aircraft"
-        self.af = Airframe(env, af)
-        self.av = Avionics(env, av)
-        self.puls = Propulsion(env, puls)
+        self.af = Airframe(env, af, endTime['af'], repTime['af'])
+        self.av = Avionics(env, av, endTime['av'], repTime['av'])
+        self.puls = Propulsion(env, puls, endTime['puls'], repTime['puls'])
         self.BuNo = self.af.ID
         self.status = self.af.status & self.av.status & self.puls.status
         self.bornDate = env.now
@@ -183,37 +207,19 @@ class Aircraft(object):
         #                                       "Flight Date": env.now},
         #                                      ignore_index=True)
         if self.status is False:
-        #     if self.af.status is False:
-        #         repTime = 15
-        #         yield env.timeout(repTime)
-        #         self.af.status = True
-        #         self.av.status = True
-        #         self.puls.status = True
-        #         print("The Airframe was broken, but now we fixed everything")
-        #     elif self.puls.status is False:
-        #         repTime = 15
-        #         yield env.timeout(repTime)
-        #         self.puls.status = True
-        #         self.av.status = True
-        #         print("The Engine busted, so we fixed that and checked the instruments")
-        #     elif self.av.status is False:
-        #         repTime = 15
-        #         yield env.timeout(repTime)
-        #         self.av.status = True
-        #         print("Just the instruments were down. Up and at'em")
             afRepTime = 0
             avRepTime = 0
             pulsRepTime = 0
             if self.af.status is False:
-                afRepTime = 16
+                afRepTime = np.random.randint(1, self.af.repTime)
                 self.af.status = True
                 # print("The Airframe was broken, but we bent some metal %d" % self.env.now)
             if self.av.status is False:
-                avRepTime = 13
+                avRepTime = np.random.randint(1, self.av.repTime)
                 self.av.status = True
                 # print("The instruments were down. Up and at'em %d" % self.env.now)
             if self.puls.status is False:
-                pulsRepTime = 14
+                pulsRepTime = np.random.randint(1, self.puls.repTime)
                 self.puls.status  = True
                 # print("The Engine busted, so now it purrs like a kitten %d" % self.env.now)
             repTime = max(afRepTime,
@@ -260,15 +266,15 @@ class Aircraft(object):
         self.puls.failFlight(env, fltTime)
         # Update the aircraft status
         self.status = self.af.status & self.av.status & self.puls.status
-        # self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
-        #                                       "FlightHours": fltTime,
-        #                                       "AC Status": self.status,
-        #                                       "Airframe Status": self.af.status,
-        #                                       "Avionics Status": self.av.status,
-        #                                       "Propulsion Status": self.puls.status,
-        #                                       "Flight Date": env.now},
-        #                                      ignore_index=True)
-        # self.updateBlueBook(env, fltTime)
+        #??# self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
+        #??#                                       "FlightHours": fltTime,
+        #??#                                       "AC Status": self.status,
+        #??#                                       "Airframe Status": self.af.status,
+        #??#                                       "Avionics Status": self.av.status,
+        #??#                                       "Propulsion Status": self.puls.status,
+        #??#                                       "Flight Date": env.now},
+        #??#                                      ignore_index=True)
+        #??# self.updateBlueBook(env, fltTime)
         # Update aircrew values. For now, updating flight time
         # whether up or down, and not counting a syllabus event if down
         # if self.status:
@@ -280,7 +286,7 @@ class Aircraft(object):
         inst.hours = inst.hours + fltTime
         stud.timeInSquadron = env.now - stud.gainDate
         inst.timeInSquadron = env.now - inst.gainDate
-        #inst.flightLog(env, fltTime, self.BuNo, "NA", day)
+        #??# inst.flightLog(env, fltTime, self.BuNo, "NA", day)
         env.process(self.updateBlueBook(env, fltTime))
         # add the event to the student's flight log with the result
         if self.status is True:
@@ -288,8 +294,8 @@ class Aircraft(object):
             stud.checkAttrite(env)
             stud.checkGraduate(env)
             # inst.checkNewOrders(env)
-        #else:
-            #stud.flightLog(env, fltTime, self.BuNo, "Incomplete", day)
+        #??# else:
+            #??# stud.flightLog(env, fltTime, self.BuNo, "Incomplete", day)
 
     # run the slep line check. inputs for the function
     # def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
@@ -690,12 +696,12 @@ class Scheduler(object):
 
 
 # Build an aircraft. If it is the start, it will build 
-def buildAC(env, numAC, fl, attrit):
+def buildAC(env, numAC, fl, attrit, endTime, repTime):
     for n in range(numAC):
         af = "af" + str(n)
         av = "av" + str(n)
         puls = "puls" + str(n)
-        fl[n] = Aircraft(env, af, av, puls, attrit)
+        fl[n] = Aircraft(env, af, av, puls, attrit, endTime, repTime)
         
 
 def newStuds(env, listname, numStud):
@@ -852,70 +858,18 @@ time_line =      [3*24*365,
                   3*24*365,
                   3*24*365,
                   3*24*365]
+et = {'af':720,
+      'av':120,
+      'puls':120}
+rt = {'af':296,
+      'av':120,
+      'puls':120}
+      
 SLEPspots =      [4, 8, 4, 8, 4, 8]
 
 ######################################################################
 # Build Aircraft, Students, and instructors                          #
 ######################################################################
-
-
-# np.random.seed([RANDOM_SEED])
-# random.seed(RANDOM_SEED)
-# 
-# 
-# # def repair(env, ac)
-# env = simpy.Environment()
-# flightLine = {}
-# boneYard = {}
-# SLEPlist = {}
-# buildAC(env, NUM_AIRCRAFT, flightLine)
-# 
-# af_SLEPline = simpy.Resource(env, capacity=4)
-# av_SLEPline = simpy.Resource(env, capacity=4)
-# puls_SLEPline = simpy.Resource(env, capacity=4)
-# indocPeriod = 300
-# ac_status_history = []
-# 
-# studList = {0: Student(env, 0),
-#             1: Student(env, 1),
-#             2: Student(env, 2),
-#             3: Student(env, 3),
-#             4: Student(env, 4),
-#             5: Student(env, 5),
-#             6: Student(env, 6),
-#             7: Student(env, 7),
-#             8: Student(env, 8),
-#             9: Student(env, 9)}
-# 
-# 
-# gradStuds = {}
-# attritStuds = {}
-# instList = {0: Instructor(env, 10, 10),
-#             1: Instructor(env, 11, 10),
-#             2: Instructor(env, 12, 10),
-#             3: Instructor(env, 13, 10),
-#             4: Instructor(env, 14, 10),
-#             5: Instructor(env, 15, 10),
-#             6: Instructor(env, 16, 10),
-#             7: Instructor(env, 17, 10),
-#             8: Instructor(env, 18, 10),
-#             9: Instructor(env, 19, 10)}
-# sked = Scheduler(env,
-#                  flightLine,
-#                  studList,
-#                  instList,
-#                  indocPeriod,
-#                  SLEP_af = af_SLEPline,
-#                  SLEP_av = av_SLEPline,
-#                  SLEP_puls = puls_SLEPline,
-#                  SLEPlist = SLEPlist)
-# 
-#env.run(until=5)
-
-
-# timeNow = time.strftime("%Y%m%d-%H%M%S")
-# os.makedirs(timeNow)
-# os.path.join(timeNow +'/')
 
 for r in range(len(rl)):
     tic_run = time.clock()
@@ -941,7 +895,7 @@ for r in range(len(rl)):
     flightLine = {}
     boneYard = {}
     SLEPlist = {}
-    buildAC(env, NUM_AIRCRAFT[r], flightLine, attrit[r])
+    buildAC(env, NUM_AIRCRAFT[r], flightLine, attrit[r], et, rt)
     af_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
     av_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
     puls_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
@@ -964,6 +918,7 @@ for r in range(len(rl)):
                      SLEP_av = av_SLEPline,
                      SLEP_puls = puls_SLEPline,
                      SLEPlist = SLEPlist)
+    print(time_line[r])
     env.run(until=time_line[r])
     current_run = r + 1
     print(current_run)
