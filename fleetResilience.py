@@ -63,9 +63,9 @@ class Part(object):
         
     # Define a fail time for the particular part.
     def failTime(self, env, **kwargs):
-        print("from failTime" + str(kwargs['endTime']))
-        time_of_failure = np.ceil(np.random.exponential(kwargs['endTime'])) + env.now
-        print(self.obj + " will fail at time " + str(time_of_failure))
+        # print("from failTime" + str(kwargs['endTime']))
+        time_of_failure = np.ceil(np.random.exponential(kwargs['endTime']))
+        # print(self.obj + " will fail at time " + str(time_of_failure))
         return(time_of_failure)
         # for kw in kwargs:
         #     if kwargs[kw] == "endTime":
@@ -87,7 +87,7 @@ class Part(object):
                                                ignore_index=True)
             # THis section will go with a repair function, but for now
             # I want to check the validity
-            print("from failFlight " + self.obj + str(self.endTime))
+            # print("from failFlight " + self.obj + str(self.endTime))
             self.fltFail = self.failTime(env, **{"endTime": self.endTime})
             self.fltHrsSinceFail = 0
         else:
@@ -216,18 +216,18 @@ class Aircraft(object):
             if self.af.status is False:
                 afRepTime = np.random.randint(1, self.af.repTime)
                 self.af.status = True
-                print("The Airframe was broken, but we bent some metal %d" % self.env.now)
-                print("Airframe won't break again until %d." % self.af.fltFail)
+                # print("The Airframe was broken, but we bent some metal %d" % self.env.now)
+                # print("Airframe won't break again until %d." % self.af.fltFail)
             if self.av.status is False:
                 avRepTime = np.random.randint(1, self.av.repTime)
                 self.av.status = True
-                print("The instruments were down. Up and at'em %d" % self.env.now)
-                print("Avionics won't break again until %d." % self.av.fltFail)
+                # print("The instruments were down. Up and at'em %d" % self.env.now)
+                # print("Avionics won't break again until %d." % self.av.fltFail)
             if self.puls.status is False:
                 pulsRepTime = np.random.randint(1, self.puls.repTime)
                 self.puls.status  = True
-                print("The Engine busted, so now it purrs like a kitten %d. " % self.env.now)
-                print("Engine won't break again until" + str(self.puls.fltFail))
+                # print("The Engine busted, so now it purrs like a kitten %d. " % self.env.now)
+                # print("Engine won't break again until" + str(self.puls.fltFail))
             repTime = max(afRepTime,
                               avRepTime,
                               pulsRepTime)
@@ -527,8 +527,9 @@ class Scheduler(object):
             ##################################################
             # At the start of the flight period, we will record the
             # aircraft in the SLEPlist, flightLine, and boneYard
-            self.SLEPcheck(self.env)
-            self.returnAC(self.env)
+            if (SLEP_in_run):
+                self.SLEPcheck(self.env)
+                self.returnAC(self.env)
             availStuds = self.studList.copy()
             availInst = self.instList.copy()
             availAC = self.flightLine.copy()
@@ -772,35 +773,37 @@ os.makedirs(timeNow)
 os.path.join(timeNow +'/')
 
 
-# def allBB(sim_run, acDict):
-#     for num, ac in acDict.items():
-#         filename = timeNow + '/AC' + str(num) + 'run' + str(sim_run) + '.csv'
-#         ac.blueBook.to_csv(filename)
-# 
-# def concBB(sim_run, acDict, sr):
-#     df = []
-#     for num, ac in acDict.items():
-#         df.append(ac.blueBook)
-#     if len(df) > 0:
-#         dfcsv = pd.concat(df)
-#         filename = timeNow + '/ALL' + sr + 'run' + str(sim_run) + '.csv'
-#         dfcsv.to_csv(filename)
-#         return(dfcsv)
+def allBB(sim_run, acDict):
+    acStor = []
+    for dictName, dictObj in acDict.items():
+        for num, ac in dictObj.items():
+            acHist = pd.concat([ac.af.history, ac.av.history, ac.puls.history],
+                               ignore_index = True)
+            acStor.append(acHist)
+            print(acStor[-1])
+    allacHist = pd.concat(acStor)
+    filename = timeNow + '/AC' + str(num) + 'history' + str(sim_run) + '.csv'
+    allacHist.to_csv(filename)
+
+def concBB(sim_run, acDict, sr):
+    df = []
+    for num, ac in acDict.items():
+        df.append(ac.blueBook)
+    if len(df) > 0:
+        dfcsv = pd.concat(df)
+        filename = timeNow + '/ALL' + sr + 'run' + str(sim_run) + '.csv'
+        dfcsv.to_csv(filename)
+        return(dfcsv)
 
 def buildFiles(sim_run, acListDict, st, gr, at):
-    # masterDF = []
-    # for lname, lobject in acListDict.items():
-    #     if len(lobject) > 0:
-    #         allBB(sim_run, lobject)
-    #         g = concBB(sim_run, lobject, lname)
-    #         masterDF.append(g)
-    # masterDF = pd.concat(masterDF)
-    # fn = timeNow + '/ALL' + 'run' + str(sim_run) + '.csv'
-    # masterDF.to_csv(fn)
+    fn = timeNow + '/ALL' + 'run' + str(sim_run) + '.csv'
     fnst = timeNow + '/skedTracker' + 'run' + str(sim_run) + '.csv'
     sked.tracker.to_csv(fnst)
+    allBB(sim_run, acListDict)
     aircrewInfo = studInfo(sim_run, st, gr, at)
     aircrewInfo.to_csv(timeNow + '/aicrewRun' +str(sim_run) +'.csv')
+    aircraftInfo = acInfo(sim_run, acListDict)
+    aircraftInfo.to_csv(timeNow +'/ACRun' + str(sim_run) + '.csv')
     
 
 def studInfo(sim_run, studs, grads, attrits):
@@ -831,7 +834,21 @@ def studInfo(sim_run, studs, grads, attrits):
             sgaDF = sgaDF.append(attrit)
     return(sgaDF)
     
-        
+def acInfo(sim_run, acLists):
+    acDF = pd.DataFrame({'Run': [],
+                             'ID' :  [],
+                             'Disp': [],
+                             'FlightHours': []})
+    for acListName, acList in acLists.items():
+        if len(acList) > 0:
+            for fname, fobj in acList.items():
+                ac = pd.DataFrame({'Run': [sim_run],
+                                   'ID': [fobj.BuNo],
+                                   'Disp': [acListName],
+                                   'FlightHours': [fobj.af.fltHours]})
+                acDF = acDF.append(ac)
+    return(acDF)
+
         
             
 
@@ -852,27 +869,42 @@ def studInfo(sim_run, studs, grads, attrits):
 # Constants                                                          #
 ######################################################################
 
-NUM_AIRCRAFT =   [10]#, 100, 100, 100, 100, 100]#    [15, 30, 80]
-NUM_STUDENT =    [10]#, 100, 100, 100, 100, 100]#    [20, 30, 50]
-NUM_INSTRUCTOR = [7]#, 80, 70, 80, 70, 80] #    [15, 25, 50]
-s_o_c =          [5]#, 25, 25, 25, 25, 25]#    [20, 30, 50]
-rl =             [42]#, 42, 23, 23, 122809, 122809] #    [42, 42, 42]
-ip =             [720]#, 720, 720, 720, 720, 720]   #  [720, 720, 720]
-attrit =         [.035]#, .035, .035, .035, .035, .035]
-time_line =      [365]#,
-                  # 3*24*365,
-                  # 3*24*365,
-                  # 3*24*365,
-                  # 3*24*365,
-                  # 3*24*365]
+NUM_AIRCRAFT =   [100, 90, 80, 70, 60, 50,
+                  100, 90, 80, 70, 60, 50]#    [15, 30, 80]
+NUM_STUDENT =    [100, 100, 100, 100, 100, 100,
+                  100, 100, 100, 100, 100, 100]#    [20, 30, 50]
+NUM_INSTRUCTOR = [80, 80, 80, 80, 80, 80,
+                  80, 80, 80, 80, 80, 80] #    [15, 25, 50]
+s_o_c =          [25, 25, 25, 25, 25, 25,
+                  25, 25, 25, 25, 25, 25]
+rl =             [42, 42, 23, 23, 122809, 122809,
+                  42, 42, 23, 23, 122809, 122809] 
+ip =             [720, 720, 720, 720, 720, 720,
+                  720, 720, 720, 720, 720, 720]   
+attrit =         [.035, .035, .035, .035, .035, .035,
+                  .035, .035, .035, .035, .035, .035,]
+time_line =      [3*24*365,
+                  3*24*365,
+                  3*24*365,
+                  3*24*365,
+                  3*24*365,
+                  3*24*365,
+                  3*24*365,
+                  3*24*365,
+                  3*24*365,
+                  3*24*365,
+                  3*24*365,
+                  3*24*365]
 et = {'af':720,
       'av':240,
       'puls':360}
 rt = {'af':24,
       'av':6,
       'puls':6}
-      
-SLEPspots =      [4]#, 8, 4, 8, 4, 8]
+SLEP_in_run = [False, False, False, False, False, False,
+               True, True, True, True, True, True]      
+SLEPspots =      [4, 8, 4, 8, 4, 8,
+                  4, 8, 4, 8, 4, 8]
 
 ######################################################################
 # Build Aircraft, Students, and instructors                          #
