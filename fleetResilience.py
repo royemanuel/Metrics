@@ -80,11 +80,11 @@ class Part(object):
             self.status = False
             self.age = env.now - self.bornDate
             #??# Commented out data storage sections for easy removal.
-            self.history = self.history.append({"ID": self.ID,
-                                                "Age": self.age,
-                                                "FlightHours": self.fltHours,
-                                                "TimeToFail": self.fltFail},
-                                               ignore_index=True)
+            #??#self.history = self.history.append({"ID": self.ID,
+            #??#                                    "Age": self.age,
+            #??#                                    "FlightHours": self.fltHours,
+            #??#                                    "TimeToFail": self.fltFail},
+            #??#                                   ignore_index=True)
             # THis section will go with a repair function, but for now
             # I want to check the validity
             # print("from failFlight " + self.obj + str(self.endTime))
@@ -95,12 +95,12 @@ class Part(object):
             self.fltHours += fltTime
             self.age = env.now - self.bornDate
             #??# Commented out data storage sections for easy removal.
-            self.history = self.history.append({"ID": self.ID,
-                                                "Age": self.age,
-                                                "FlightHours": self.fltHours,
-                                                "TimeToFail": self.fltFail,
-                                                "fhSinceFail": self.fltHrsSinceFail},
-                                                ignore_index=True)
+            #??#self.history = self.history.append({"ID": self.ID,
+            #??#                                    "Age": self.age,
+            #??#                                    "FlightHours": self.fltHours,
+            #??#                                    "TimeToFail": self.fltFail,
+            #??#                                    "fhSinceFail": self.fltHrsSinceFail},
+            #??#                                    ignore_index=True)
 
     # Check if the part needs to go to SLEP. Intend each part to call
     def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
@@ -215,25 +215,25 @@ class Aircraft(object):
             pulsRepTime = 0
             if self.af.status is False:
                 afRepTime = np.random.randint(1, self.af.repTime)
-                self.af.status = True
                 # print("The Airframe was broken, but we bent some metal %d" % self.env.now)
                 # print("Airframe won't break again until %d." % self.af.fltFail)
             if self.av.status is False:
                 avRepTime = np.random.randint(1, self.av.repTime)
-                self.av.status = True
                 # print("The instruments were down. Up and at'em %d" % self.env.now)
                 # print("Avionics won't break again until %d." % self.av.fltFail)
             if self.puls.status is False:
                 pulsRepTime = np.random.randint(1, self.puls.repTime)
-                self.puls.status  = True
                 # print("The Engine busted, so now it purrs like a kitten %d. " % self.env.now)
                 # print("Engine won't break again until" + str(self.puls.fltFail))
             repTime = max(afRepTime,
                               avRepTime,
                               pulsRepTime)
             yield self.env.timeout(repTime)
+            self.puls.status  = True
+            self.af.status = True
+            self.av.status = True
             # print("fixed at %d" % self.env.now)
-            self.status = self.af.status & self.av.status & self.puls.status
+            self.status = True
             # self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
             #                                       "FlightHours": fltTime,
             #                                       "AC Status": self.status,
@@ -622,7 +622,7 @@ class Scheduler(object):
                     ## Check to see if the aircraft has used up its lifetime. If it
                     ## has, it is placed in the boneYard list and removed from the
                     ## flightLine list
-                    if (ac.lifeTime < ac.fltHours):
+                    if (ac.af.lifeTime < ac.af.fltHours):
                         boneYard.update({int(ac.BuNo[2:]):
                                          self.flightLine.pop(int(ac.BuNo[2:]))})
                         # print("Aircraft " + str(ac.BuNo) + " is off to Davis-Monthan")
@@ -768,7 +768,7 @@ def newInsts(env, listname, numInst, syllabus):
 # for ac in flightLine:
 #     aircraftHistory = aircraftHistory.append(flightLine[ac].blueBook)
 
-timeNow = time.strftime("%Y%m%d-%H%M%S")
+timeNow = "fleetData" + time.strftime("%Y%m%d-%H%M%S")
 os.makedirs(timeNow)
 os.path.join(timeNow +'/')
 
@@ -868,8 +868,16 @@ def acInfo(sim_run, acLists):
 ######################################################################
 # Constants                                                          #
 ######################################################################
+def calcScale(Mode, Mean):
+    Scale = (np.log(Mode) +2 *np.log(Mean))/3
+    return Scale
 
-NUM_AIRCRAFT =   [100, 90, 80, 70, 60, 50,
+def calcShape(Mode, Mean):
+    Shape = np.sqrt((2/3)*np.log(Mean)-(2/3)*np.log(Mode))
+    return Shape
+
+
+NUM_AIRCRAFT =   [10, 90, 80, 70, 60, 50,
                   100, 90, 80, 70, 60, 50]#    [15, 30, 80]
 NUM_STUDENT =    [100, 100, 100, 100, 100, 100,
                   100, 100, 100, 100, 100, 100]#    [20, 30, 50]
@@ -883,18 +891,18 @@ ip =             [720, 720, 720, 720, 720, 720,
                   720, 720, 720, 720, 720, 720]   
 attrit =         [.035, .035, .035, .035, .035, .035,
                   .035, .035, .035, .035, .035, .035,]
-time_line =      [3*24*365,
-                  3*24*365,
-                  3*24*365,
-                  3*24*365,
-                  3*24*365,
-                  3*24*365,
-                  3*24*365,
-                  3*24*365,
-                  3*24*365,
-                  3*24*365,
-                  3*24*365,
-                  3*24*365]
+time_line =      [5*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50 *24*365]
 et = {'af':720,
       'av':240,
       'puls':360}
