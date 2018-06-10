@@ -132,7 +132,7 @@ class Airframe(Part):
         self.fltFail = self.failTime(env, **{"endTime": endTime})
         super().__init__(env,
                          ID,
-                         SLEP_limit = 7000,
+                         SLEP_limit = 100,
                          lifeTime = 7200,
                          endTime = endTime,
                          repTime = repTime)
@@ -487,13 +487,13 @@ class Scheduler(object):
         fl = self.flightLine.copy()
         for num, ac in fl.items():
             if(ac.af.fltHours > ac.af.SLEP_limit):
+                self.SLEPlist.update({int(ac.BuNo[2:]):
+                                      self.flightLine.pop(int(ac.BuNo[2:]))})
                 self.env.process(ac.af.SLEP_Part(env,
                                 SLEP_line = af_SLEPline,
                                 SLEP_TTR = 1000,
                                                  SLEP_addition = 9900))
                 # print("Aircraft " + str(ac.BuNo) + " is off to the FST")
-                self.SLEPlist.update({int(ac.BuNo[2:]):
-                                      self.flightLine.pop(int(ac.BuNo[2:]))})
                 # print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
 
     def returnAC(self, env):
@@ -502,7 +502,7 @@ class Scheduler(object):
             if (SLEPac.af.SLEPtime < env.now):
                 # print("Aircraft " + str(SLEPac.BuNo) + " is back from SLEP")
                 SLEPac.af.SLEP_limit = 20000
-                SLEPac.af.lifeTime = 19800
+                SLEPac.af.lifeTime = 10000
                 self.flightLine.update({int(SLEPac.BuNo[2:]):
                                         self.SLEPlist.pop(int(SLEPac.BuNo[2:]))})
                 # print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
@@ -768,7 +768,7 @@ def newInsts(env, listname, numInst, syllabus):
 # for ac in flightLine:
 #     aircraftHistory = aircraftHistory.append(flightLine[ac].blueBook)
 
-timeNow = "fleetData" + time.strftime("%Y%m%d-%H%M%S")
+timeNow = "fleetData/" + time.strftime("%Y%m%d-%H%M%S")
 os.makedirs(timeNow)
 os.path.join(timeNow +'/')
 
@@ -877,7 +877,7 @@ def calcShape(Mode, Mean):
     return Shape
 
 
-NUM_AIRCRAFT =   [10, 90, 80, 70, 60, 50,
+NUM_AIRCRAFT =   [100, 90, 80, 70, 60, 50,
                   100, 90, 80, 70, 60, 50]#    [15, 30, 80]
 NUM_STUDENT =    [100, 100, 100, 100, 100, 100,
                   100, 100, 100, 100, 100, 100]#    [20, 30, 50]
@@ -892,24 +892,24 @@ ip =             [720, 720, 720, 720, 720, 720,
 attrit =         [.035, .035, .035, .035, .035, .035,
                   .035, .035, .035, .035, .035, .035,]
 time_line =      [5*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50 *24*365]
+                  5*24*365,
+                  5*24*365,
+                  5*24*365,
+                  5*24*365,
+                  5*24*365,
+                  5*24*365,
+                  5*24*365,
+                  5*24*365,
+                  5*24*365,
+                  5*24*365,
+                  5*24*365]
 et = {'af':720,
       'av':240,
       'puls':360}
-rt = {'af':24,
-      'av':6,
-      'puls':6}
-SLEP_in_run = [False, False, False, False, False, False,
+rt = {'af':720,
+      'av':480,
+      'puls':240}
+SLEP_or_not = [False, False, False, False, False, False,
                True, True, True, True, True, True]      
 SLEPspots =      [4, 8, 4, 8, 4, 8,
                   4, 8, 4, 8, 4, 8]
@@ -920,6 +920,7 @@ SLEPspots =      [4, 8, 4, 8, 4, 8,
 
 for r in range(len(rl)):
     tic_run = time.clock()
+    SLEP_in_run = SLEP_or_not[r]
     np.random.seed([rl[r]])
     random.seed(rl[r])
     # Make all variables None to start it out
