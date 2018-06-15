@@ -106,9 +106,9 @@ class Part(object):
     def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
         request = SLEP_line.request()
         yield request
-        self.SLEPtime = SLEP_TTR
+        self.SLEPtime = SLEP_TTR + env.now
         # print(self.SLEPtime)
-        yield env.timeout(self.SLEPtime)
+        yield env.timeout(SLEP_TTR)
         yield SLEP_line.release(request)
 
 
@@ -124,7 +124,7 @@ def print_stats(res):
 # to nest or do the inheritance part of OOP.
 # Airframes are the source of the BuNo
 class Airframe(Part):
-    def __init__(self, env, ID, endTime, repTime):
+    def __init__(self, env, ID, endTime, repTime, slplmt):
         self.env = env
         self.obj = "Airframe"
         self.ageFail = 1000
@@ -132,7 +132,7 @@ class Airframe(Part):
         self.fltFail = self.failTime(env, **{"endTime": endTime})
         super().__init__(env,
                          ID,
-                         SLEP_limit = 100,
+                         SLEP_limit = slplmt,
                          lifeTime = 7200,
                          endTime = endTime,
                          repTime = repTime)
@@ -181,10 +181,10 @@ class Propulsion(Part):
 
 
 class Aircraft(object):
-    def __init__(self, env, af, av, puls, attrit, endTime, repTime):
+    def __init__(self, env, af, av, puls, attrit, endTime, repTime, slplmt):
         self.env = env
         self.obj = "Aircraft"
-        self.af = Airframe(env, af, endTime['af'], repTime['af'])
+        self.af = Airframe(env, af, endTime['af'], repTime['af'], slplmt)
         self.av = Avionics(env, av, endTime['av'], repTime['av'])
         self.puls = Propulsion(env, puls, endTime['puls'], repTime['puls'])
         self.BuNo = self.af.ID
@@ -491,7 +491,7 @@ class Scheduler(object):
                                       self.flightLine.pop(int(ac.BuNo[2:]))})
                 self.env.process(ac.af.SLEP_Part(env,
                                 SLEP_line = af_SLEPline,
-                                SLEP_TTR = 1000,
+                                SLEP_TTR = 4320,
                                                  SLEP_addition = 9900))
                 # print("Aircraft " + str(ac.BuNo) + " is off to the FST")
                 # print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
@@ -704,12 +704,12 @@ class Scheduler(object):
 
 
 # Build an aircraft. If it is the start, it will build 
-def buildAC(env, numAC, fl, attrit, endTime, repTime):
+def buildAC(env, numAC, fl, attrit, endTime, repTime, slplmt):
     for n in range(numAC):
         af = "af" + str(n)
         av = "av" + str(n)
         puls = "puls" + str(n)
-        fl[n] = Aircraft(env, af, av, puls, attrit, endTime, repTime)
+        fl[n] = Aircraft(env, af, av, puls, attrit, endTime, repTime, slplmt)
         
 
 def newStuds(env, listname, numStud):
@@ -780,7 +780,6 @@ def allBB(sim_run, acDict):
             acHist = pd.concat([ac.af.history, ac.av.history, ac.puls.history],
                                ignore_index = True)
             acStor.append(acHist)
-            print(acStor[-1])
     allacHist = pd.concat(acStor)
     filename = timeNow + '/AC' + str(num) + 'history' + str(sim_run) + '.csv'
     allacHist.to_csv(filename)
@@ -903,21 +902,24 @@ time_line =      [5*24*365,
                   5*24*365,
                   5*24*365,
                   5*24*365]
+sleplimit = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200]
+
 et = {'af':720,
       'av':240,
       'puls':360}
 rt = {'af':720,
       'av':480,
       'puls':240}
-SLEP_or_not = [False, False, False, False, False, False,
-               True, True, True, True, True, True]      
+SLEP_or_not = [True, True, True, True, True, True,
+                   True, True, True, True, True, True]
+              # False, False, False, False, False, False]
 SLEPspots =      [4, 8, 4, 8, 4, 8,
                   4, 8, 4, 8, 4, 8]
 
 ######################################################################
 # Build Aircraft, Students, and instructors                          #
 ######################################################################
-
+allACstore = {}
 for r in range(len(rl)):
     tic_run = time.clock()
     SLEP_in_run = SLEP_or_not[r]
@@ -943,7 +945,7 @@ for r in range(len(rl)):
     flightLine = {}
     boneYard = {}
     SLEPlist = {}
-    buildAC(env, NUM_AIRCRAFT[r], flightLine, attrit[r], et, rt)
+    buildAC(env, NUM_AIRCRAFT[r], flightLine, attrit[r], et, rt, sleplimit[r])
     af_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
     av_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
     puls_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
@@ -975,6 +977,9 @@ for r in range(len(rl)):
                 'FL' : flightLine,
                 'SLEP' : SLEPlist},
                studList, gradStuds, attritStuds)
+    allACstore[r] = {'fl': flightLine,
+                         'by' : boneYard,
+                         'sl' : SLEPlist}
     toc_run = time.clock()    
     print('Completed Run ' + str(r + 1) + ' of ' + str(len(rl)) +
           ' in ' + str(toc_run - tic_run) + ' seconds.')
