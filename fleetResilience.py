@@ -26,6 +26,7 @@ import numpy as np
 import pandas as pd
 # import pdb
 import random
+import math
 tic = time.clock()
 time.process_time()
 time.perf_counter()
@@ -59,7 +60,7 @@ class Part(object):
         self.status = True
         self.history = pd.DataFrame()
         self.SLEP = False
-        self.SLEPtime = 20000
+        self.SLEPtime = float('inf')
         
     # Define a fail time for the particular part.
     def failTime(self, env, **kwargs):
@@ -103,6 +104,8 @@ class Part(object):
             #??#                                    ignore_index=True)
 
     # Check if the part needs to go to SLEP. Intend each part to call
+    # Looks like I need to put the SLEP stuff into the Resource definition
+    # of the thing. This might take some time to untangle. 
     def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
         request = SLEP_line.request()
         yield request
@@ -552,15 +555,69 @@ class Scheduler(object):
                 #         len(availAC) > 0):
                 if (len(availStuds) == 0):
                     # print("At Time " + str(env.now) + "All the students are flying")
-                    # yield env.timeout(1)
+                    upAC = 0
+                    for key, item in self.flightLine.items():
+                        if item.status:
+                            upAC += 1
+                    status_now = {'Time':[self.env.now],
+                                  'Day':[daytrack],
+                                  'flightLine':[len(self.flightLine)],
+                                  'upAircraft':[upAC],
+                                  'SLEPlist':[len(self.SLEPlist)],
+                                  'boneYard':[len(boneYard)],
+                                  'students':[len(self.studList)],
+                                  'graduates':[len(gradStuds)],
+                                  'instructors':[len(self.instList)],
+                                  'attrites':[len(attritStuds)]
+                    }
+                    status_now = pd.DataFrame(data=status_now)
+                    self.tracker = self.tracker.append(status_now,
+                                                       ignore_index = True)
+                    yield env.timeout(1)
                     break
                 elif (len(availInst) == 0):
                     # print("At Time " + str(env.now) + "No one is left to teach!")
-                    # yield env.timeout(1)
+                    upAC = 0
+                    for key, item in self.flightLine.items():
+                        if item.status:
+                            upAC += 1
+                    status_now = {'Time':[self.env.now],
+                                  'Day':[daytrack],
+                                  'flightLine':[len(self.flightLine)],
+                                  'upAircraft':[upAC],
+                                  'SLEPlist':[len(self.SLEPlist)],
+                                  'boneYard':[len(boneYard)],
+                                  'students':[len(self.studList)],
+                                  'graduates':[len(gradStuds)],
+                                  'instructors':[len(self.instList)],
+                                  'attrites':[len(attritStuds)]
+                    }
+                    status_now = pd.DataFrame(data=status_now)
+                    self.tracker = self.tracker.append(status_now,
+                                                       ignore_index = True)
+                    yield env.timeout(1)
                     break
                 elif (len(availAC) == 0):
                     # print("At Time " + str(env.now) + "Nothing to fly!")
-                    # yield env.timeout(1)
+                    upAC = 0
+                    for key, item in self.flightLine.items():
+                        if item.status:
+                            upAC += 1
+                    status_now = {'Time':[self.env.now],
+                                  'Day':[daytrack],
+                                  'flightLine':[len(self.flightLine)],
+                                  'upAircraft':[upAC],
+                                  'SLEPlist':[len(self.SLEPlist)],
+                                  'boneYard':[len(boneYard)],
+                                  'students':[len(self.studList)],
+                                  'graduates':[len(gradStuds)],
+                                  'instructors':[len(self.instList)],
+                                  'attrites':[len(attritStuds)]
+                    }
+                    status_now = pd.DataFrame(data=status_now)
+                    self.tracker = self.tracker.append(status_now,
+                                                       ignore_index = True)
+                    yield env.timeout(1)
                     break
                 k = 0
                 while k == 0:
@@ -689,12 +746,12 @@ class Scheduler(object):
 
             if self.env.now % 100 == 0:
                 print("Simulation at time " + str(self.env.now), end='\r')
-            if len(flightLine) == 0 and len(self.SLEPlist) > 0:
-                next_SLEP_complete_dict = {}
-                for num, ac in self.SLEPlist.items():
-                    next_SLEP_complete_dict[num] = ac.af.SLEPtime
-                t = next_SLEP_complete_dict[max(next_SLEP_complete_dict)]    
-                yield self.env.timeout(t)
+            ##if len(flightLine) == 0 and len(self.SLEPlist) > 0:
+            ##    next_SLEP_complete_dict = {}
+            ##    for num, ac in self.SLEPlist.items():
+            ##        next_SLEP_complete_dict[num] = ac.af.SLEPtime
+            ##    t = next_SLEP_complete_dict[max(next_SLEP_complete_dict)]    
+            ##    yield self.env.timeout(t)
             if len(self.flightLine) == 0 and len(self.SLEPlist) == 0:
                 print(self.env.now)
                 break
@@ -890,19 +947,30 @@ ip =             [720, 720, 720, 720, 720, 720,
                   720, 720, 720, 720, 720, 720]   
 attrit =         [.035, .035, .035, .035, .035, .035,
                   .035, .035, .035, .035, .035, .035,]
-time_line =      [5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365]
-sleplimit = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200]
+time_line =      [50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365,
+                  50*24*365]
+sleplimit = [7000,
+             6800,
+             6600,
+             6400,
+             6200,
+             6000,
+             5800,
+             5600,
+             5400,
+             5200,
+             5000,
+             4800]
 
 et = {'af':720,
       'av':240,
@@ -986,12 +1054,3 @@ for r in range(len(rl)):
 
 toc = time.clock()    
 print('Completed all runs in ' + str(toc - tic) + ' seconds.')
-
-
-
-        
-      
-
-    
-
-
