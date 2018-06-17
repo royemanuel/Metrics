@@ -132,7 +132,7 @@ class Airframe(Part):
         self.fltFail = self.failTime(env, **{"endTime": endTime})
         super().__init__(env,
                          ID,
-                         SLEP_limit = 100,
+                         SLEP_limit = 7000,
                          lifeTime = 7200,
                          endTime = endTime,
                          repTime = repTime)
@@ -190,25 +190,25 @@ class Aircraft(object):
         self.BuNo = self.af.ID
         self.status = self.af.status & self.av.status & self.puls.status
         self.bornDate = env.now
-        #self.blueBook = pd.DataFrame()
+        self.blueBook = pd.DataFrame()
         self.lifeTime = self.af.lifeTime
         self.fltHours = 0
         self.attrit = attrit
 
     def updateBlueBook(self, env, fltTime):
         # print("Updating Blue Book")
-        # self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
-        #                                       "FlightHours": fltTime,
-        #                                       "AC Status": self.status,
-        #                                       "Airframe ID": self.af.ID,
-        #                                       "Airframe Status": self.af.status,
-        #                                       "Avionics ID": self.av.ID,
-        #                                       "Avionics Status": self.av.status,
-        #                                       "Propulsion ID": self.puls.ID,
-        #                                       "Propulsion Status": self.puls.status,
-        #                                       "SLEP Status": self.af.SLEP,
-        #                                       "Flight Date": env.now},
-        #                                      ignore_index=True)
+        self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
+                                              "FlightHours": fltTime,
+                                              "AC Status": self.status,
+                                              "Airframe ID": self.af.ID,
+                                              "Airframe Status": self.af.status,
+                                              "Avionics ID": self.av.ID,
+                                              "Avionics Status": self.av.status,
+                                              "Propulsion ID": self.puls.ID,
+                                              "Propulsion Status": self.puls.status,
+                                              "SLEP Status": self.af.SLEP,
+                                              "Flight Date": env.now},
+                                             ignore_index=True)
         if self.status is False:
             afRepTime = 0
             avRepTime = 0
@@ -234,17 +234,17 @@ class Aircraft(object):
             self.av.status = True
             # print("fixed at %d" % self.env.now)
             self.status = True
-            # self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
-            #                                       "FlightHours": fltTime,
-            #                                       "AC Status": self.status,
-            #                                       "Airframe Status": self.af.status,
-            #                                       "Avionics Status": self.av.status,
-            #                                       "Propulsion Status": self.puls.status,
-            #                                       "RepairTime": repTime},
-            #                                      ignore_index=True)
-        # tmpBB = self.blueBook.copy()
-        # self.fltHours = tmpBB.dropna(subset=["Flight Date"]).sum().FlightHours
-        # self.lifeTime = self.af.lifeTime
+            self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
+                                                  "FlightHours": fltTime,
+                                                  "AC Status": self.status,
+                                                  "Airframe Status": self.af.status,
+                                                  "Avionics Status": self.av.status,
+                                                  "Propulsion Status": self.puls.status,
+                                                  "RepairTime": repTime},
+                                                 ignore_index=True)
+        tmpBB = self.blueBook.copy()
+        self.fltHours = tmpBB.dropna(subset=["Flight Date"]).sum().FlightHours
+        self.lifeTime = self.af.lifeTime
 
 
         
@@ -273,14 +273,14 @@ class Aircraft(object):
         # Update the aircraft status
         self.status = self.af.status & self.av.status & self.puls.status
         #??# Commented out data storage sections for easy removal.
-        #??# self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
-        #??#                                       "FlightHours": fltTime,
-        #??#                                       "AC Status": self.status,
-        #??#                                       "Airframe Status": self.af.status,
-        #??#                                       "Avionics Status": self.av.status,
-        #??#                                       "Propulsion Status": self.puls.status,
-        #??#                                       "Flight Date": env.now},
-        #??#                                      ignore_index=True)
+        self.blueBook = self.blueBook.append({"Aircraft": self.BuNo,
+                                              "FlightHours": fltTime,
+                                              "AC Status": self.status,
+                                              "Airframe Status": self.af.status,
+                                              "Avionics Status": self.av.status,
+                                              "Propulsion Status": self.puls.status,
+                                              "Flight Date": env.now},
+                                             ignore_index=True)
         #??# self.updateBlueBook(env, fltTime)
         # Update aircrew values. For now, updating flight time
         # whether up or down, and not counting a syllabus event if down
@@ -487,11 +487,13 @@ class Scheduler(object):
         fl = self.flightLine.copy()
         for num, ac in fl.items():
             if(ac.af.fltHours > ac.af.SLEP_limit):
+                ac.af.status = False
+                ac.status = ac.av.status and ac.puls.status and ac.af.status
                 self.SLEPlist.update({int(ac.BuNo[2:]):
                                       self.flightLine.pop(int(ac.BuNo[2:]))})
                 self.env.process(ac.af.SLEP_Part(env,
-                                SLEP_line = af_SLEPline,
-                                SLEP_TTR = 1000,
+                                                 SLEP_line = af_SLEPline,
+                                                 SLEP_TTR = 5000,
                                                  SLEP_addition = 9900))
                 # print("Aircraft " + str(ac.BuNo) + " is off to the FST")
                 # print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
@@ -500,6 +502,8 @@ class Scheduler(object):
         sl = self.SLEPlist.copy()
         for num, SLEPac in sl.items():
             if (SLEPac.af.SLEPtime < env.now):
+                SLEPac.af.status = True
+                SLEPac.status = SLEPac.av.status and SLEPac.puls.status and SLEPac.af.status
                 # print("Aircraft " + str(SLEPac.BuNo) + " is back from SLEP")
                 SLEPac.af.SLEP_limit = 20000
                 SLEPac.af.lifeTime = 10000
@@ -877,42 +881,42 @@ def calcShape(Mode, Mean):
     return Shape
 
 
-NUM_AIRCRAFT =   [100, 90, 80, 70, 60, 50,
-                  100, 90, 80, 70, 60, 50]#    [15, 30, 80]
-NUM_STUDENT =    [100, 100, 100, 100, 100, 100,
-                  100, 100, 100, 100, 100, 100]#    [20, 30, 50]
-NUM_INSTRUCTOR = [80, 80, 80, 80, 80, 80,
-                  80, 80, 80, 80, 80, 80] #    [15, 25, 50]
-s_o_c =          [25, 25, 25, 25, 25, 25,
-                  25, 25, 25, 25, 25, 25]
-rl =             [42, 42, 23, 23, 122809, 122809,
-                  42, 42, 23, 23, 122809, 122809] 
-ip =             [720, 720, 720, 720, 720, 720,
-                  720, 720, 720, 720, 720, 720]   
-attrit =         [.035, .035, .035, .035, .035, .035,
-                  .035, .035, .035, .035, .035, .035,]
-time_line =      [5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365,
-                  5*24*365]
+NUM_AIRCRAFT =   [10]#, 90, 80, 70, 60, 50,
+                  #100, 90, 80, 70, 60, 50]#    [15, 30, 80]
+NUM_STUDENT =    [100]#0, 100, 100, 100, 100, 100,
+                  #100, 100, 100, 100, 100, 100]#    [20, 30, 50]
+NUM_INSTRUCTOR = [80]#0, 80, 80, 80, 80, 80,
+                  #80, 80, 80, 80, 80, 80] #    [15, 25, 50]
+s_o_c =          [25]#, 25, 25, 25, 25, 25,
+                  #25, 25, 25, 25, 25, 25]
+rl =             [42]#, 42, 23, 23, 122809, 122809,
+                  #42, 42, 23, 23, 122809, 122809] 
+ip =             [720]#, 720, 720, 720, 720, 720,
+                  #720, 720, 720, 720, 720, 720]   
+attrit =         [.035]#, .035, .035, .035, .035, .035,
+                  #.035, .035, .035, .035, .035, .035,]
+time_line =      [50*24*365]#,
+                  #50*24*365,
+                  #50*24*365,
+                  #50*24*365,
+                  #50*24*365,
+                  #50*24*365,
+                  #50*24*365,
+                  #50*24*365,
+                  #50*24*365,
+                  #50*24*365,
+                  #50*24*365,
+                  #50*24*365]
 et = {'af':720,
       'av':240,
       'puls':360}
 rt = {'af':720,
       'av':480,
       'puls':240}
-SLEP_or_not = [False, False, False, False, False, False,
-               True, True, True, True, True, True]      
-SLEPspots =      [4, 8, 4, 8, 4, 8,
-                  4, 8, 4, 8, 4, 8]
+SLEP_or_not = [True]#[False, False, False, False, False, False,
+               #True, True, True, True, True, True]      
+SLEPspots =      [4]#[4, 8, 4, 8, 4, 8,
+                  #4, 8, 4, 8, 4, 8]
 
 ######################################################################
 # Build Aircraft, Students, and instructors                          #
