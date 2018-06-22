@@ -984,10 +984,44 @@ SLEP_or_not = [True, True, True, True, True, True,
 SLEPspots =      [4, 8, 4, 8, 4, 8,
                   4, 8, 4, 8, 4, 8]
 
+studyParamWB = pd.ExcelFile('FleetResParam.xlsx')
+studyParam = studyParamWB.parse('Sheet1')
+
+NUM_AIRCRAFT = studyParam.NUM_AIRCRAFT
+
+NUM_STUDENT = studyParam.NUM_STUDENT
+
+NUM_INSTRUCTOR = studyParam.NUM_INSTRUCTOR
+
+s_o_c = studyParam.s_o_c
+
+rl = studyParam.rl
+
+ip = studyParam.ip
+
+attrit = studyParam.attrit
+
+time_line = studyParam.time_line
+
+sleplimit = studyParam.sleplimit
+
+et_af = studyParam.et_af
+et_av = studyParam.et_av
+et_puls = studyParam.et_puls
+rt_af = studyParam.rt_af
+rt_av = studyParam.rt_av
+rt_puls = studyParam.rt_puls
+SLEP_or_not = studyParam.SLEP_or_not
+SLEPspots = studyParam.SLEPspots
+
+
 ######################################################################
 # Build Aircraft, Students, and instructors                          #
 ######################################################################
 allACstore = {}
+
+
+
 for r in range(len(rl)):
     tic_run = time.clock()
     SLEP_in_run = SLEP_or_not[r]
@@ -1013,6 +1047,8 @@ for r in range(len(rl)):
     flightLine = {}
     boneYard = {}
     SLEPlist = {}
+    et = {'af': et_af[r], 'av': et_av[r], 'puls': et_puls[r]}
+    rt = {'af': rt_af[r], 'av': rt_av[r], 'puls': rt_puls[r]}
     buildAC(env, NUM_AIRCRAFT[r], flightLine, attrit[r], et, rt, sleplimit[r])
     af_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
     av_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
