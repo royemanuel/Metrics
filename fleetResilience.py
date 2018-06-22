@@ -856,13 +856,15 @@ def concBB(sim_run, acDict, sr):
 
 def buildFiles(sim_run, acListDict, st, gr, at):
     fn = timeNow + '/ALL' + 'run' + str(sim_run) + '.csv'
-    fnst = timeNow + '/skedTracker' + 'run' + str(sim_run) + '.csv'
+    fnst = timeNow + '/skedTrackerExp' + str(sim_run) + 'Run' + str(n) + '.csv'
     sked.tracker.to_csv(fnst)
     allBB(sim_run, acListDict)
     aircrewInfo = studInfo(sim_run, st, gr, at)
-    aircrewInfo.to_csv(timeNow + '/aicrewRun' +str(sim_run) +'.csv')
+    aircrewInfo.to_csv(timeNow + '/aicrewRunExp' +str(sim_run) +'Run' +
+                            str(n) + '.csv')
     aircraftInfo = acInfo(sim_run, acListDict)
-    aircraftInfo.to_csv(timeNow +'/ACRun' + str(sim_run) + '.csv')
+    aircraftInfo.to_csv(timeNow +'/ACexp' + str(sim_run) + 'Run' +
+                            str(n) + '.csv')
     
 
 def studInfo(sim_run, studs, grads, attrits):
@@ -1015,6 +1017,7 @@ rt_av = studyParam.rt_av
 rt_puls = studyParam.rt_puls
 SLEP_or_not = studyParam.SLEP_or_not
 SLEPspots = studyParam.SLEPspots
+nRuns = 5
 
 
 ######################################################################
@@ -1022,73 +1025,84 @@ SLEPspots = studyParam.SLEPspots
 ######################################################################
 allACstore = {}
 
-
+#np.random.seed([42])
+#random.seed(42)
 
 for r in range(len(rl)):
-    tic_run = time.clock()
-    SLEP_in_run = SLEP_or_not[r]
     np.random.seed([rl[r]])
     random.seed(rl[r])
-    # Make all variables None to start it out
-    env = None
-    flightLine = None
-    boneYard = None
-    SLEPlist = None
-    af_SLEPline = None
-    av_SLEPline = None
-    puls_SLEPline = None
-    indocPeriod = None
-    studList = None
-    gradStuds = None
-    attritStuds = None
-    instList = None
-    inactiveInstList = None
-    sked = None
-    # Build everything again
-    env = simpy.Environment()
-    flightLine = {}
-    boneYard = {}
-    SLEPlist = {}
-    et = {'af': et_af[r], 'av': et_av[r], 'puls': et_puls[r]}
-    rt = {'af': rt_af[r], 'av': rt_av[r], 'puls': rt_puls[r]}
-    buildAC(env, NUM_AIRCRAFT[r], flightLine, attrit[r], et, rt, sleplimit[r])
-    af_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
-    av_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
-    puls_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
-    ac_status_history = []
-    indocPeriod = ip[r]
-    studList = {}
-    newStuds(env, studList, NUM_STUDENT[r])
-    gradStuds = {}
-    attritStuds = {}
-    inactiveInstList = {}
-    instList = {}
-    newInsts(env, instList, NUM_INSTRUCTOR[r], 0)
-    sked = Scheduler(env,
-                     flightLine,
-                     studList,
-                     instList,
-                     indocPeriod,
-                     s_o_c[r],
-                     SLEP_af = af_SLEPline,
-                     SLEP_av = av_SLEPline,
-                     SLEP_puls = puls_SLEPline,
-                     SLEPlist = SLEPlist)
-    print(time_line[r])
-    env.run(until=time_line[r])
-    current_run = r + 1
-    print(current_run)
-    buildFiles(current_run,
-               {'BY' : boneYard,
-                'FL' : flightLine,
-                'SLEP' : SLEPlist},
-               studList, gradStuds, attritStuds)
-    allACstore[r] = {'fl': flightLine,
-                         'by' : boneYard,
-                         'sl' : SLEPlist}
-    toc_run = time.clock()    
-    print('Completed Run ' + str(r + 1) + ' of ' + str(len(rl)) +
-          ' in ' + str(toc_run - tic_run) + ' seconds.')
+    for n in range(nRuns):
+        tic_run = time.clock()
+        SLEP_in_run = SLEP_or_not[r]
+        # Make all variables None to start it out
+        env = None
+        flightLine = None
+        boneYard = None
+        SLEPlist = None
+        af_SLEPline = None
+        av_SLEPline = None
+        puls_SLEPline = None
+        indocPeriod = None
+        studList = None
+        gradStuds = None
+        attritStuds = None
+        instList = None
+        inactiveInstList = None
+        sked = None
+        # Build everything again
+        env = simpy.Environment()
+        flightLine = {}
+        boneYard = {}
+        SLEPlist = {}
+        et = {'af': et_af[r], 'av': et_av[r], 'puls': et_puls[r]}
+        rt = {'af': rt_af[r], 'av': rt_av[r], 'puls': rt_puls[r]}
+        buildAC(env, NUM_AIRCRAFT[r], flightLine, attrit[r], et, rt, sleplimit[r])
+        af_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
+        av_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
+        puls_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
+        ac_status_history = []
+        indocPeriod = ip[r]
+        studList = {}
+        newStuds(env, studList, NUM_STUDENT[r])
+        gradStuds = {}
+        attritStuds = {}
+        inactiveInstList = {}
+        instList = {}
+        newInsts(env, instList, NUM_INSTRUCTOR[r], 0)
+        sked = Scheduler(env,
+                         flightLine,
+                         studList,
+                         instList,
+                         indocPeriod,
+                         s_o_c[r],
+                         SLEP_af = af_SLEPline,
+                         SLEP_av = av_SLEPline,
+                         SLEP_puls = puls_SLEPline,
+                         SLEPlist = SLEPlist)
+        print(time_line[r])
+        env.run(until=time_line[r])
+        current_run = r + 1
+        print(current_run)
+        buildFiles(current_run,
+                   {'BY' : boneYard,
+                    'FL' : flightLine,
+                    'SLEP' : SLEPlist},
+                   studList, gradStuds, attritStuds)
+        allACstore[r] = {'fl': flightLine,
+                             'by' : boneYard,
+                             'sl' : SLEPlist}
+        toc_run = time.clock()
+        print('Completed Run ' +
+                  str(n + 1) +
+                  ' of ' +
+                  str(nRuns) +
+                  ' Experiment ' +
+                  str(r + 1) +
+                  ' of ' +
+                  str(len(rl)) +
+                  ' Experiments. It took ' +
+                  str(toc_run - tic_run) +
+                  ' seconds.')
 
 toc = time.clock()    
 print('Completed all runs in ' + str(toc - tic) + ' seconds.')
