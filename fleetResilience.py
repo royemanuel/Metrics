@@ -27,6 +27,8 @@ import pandas as pd
 # import pdb
 import random
 import math
+from shutil import copy2
+
 tic = time.clock()
 time.process_time()
 time.perf_counter()
@@ -829,6 +831,7 @@ timeNow = "fleetData/" + time.strftime("%Y%m%d-%H%M%S")
 os.makedirs(timeNow)
 os.path.join(timeNow +'/')
 
+copy2('FleetResParam.xlsx', timeNow + '/')
 
 def allBB(sim_run, acDict):
     acStor = []
