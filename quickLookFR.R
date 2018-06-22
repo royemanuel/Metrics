@@ -6,7 +6,8 @@ skedTracker <- read_csv("skedTrackerrun12.csv")
 skedTracker <-
     skedTracker %>%
     select(-X1, -Day, -instructors) %>%
-    gather(Category, Count, -Time)
+    gather(Category, Count, -Time) %>%
+    mutate(Time = Time / (24*365))
 
 studPlot <-
     ggplot(skedTracker,
