@@ -908,13 +908,12 @@ def acInfo(sim_run, acLists):
                 acDF = acDF.append(ac)
     return(acDF)
 
-        
-            
+
 
 # allBB(boneYard)
 # allBB(flightLine)
 # allBB(SLEPlist)
-# 
+#
 # concBB(boneYard, 'BY')
 # concBB(flightLine, 'FL')
 # g = concBB(SLEPlist, 'SLEP')
@@ -945,9 +944,9 @@ NUM_INSTRUCTOR = [80, 80, 80, 80, 80, 80,
 s_o_c =          [25, 25, 25, 25, 25, 25,
                   25, 25, 25, 25, 25, 25]
 rl =             [42, 42, 23, 23, 122809, 122809,
-                  42, 42, 23, 23, 122809, 122809] 
+                  42, 42, 23, 23, 122809, 122809]
 ip =             [720, 720, 720, 720, 720, 720,
-                  720, 720, 720, 720, 720, 720]   
+                  720, 720, 720, 720, 720, 720]
 attrit =         [.035, .035, .035, .035, .035, .035,
                   .035, .035, .035, .035, .035, .035,]
 time_line =      [50*24*365,
