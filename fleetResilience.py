@@ -27,7 +27,7 @@ import pandas as pd
 # import pdb
 import random
 import math
-from shutil import copy2
+from shutil import copy
 
 tic = time.clock()
 time.process_time()
@@ -831,7 +831,7 @@ timeNow = "fleetData/" + time.strftime("%Y%m%d-%H%M%S")
 os.makedirs(timeNow)
 os.path.join(timeNow +'/')
 
-copy2('FleetResParam.xlsx', timeNow + '/')
+
 
 def allBB(sim_run, acDict):
     acStor = []
@@ -936,6 +936,10 @@ def calcShape(Mode, Mean):
     Shape = np.sqrt((2/3)*np.log(Mean)-(2/3)*np.log(Mode))
     return Shape
 
+rl = int(input('Choose the random seed: '))
+
+copy('FleetResParam.xlsx', timeNow + '/' + 'ParametersRdmSd' +
+         str(rl) + '.xlsx' )
 
 NUM_AIRCRAFT =   [100, 90, 80, 70, 60, 50,
                   100, 90, 80, 70, 60, 50]#    [15, 30, 80]
@@ -945,8 +949,8 @@ NUM_INSTRUCTOR = [80, 80, 80, 80, 80, 80,
                   80, 80, 80, 80, 80, 80] #    [15, 25, 50]
 s_o_c =          [25, 25, 25, 25, 25, 25,
                   25, 25, 25, 25, 25, 25]
-rl =             [42, 42, 23, 23, 122809, 122809,
-                  42, 42, 23, 23, 122809, 122809]
+#rl =             [42, 42, 23, 23, 122809, 122809,
+#                  42, 42, 23, 23, 122809, 122809]
 ip =             [720, 720, 720, 720, 720, 720,
                   720, 720, 720, 720, 720, 720]
 attrit =         [.035, .035, .035, .035, .035, .035,
@@ -999,7 +1003,7 @@ NUM_INSTRUCTOR = studyParam.NUM_INSTRUCTOR
 
 s_o_c = studyParam.s_o_c
 
-rl = studyParam.rl
+#rl = studyParam.rl
 
 ip = studyParam.ip
 
@@ -1028,9 +1032,9 @@ allACstore = {}
 #np.random.seed([42])
 #random.seed(42)
 
-for r in range(len(rl)):
-    np.random.seed([rl[r]])
-    random.seed(rl[r])
+for r in range(len(s_o_c)):
+    np.random.seed([rl])
+    random.seed(rl)
     for n in range(nRuns):
         tic_run = time.clock()
         SLEP_in_run = SLEP_or_not[r]
@@ -1099,7 +1103,7 @@ for r in range(len(rl)):
                   ' Experiment ' +
                   str(r + 1) +
                   ' of ' +
-                  str(len(rl)) +
+                  str(len(s_o_c)) +
                   ' Experiments. It took ' +
                   str(toc_run - tic_run) +
                   ' seconds.')
