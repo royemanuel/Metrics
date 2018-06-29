@@ -1,7 +1,7 @@
 library("tidyverse")
 library("readxl")
 
-skedTracker <- read_csv("skedTrackerExp16Run1.csv")
+skedTracker <- read_csv("skedTrackerExp6Run1.csv")
 
 skedTracker <-
     skedTracker %>%
@@ -27,6 +27,8 @@ studPlotNoGrads <-
                group = Category,
                color = Category)) +
     geom_line()
+
+studPlotNoGrads
 
 
 
