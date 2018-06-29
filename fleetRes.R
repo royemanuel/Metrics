@@ -18,45 +18,45 @@ qrtrly_grads <- function(df){
                                                       is.na(lag(attrites,1)),
                                                       0)) %>%
         select(Time, Grads_in_quarter, Attrits_in_quarter) %>%
-        gather(Infrastructure, Performance, -Time)
+        gather(Categoryqui, Performance, -Time)
 }
 
 assignGroup <- function(DF){
     DF <- DF %>% mutate(diff = round(Performance - Need, 2))
     DF$Grp <- 1
     DF_output <- tibble()
-    DF$Infrastructure <- as.factor(DF$Infrastructure)
-    inf_values <- unique(DF$Infrastructure)
-    inf_number <- length(inf_values)
+    DF$Category <- as.factor(DF$Category)
+    cat_values <- unique(DF$Category)
+    cat_number <- length(cat_values)
     ## pb <- txtProgressBar(min = 0, max = length(unique(DF$Run)), style = 3)
     for (run in 1:length(unique(DF$Run))){
         DF_by_run <-
             DF %>%
             filter(Run == unique(DF$Run)[run])
         ## print(run)
-        DF_inf_grp <- tibble()
-        for (i in 1:inf_number){
+        DF_cat_grp <- tibble()
+        for (i in 1:cat_number){
             grp <- 1
-            DF_inf <-
+            DF_cat <-
                 DF_by_run %>%
-                filter(Infrastructure == inf_values[i])
-            s <- sign(DF_inf$diff[1])
-            for (r in 1:nrow(DF_inf)){
-                if (sign(s) == sign(DF_inf$diff[r])){
-                    DF_inf$Grp[r] <- grp
+                filter(Category == cat_values[i])
+            s <- sign(DF_cat$diff[1])
+            for (r in 1:nrow(DF_cat)){
+                if (sign(s) == sign(DF_cat$diff[r])){
+                    DF_cat$Grp[r] <- grp
                 } else {
                     grp <- grp + 1
-                    s <- sign(DF_inf$diff[r])
+                    s <- sign(DF_cat$diff[r])
                     ##print(grp)
-                    DF_inf$Grp[r] <- grp
+                    DF_cat$Grp[r] <- grp
                 }
-                DF_inf
+                DF_cat
             }
-            DF_inf_grp <- bind_rows(DF_inf_grp, DF_inf)
-            cat("\r", inf_values[i], run)
+            DF_cat_grp <- bind_rows(DF_cat_grp, DF_cat)
+            cat("\r", cat_values[i], run)
         }
         ## setTxtProgressBar(pb, run)
-        DF_output <- bind_rows(DF_output, DF_inf_grp)
+        DF_output <- bind_rows(DF_output, DF_cat_grp)
     }
     print("groups assigned")
     DF_output <- endcap_group(DF_output)
@@ -91,23 +91,23 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
     for (r in 1:nrow(DF)){
         ## Find the first row that is less than zero
         if (DF$diff[r] < 0){
-            if (r < preTime){
-                preSteps <- r
+            if (r <= preTime){
+                preSteps <- r - 1
                 ##preIntSub <- preIntSub[1:preSteps]
             } else {
                 preSteps <- preTime
             }
-            ## print(preSteps)
+            print(preSteps)
             surplus <-rev(DF$diff[(r-preSteps):(r-1)])
-            ## print(surplus)
+            print(surplus)
             for (pre in 1:preSteps){
                 if(DF$diff[r] < 0 & sum(surplus) > 0){
                     xferAvail <- surplus[pre] * preIntSub[pre]
-                    ## print(paste("xferAvail", xferAvail))
+                    print(paste("xferAvail", xferAvail))
                     ## First case is when you have more surplus than
                     ## shortfall
                     xRow <- r - pre
-                    ## print(paste("xRow", xRow))
+                    print(paste("xRow", xRow))
                     if (xferAvail > abs(DF$diff[r])){
                         DF$diff[xRow] <- (xferAvail + DF$diff[r]) /
                             preIntSub[pre]
@@ -142,8 +142,8 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
     for (r in 1:nrow(invDF)){
         ## Find the first row that is less than zero
         if (invDF$diff[r] < 0){
-            if (r < postTime){
-                postSteps <- r
+            if (r <= postTime){
+                postSteps <- r - 1
                 ##postIntSub <- postIntSub[1:postSteps]
             } else {
                 postSteps <- postTime
@@ -193,14 +193,29 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
 }
 
 
-qrtrly_EIR <- function(df){
+qrtrly_EIR <- function(DF){
+    DF <-
+        DF %>%
+        mutate(modPerf = ifelse(modPerf > Need, Need, modPerf))
     
-    for (i in seq_along(df)){
-        dfi = i * 5
-    }
 }
 
-
+calc_EIR <- function(DF){
+    DFg <- DF %>%
+        group_by(Run, Infrastructure, Grp) %>%
+        summarise(grpInt = (trapz(Time, Performance) /
+                            trapz(Time, Need)) *
+                      (max(Time) - min(Time) + 1),
+                  grpTime = max(Time) - min(Time),
+                  n = n()) %>%
+        filter(n > 1) %>%
+        select(-n)
+    DFg <- DFg %>% summarise(ExtendedIntegralResilience =
+                                 ifelse(sum(grpInt) / sum(grpTime) < 1,
+                                        sum(grpInt) / sum(grpTime),
+                                        1 + chi *
+                                        (sum(grpInt) / sum(grpTime) - 1)))
+}
 
 
 
