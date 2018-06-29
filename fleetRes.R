@@ -127,8 +127,6 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
             #while(sum(preIntSub > 0) & DF$diff[r] <0){
             #}
         }
-        ## Fill in find the closes negative value with decreasing
-        ## availability
     }
     return(DF)
 }
