@@ -63,6 +63,17 @@ assignGroup <- function(DF){
     DF_output
 }
 
+pullChunk <- function(DF, preIntSub, postIntSub){
+    for (r in 1:nrow(DF)){
+        while(sign(r) >= 0){            
+        }
+        startRow <- r - length(preIntSub)
+        while(sign(r) <= 0){
+        }
+        endRow
+    }
+}
+
 ## Building a method to modify the performance value to satisfy the
 ## need. DF is the data frame with Time, Category, Performance, and Need
 ## defined. preIntSub is the intertemporal substitutability vector for
@@ -73,7 +84,7 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
     DF <-
         DF %>%
         mutate(diff = Performance - Need, modPerf = Performance)
-    print(DF)
+    ## print(DF)
     preTime <- length(preIntSub)
     postTime <- length(postIntSub)
     ## load in the surplus before shortfall
@@ -82,20 +93,21 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
         if (DF$diff[r] < 0){
             if (r < preTime){
                 preSteps <- r
+                ##preIntSub <- preIntSub[1:preSteps]
             } else {
                 preSteps <- preTime
             }
-            print(preSteps)
+            ## print(preSteps)
             surplus <-rev(DF$diff[(r-preSteps):(r-1)])
-            print(surplus)
+            ## print(surplus)
             for (pre in 1:preSteps){
                 if(DF$diff[r] < 0 & sum(surplus) > 0){
                     xferAvail <- surplus[pre] * preIntSub[pre]
-                    print(paste("xferAvail", xferAvail))
+                    ## print(paste("xferAvail", xferAvail))
                     ## First case is when you have more surplus than
                     ## shortfall
                     xRow <- r - pre
-                    print(paste("xRow", xRow))
+                    ## print(paste("xRow", xRow))
                     if (xferAvail > abs(DF$diff[r])){
                         DF$diff[xRow] <- (xferAvail + DF$diff[r]) /
                             preIntSub[pre]
@@ -103,10 +115,10 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
                             DF$diff[r] / preIntSub[pre]
                         DF$diff[r] <- 0
                         DF$modPerf[r] <- DF$Need[r]
-                        print("case 1")
-                        print(paste("pre", pre))
-                        print(paste("r", r))
-                        print(DF[(xRow):r,])
+                        ## print("case 1")
+                        ## print(paste("pre", pre))
+                        ## print(paste("r", r))
+                        ## print(DF[(xRow):r,])
                     } else {
                         ## second case is when you have more shortfall
                         ## than surplus
@@ -114,21 +126,70 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
                         DF$modPerf[xRow] <- DF$modPerf[xRow] - surplus[pre] 
                         DF$diff[r] <- xferAvail + DF$diff[r]
                         DF$modPerf[r] <- DF$modPerf[r] + xferAvail
-                        print("case 2")
-                        print(paste("pre", pre))
-                        print(paste("r", r))
-                        print(DF[(xRow):r,])
+                        ## print("case 2")
+                        ## print(paste("pre", pre))
+                        ## print(paste("r", r))
+                        ## print(DF[(xRow):r,])
                     }
                 }
             }
-            ## for (pre in 1:preSteps){
-            ##     print(surplus)
-            ## }
-            #while(sum(preIntSub > 0) & DF$diff[r] <0){
-            #}
         }
     }
-    return(DF)
+    invDF <-
+        DF %>%
+        arrange(-row_number())
+    ## print(invDF)
+    for (r in 1:nrow(invDF)){
+        ## Find the first row that is less than zero
+        if (invDF$diff[r] < 0){
+            if (r < postTime){
+                postSteps <- r
+                ##postIntSub <- postIntSub[1:postSteps]
+            } else {
+                postSteps <- postTime
+            }
+            ## print(postSteps)
+            surplus <-rev(invDF$diff[(r-postSteps):(r-1)])
+            ## print(surplus)
+            for (post in 1:postSteps){
+                if(invDF$diff[r] < 0 & sum(surplus) > 0){
+                    xferAvail <- surplus[post] * postIntSub[post]
+                    ## print(paste("xferAvail", xferAvail))
+                    ## First case is when you have more surplus than
+                    ## shortfall
+                    xRow <- r - post
+                    ## print(paste("xRow", xRow))
+                    if (xferAvail > abs(invDF$diff[r])){
+                        invDF$diff[xRow] <- (xferAvail + invDF$diff[r]) /
+                            postIntSub[post]
+                        invDF$modPerf[xRow] <- invDF$modPerf[xRow] +
+                            invDF$diff[r] / postIntSub[post]
+                        invDF$diff[r] <- 0
+                        invDF$modPerf[r] <- invDF$Need[r]
+                        ## print("case 1")
+                        ## print(paste("post", post))
+                        ## print(paste("r", r))
+                        ## print(invDF[(xRow):r,])
+                    } else {
+                        ## second case is when you have more shortfall
+                        ## than surplus
+                        invDF$diff[xRow] <- 0
+                        invDF$modPerf[xRow] <- invDF$modPerf[xRow] - surplus[post] 
+                        invDF$diff[r] <- xferAvail + invDF$diff[r]
+                        invDF$modPerf[r] <- invDF$modPerf[r] + xferAvail
+                        ## print("case 2")
+                        ## print(paste("post", post))
+                        ## print(paste("r", r))
+                        ## print(invDF[(xRow):r,])
+                    }
+                }
+            }
+        }
+    }
+    finalDF <-
+        invDF %>%
+        arrange(-row_number())
+    return(finalDF)
 }
 
 
