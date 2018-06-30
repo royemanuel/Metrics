@@ -3,21 +3,21 @@ library("readxl")
 
 skedTracker <- read_csv("skedTrackerExp6Run1.csv")
 
-skedTracker <-
+skedTrackerPlotter <-
     skedTracker %>%
     select(-X1, -Day, -instructors) %>%
     gather(Category, Count, -Time) %>%
     mutate(Time = Time / (24*365))
 
 studPlot <-
-    ggplot(skedTracker,
+    ggplot(skedTrackerPlotter,
            aes(Time, Count,
                group = Category,
                color = Category)) +
     geom_line()
 
 skedTrackerNG <-
-    skedTracker %>%
+    skedTrackerPlotter %>%
     filter(Category != "graduates",
            Category != "attrites")
 

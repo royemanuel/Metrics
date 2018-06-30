@@ -30,8 +30,9 @@ opAvail <- function(DF){
         DF %>%
         group_by(Day) %>%
         filter(Time == min(Time)) %>%
-        mutate(mornAvail = upAircraft / (flightLine + SLEPlist + boneYard)) %>%
-        select(Day, mornAvail)
+        mutate(Performance = upAircraft /
+                   (flightLine + SLEPlist + boneYard)) %>%
+        select(Day, Performance)
 }
 
 
@@ -220,7 +221,7 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
 }
 
 
-qrtrly_EIR <- function(DF){
+step_EIR <- function(DF){
     DF <-
         DF %>%
         group_by(grp) %>%
@@ -259,4 +260,20 @@ assignGroupFast <- function(DF){
     }
     DF$grp <- g
     return(DF)
+}
+
+
+AoRes <- function(DF, nd){
+    wDF <-
+        opAvail(skedTracker) %>%
+        ungroup(wDF)%>%
+        mutate(Time = Day,
+               Need = nd)
+    ## Hard code the chi values because it is zero always for availability
+    wDF <- modifyPerformance(wDF, c(0), c(0))
+    wDF <-
+        assignGroupFast(wDF) %>%
+        ## Another hard code to ensure we have no residual substitutability
+        mutate(modPerf = ifelse(diff < 0, modPerf, Need))
+    step_EIR(wDF)
 }
