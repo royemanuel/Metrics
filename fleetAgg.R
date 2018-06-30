@@ -1,7 +1,8 @@
-source("fleetRes.R")
+#source("fleetRes.R")
 
-setwd("")
+#setwd("fleetData/20180630-090621")
 
+starttime <- Sys.time()
 timetoGradFiles <- list.files(path = ".", pattern = "aircrew")
 
 skedFiles <- list.files(path = ".", pattern = "sked")
@@ -20,9 +21,9 @@ chiGradPost <- c(1, 1, .5)
 
 ######################################################################
 ## Lists where the final resilience values are stored
-satList <- list()
-gradList <- list()
-AoList <- list()
+satList <- c()
+gradList <- c()
+AoList <- c()
 
 ######################################################################
 ## Big for loop to go through the directory where I put the data
@@ -31,5 +32,36 @@ AoList <- list()
 for (ttg in 1:length(timetoGradFiles)){
     DFrun <- read_csv(timetoGradFiles[ttg])
     DFrun$Need <- .85
-    satList[[ttg]] <- satRes(DFrun)
+    satList <- c(satList, satRes(DFrun, .85, 1200))
 }
+
+for (skd in 1:length(skedFiles)){
+    sked <- read_csv(skedFiles[skd])
+    AoList <- c(AoList, AoRes(sked, 0.85))
+    gradList <- c(gradList, gradRes(sked, 65, chiGradPre, chiGradPost))
+}
+
+resDF <- data.frame(SAT = satList, GRAD = gradList, Ao = AoList)
+
+endtime <- Sys.time()
+print(endtime - starttime)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

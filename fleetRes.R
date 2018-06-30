@@ -21,7 +21,7 @@ qrtrly_grads <- function(DF){
                Attrits_in_quarter = attrites - replace(lag(attrites,1),
                                                       is.na(lag(attrites,1)),
                                                       0)) %>%
-        select(Time, Grads_in_quarter, Attrits_in_quarter) %>%
+        select(Time, Grads_in_quarter) %>%
         gather(Category, Performance, -Time)
 }
 
@@ -42,14 +42,22 @@ opAvail <- function(DF){
 
 ######################################################################
 ## Functions to condition the aircrew data for resilience analysis
-qrtrly_sat <- function(DF){
+qrtrly_sat <- function(DF, desiredTIS){
     sumDF <-
         DF %>%
-        mutate(satisfaction = ifelse(indRes >= 1, 1, 0)) %>%
+        filter(Disp == "G") %>%
+        mutate(Time =  as.integer(exitDate),
+               ## number of hour
+               indRes = desiredTIS / TimeInSqdn,
+               date = as_datetime(3600 * Time +
+                                  make_datetime(2005, 1, 1, 8)),
+               qrtr = quarter(date, with_year = TRUE),
+               satisfaction = ifelse(indRes >= 1, 1, 0)) %>%
         group_by(qrtr) %>%
         summarise(numGrad = n(),
                   satisfaction = sum(satisfaction),
                   Performance = satisfaction / numGrad)
+    return(sumDF)
 }
 
 ######################################################################
@@ -188,22 +196,6 @@ step_EIR <- function(DF){
     res <- sum(DF$secRes) / sum(DF$num[])
 }
 
-calc_EIR <- function(DF){
-    DFg <- DF %>%
-        group_by(Run, Category, grp) %>%
-        summarise(grpInt = (trapz(Time, Performance) /
-                            trapz(Time, Need)) *
-                      (max(Time) - min(Time) + 1),
-                  grpTime = max(Time) - min(Time),
-                  n = n()) %>%
-        filter(n > 1) %>%
-        select(-n)
-    DFg <- DFg %>% summarise(ExtendedIntegralResilience =
-                                 ifelse(sum(grpInt) / sum(grpTime) < 1,
-                                        sum(grpInt) / sum(grpTime),
-                                        1 + chi *
-                                        (sum(grpInt) / sum(grpTime) - 1)))
-}
 
 
 assignGroupFast <- function(DF){
@@ -222,7 +214,7 @@ assignGroupFast <- function(DF){
 
 AoRes <- function(DF, nd){
     wDF <-
-        opAvail(skedTracker) %>%
+        opAvail(DF) %>%
         ungroup(wDF)%>%
         mutate(Time = Day,
                Need = nd)
@@ -235,6 +227,27 @@ AoRes <- function(DF, nd){
     step_EIR(wDF)
 }
 
+satRes <- function(DF, nd, dtis){
+    wDF <- qrtrly_sat(DF, dtis)
+    wDF <- wDF %>% mutate(Need = nd)
+    ## Hard code the chi values because it is zero always for availability
+    wDF <- modifyPerformance(wDF, c(0), c(0))
+    wDF <-
+        assignGroupFast(wDF) %>%
+        ## Another hard code to ensure we have no residual substitutability
+        mutate(modPerf = ifelse(diff < 0, modPerf, Need))
+    step_EIR(wDF)
+}
+
+gradRes <- function(DF, nd, chiPre, chiPost){
+    wDF <- qrtrly_grads(DF)
+    wDF <- wDF %>% mutate(Need = nd)
+    wDF <- modifyPerformance(wDF, chiPre, chiPost)
+    wDF <-
+        assignGroupFast(wDF) %>%
+        mutate(modPerf = ifelse(diff < 0, modPerf, Need))
+    step_EIR(wDF)
+}
 ######################################################################
 ######################################################################
 ## Chunk attempt. Failed. May revive. not now though. Goal was to
