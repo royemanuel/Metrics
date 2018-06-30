@@ -220,7 +220,9 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
     return(finalDF)
 }
 
-
+## Think about building the chi and the non-chi version, that is, when
+## chi equals one across the board. Then you don't have to use the
+## modify performance function. We are just averaging
 step_EIR <- function(DF){
     DF <-
         DF %>%
@@ -248,6 +250,7 @@ calc_EIR <- function(DF){
                                         1 + chi *
                                         (sum(grpInt) / sum(grpTime) - 1)))
 }
+
 
 assignGroupFast <- function(DF){
     DF <-
