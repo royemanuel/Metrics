@@ -860,7 +860,7 @@ def buildFiles(sim_run, acListDict, st, gr, at):
     sked.tracker.to_csv(fnst)
     allBB(sim_run, acListDict)
     aircrewInfo = studInfo(sim_run, st, gr, at)
-    aircrewInfo.to_csv(timeNow + '/aicrewRunExp' +str(sim_run) +'Run' +
+    aircrewInfo.to_csv(timeNow + '/aircrewExp' + str(sim_run) +'Run' +
                             str(n) + '.csv')
     aircraftInfo = acInfo(sim_run, acListDict)
     aircraftInfo.to_csv(timeNow +'/ACexp' + str(sim_run) + 'Run' +
@@ -869,14 +869,16 @@ def buildFiles(sim_run, acListDict, st, gr, at):
 
 def studInfo(sim_run, studs, grads, attrits):
     sgaDF = pd.DataFrame({'Run': [],
-                             'ID' :  [],
-                             'Disp': [],
-                             'TimeInSqdn': []})
+                          'ID' :  [],
+                          'Disp': [],
+                          'exitDate': [],
+                          'TimeInSqdn': []})
     if len(studs) > 0:
         for sname, sobj in studs.items():
             stud = pd.DataFrame({'Run': [sim_run],
                                  'ID': [sobj.ID],
                                  'Disp': ['S'],
+                                 'exitDate': [sobj.gradDate],
                                  'TimeInSqdn': [sobj.timeInSquadron]})
             sgaDF = sgaDF.append(stud)
     if len(grads) > 0:
@@ -884,6 +886,7 @@ def studInfo(sim_run, studs, grads, attrits):
             grad = pd.DataFrame({'Run': [sim_run],
                                  'ID': [gobj.ID],
                                  'Disp': ['G'],
+                                 'exitDate': [gobj.gradDate],
                                  'TimeInSqdn': [gobj.timeInSquadron]})
             sgaDF = sgaDF.append(grad)
     if len(attrits) > 0:
@@ -891,6 +894,7 @@ def studInfo(sim_run, studs, grads, attrits):
             attrit = pd.DataFrame({'Run': [sim_run],
                                    'ID': [aobj.ID],
                                    'Disp': ['A'],
+                                   'exitDate': [aobj.gradDate],
                                    'TimeInSqdn': [aobj.timeInSquadron]})
             sgaDF = sgaDF.append(attrit)
     return(sgaDF)
@@ -1021,7 +1025,7 @@ rt_av = studyParam.rt_av
 rt_puls = studyParam.rt_puls
 SLEP_or_not = studyParam.SLEP_or_not
 SLEPspots = studyParam.SLEPspots
-nRuns = 5
+nRuns = 1
 
 
 ######################################################################
