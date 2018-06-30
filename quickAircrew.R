@@ -12,12 +12,10 @@ aircrewData <-
            indRes = Performance / Need) %>%
     mutate(date = as_datetime(3600 * Time +
                               make_datetime(2005, 1, 1, 8))) %>%
-    mutate(qrtr = quarter(date, with_year = TRUE)) %>%
-    group_by(qrtr) %>%
-    filter(date == max(date)) 
+    mutate(qrtr = quarter(date, with_year = TRUE)) 
 
 
-airPlot <- ggplot(aircrewData, aes(Time, indRes)) + geom_point()
+airPlot <- ggplot(aircrewData, aes(qrtr, indRes)) + geom_point()
 
 airPlot
 

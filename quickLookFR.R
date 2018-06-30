@@ -1,7 +1,7 @@
 library("tidyverse")
 library("readxl")
 
-skedTracker <- read_csv("skedTrackerExp6Run1.csv")
+skedTracker <- read_csv("skedTrackerExp1Run0.csv")
 
 skedTrackerPlotter <-
     skedTracker %>%
