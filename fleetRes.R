@@ -18,61 +18,76 @@ qrtrly_grads <- function(df){
                                                       is.na(lag(attrites,1)),
                                                       0)) %>%
         select(Time, Grads_in_quarter, Attrits_in_quarter) %>%
-        gather(Categoryqui, Performance, -Time)
+        gather(Category, Performance, -Time)
 }
 
-assignGroup <- function(DF){
-    DF <- DF %>% mutate(diff = round(Performance - Need, 2))
-    DF$Grp <- 1
-    DF_output <- tibble()
-    DF$Category <- as.factor(DF$Category)
-    cat_values <- unique(DF$Category)
-    cat_number <- length(cat_values)
-    ## pb <- txtProgressBar(min = 0, max = length(unique(DF$Run)), style = 3)
-    for (run in 1:length(unique(DF$Run))){
-        DF_by_run <-
-            DF %>%
-            filter(Run == unique(DF$Run)[run])
-        ## print(run)
-        DF_cat_grp <- tibble()
-        for (i in 1:cat_number){
-            grp <- 1
-            DF_cat <-
-                DF_by_run %>%
-                filter(Category == cat_values[i])
-            s <- sign(DF_cat$diff[1])
-            for (r in 1:nrow(DF_cat)){
-                if (sign(s) == sign(DF_cat$diff[r])){
-                    DF_cat$Grp[r] <- grp
-                } else {
-                    grp <- grp + 1
-                    s <- sign(DF_cat$diff[r])
-                    ##print(grp)
-                    DF_cat$Grp[r] <- grp
-                }
-                DF_cat
-            }
-            DF_cat_grp <- bind_rows(DF_cat_grp, DF_cat)
-            cat("\r", cat_values[i], run)
-        }
-        ## setTxtProgressBar(pb, run)
-        DF_output <- bind_rows(DF_output, DF_cat_grp)
-    }
-    print("groups assigned")
-    DF_output <- endcap_group(DF_output)
-    DF_output
+## pullChunk <- function(DF, preIntSub, postIntSub){
+##     DF <-
+##         DF %>%
+##         mutate(diff = Performance - Need,
+##                grp = ifelse(sign(diff) >=0, 1, -1),
+##                modPerf = Performance)
+##     chnklngth <- rle(DF$grp)$lengths
+##     chnkval <- rle(DF$grp)$values
+##     DFchunk <- assignGroupFast(DF)
+##     dflist <- list()
+##     for (g in 1:max(DFchunk$grp)){
+##         print(paste("chunk", g))
+##         wDF <-
+##             DFchunk %>%
+##             filter(grp >= g) %>%
+##             filter(grp <= g + 2)
+##         wDF <- modifyPerformance(wDF, preIntSub, postIntSub)
+##         print(paste("wDF",unique(wDF$grp)))
+##         topDF <-
+##             DFchunk %>%
+##             filter(grp < g)
+##         botDF <-
+##             DFchunk %>%
+##             filter(grp > g + 2)
+##         print(paste("botDf", unique(botDF$grp)))
+##         DFchunk <- bind_rows(topDF, wDF, botDF) %>%
+##             arrange(grp)
+##         print(DFchunk)
+##     }
+##     return(DFchunk)
+## }
+
+##     j <- 1
+##     for (i in 1:length(chnklngth)){
+##         if (chnkval[i] > 0){
+##             j <- j + chnklngth[i]
+##         } else {
+##         }
+##     }
+##     chnk <- 1
+##     while(chnk < dim(DF)[1]){
+##         while(sign(DF$diff[chnk]) >= 0){
+##             chnk <- chnk + 1
+##             if(chnk == dim(DF)[1]){
+##                 break
+##             }
+##         }
+##         startRow <- chnk - length(preIntSub)
+##         while(sign(DF$diff[chnk]) <= 0){
+##             chnk <- chnk + 1
+##             if (chnk == dim(DF)[1]){
+##                 chnk <- chnk - length(postIntSub)
+##                 break
+##             }
+##         }
+##         endRow <- chnk + length(postIntSub)
+##         DFchnk <- DF[startRow:endRow,]
+##         DFchnk <- modifyPerformance(DFchnk, preIntSub, postIntSub)
+##         DF[startRow:endRow,] <- DFchnk[startRow:endRow,]
+##     }
+##     return(DF)
+## }
+
+modPerf <- function(DF, pre, pst){
+    
 }
 
-pullChunk <- function(DF, preIntSub, postIntSub){
-    for (r in 1:nrow(DF)){
-        while(sign(r) >= 0){            
-        }
-        startRow <- r - length(preIntSub)
-        while(sign(r) <= 0){
-        }
-        endRow
-    }
-}
 
 ## Building a method to modify the performance value to satisfy the
 ## need. DF is the data frame with Time, Category, Performance, and Need
@@ -97,17 +112,17 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
             } else {
                 preSteps <- preTime
             }
-            print(preSteps)
+            ## print(preSteps)
             surplus <-rev(DF$diff[(r-preSteps):(r-1)])
-            print(surplus)
+            ## print(surplus)
             for (pre in 1:preSteps){
                 if(DF$diff[r] < 0 & sum(surplus) > 0){
                     xferAvail <- surplus[pre] * preIntSub[pre]
-                    print(paste("xferAvail", xferAvail))
+                    ## print(paste("xferAvail", xferAvail))
                     ## First case is when you have more surplus than
                     ## shortfall
                     xRow <- r - pre
-                    print(paste("xRow", xRow))
+                    ## print(paste("xRow", xRow))
                     if (xferAvail > abs(DF$diff[r])){
                         DF$diff[xRow] <- (xferAvail + DF$diff[r]) /
                             preIntSub[pre]
@@ -174,7 +189,8 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
                         ## second case is when you have more shortfall
                         ## than surplus
                         invDF$diff[xRow] <- 0
-                        invDF$modPerf[xRow] <- invDF$modPerf[xRow] - surplus[post] 
+                        invDF$modPerf[xRow] <- invDF$modPerf[xRow] -
+                            surplus[post]
                         invDF$diff[r] <- xferAvail + invDF$diff[r]
                         invDF$modPerf[r] <- invDF$modPerf[r] + xferAvail
                         ## print("case 2")
@@ -196,13 +212,17 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
 qrtrly_EIR <- function(DF){
     DF <-
         DF %>%
-        mutate(modPerf = ifelse(modPerf > Need, Need, modPerf))
-    
+        group_by(grp) %>%
+        summarise(num = n(),
+                  sumPerf = sum(modPerf),
+                  sumNeed = sum(Need)) %>%
+        mutate(secRes = sumPerf * num / sumNeed)
+    res <- sum(DF$secRes) / sum(DF$num[])
 }
 
 calc_EIR <- function(DF){
     DFg <- DF %>%
-        group_by(Run, Infrastructure, Grp) %>%
+        group_by(Run, Category, grp) %>%
         summarise(grpInt = (trapz(Time, Performance) /
                             trapz(Time, Need)) *
                       (max(Time) - min(Time) + 1),
@@ -217,20 +237,15 @@ calc_EIR <- function(DF){
                                         (sum(grpInt) / sum(grpTime) - 1)))
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+assignGroupFast <- function(DF){
+    DF <-
+        DF %>%
+        mutate(grp = ifelse(sign(diff) < 0, -1, 1))
+    groupVector <- rle(DF$grp)
+    g <- c()
+    for(i in 1:length(groupVector$values)){
+        g <- c(g, rep(i, groupVector$lengths[i]))
+    }
+    DF$grp <- g
+    return(DF)
+}
