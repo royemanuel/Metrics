@@ -461,7 +461,8 @@ def grading(self, env, stud, attrit, fltTime, day):
 class Scheduler(object):
     def __init__(self, env, fl, studList, instList,
                  indocPeriod, size_of_class,
-                 SLEP_af, SLEP_av, SLEP_puls, SLEPlist):
+                 SLEP_af, SLEP_av, SLEP_puls, SLEPlist,
+                 sunDownDate, sunDownLength):
         self.env = env
         self.studList = studList
         self.nextStudNo = str(len(studList)) + "S"
@@ -474,6 +475,9 @@ class Scheduler(object):
         self.eventsPerDay = 4
         self.SLEPlist = SLEPlist
         self.tracker = pd.DataFrame()
+        self.sunDownDate = sunDownDate
+        self.sunDownLength = sunDownLength
+        self.sunDownStart = sunDownDate - sunDownLength
 
     # Build a class of students to start flight training
     def fltClassIndoc(self, env, minSize, maxSize):
@@ -723,9 +727,12 @@ class Scheduler(object):
             # a method or something.
             if (env.now > self.nextIndoc):
                 # print("There is no one left to learn at time " + str(env.now))
+                cs = self.classSize
+                if env.now > self.sunDownStart:
+                    cs = cs - (cs / sunDownLength * (env.now - sunDownStart))
                 self.fltClassIndoc(env,
-                                   self.classSize * .7,
-                                   self.classSize * 1.3)
+                                   cs * .7,
+                                   cs * 1.3)
                 self.nextIndoc = env.now + self.indocPeriod
                 # Pretty sure this if statement is in the wrong place
                 # if i > 4:
@@ -844,6 +851,7 @@ timeNow = "fleetData/" + time.strftime("%Y%m%d-%H%M%S")
 os.makedirs(timeNow)
 os.path.join(timeNow +'/')
 
+print('New directory is'  + timeNow + '/')
 
 
 def allBB(sim_run, acDict):
@@ -1041,8 +1049,9 @@ SLEPspots = studyParam.SLEPspots
 stagger = studyParam.Stagger
 addHours = studyParam.addHours
 TTR = studyParam.TTR
-
-nRuns = 10
+sDD = studyParam.sunDownDate
+sDL = studyParam.sunDownLength
+nRuns = 1
 
 
 ######################################################################
@@ -1112,7 +1121,9 @@ for r in range(len(s_o_c)):
                          SLEP_af = af_SLEPline,
                          SLEP_av = av_SLEPline,
                          SLEP_puls = puls_SLEPline,
-                         SLEPlist = SLEPlist)
+                         SLEPlist = SLEPlist,
+                         sunDownDate = sDD[r],
+                         sunDownLength = sDL[r])
         print(time_line[r])
         env.run(until=time_line[r])
         current_run = r + 1
