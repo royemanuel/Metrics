@@ -22,13 +22,16 @@ qrtrly_grads <- function(DF){
 }
 
 ## Function to condition the flightline data for resilience
-## Metric is the upAircraft at the start of the flight schedule each day
+## Metric is the upAircraft at the start of the flight schedule each day\
+## Note: when calculating resilience, chi value is zero for availability
+## yesterday's availability has no impact on today's
 opAvail <- function(DF){
     DF <-
         DF %>%
         group_by(Day) %>%
         filter(Time == min(Time)) %>%
-        mutate(mornAvail = upAircraft / (flightLine + SLEPlist + boneYard))
+        mutate(mornAvail = upAircraft / (flightLine + SLEPlist + boneYard)) %>%
+        select(Day, mornAvail)
 }
 
 
