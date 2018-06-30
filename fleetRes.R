@@ -1,16 +1,16 @@
 library("tidyverse")
 library("lubridate")
-qrtrly_grads <- function(df){
-    df <-
-        df %>%
+qrtrly_grads <- function(DF){
+    DF <-
+        DF %>%
         mutate(date = as_datetime(3600 * Time +
                                   make_datetime(2005, 1, 1, 8))) %>%
         mutate(qrtr =quarter(date, with_year = TRUE)) %>%
         group_by(qrtr) %>%
         filter(date == max(date))
-    df <-
-        df %>%
-        ungroup(df) %>%
+    DF <-
+        DF %>%
+        ungroup(DF) %>%
         mutate(Grads_in_quarter = graduates - replace(lag(graduates,1),
                                                       is.na(lag(graduates,1)),
                                                       0),
@@ -20,6 +20,17 @@ qrtrly_grads <- function(df){
         select(Time, Grads_in_quarter, Attrits_in_quarter) %>%
         gather(Category, Performance, -Time)
 }
+
+## Function to condition the flightline data for resilience
+## Metric is the upAircraft at the start of the flight schedule each day
+opAvail <- function(DF){
+    DF <-
+        DF %>%
+        group_by(Day) %>%
+        filter(Time == min(Time)) %>%
+        mutate(mornAvail = upAircraft / (flightLine + SLEPlist + boneYard))
+}
+
 
 ## pullChunk <- function(DF, preIntSub, postIntSub){
 ##     DF <-
@@ -84,9 +95,6 @@ qrtrly_grads <- function(df){
 ##     return(DF)
 ## }
 
-modPerf <- function(DF, pre, pst){
-    
-}
 
 
 ## Building a method to modify the performance value to satisfy the
