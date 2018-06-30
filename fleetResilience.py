@@ -49,10 +49,16 @@ time.perf_counter()
 # Build an aircraft part
 # an aircraft part needs to work, fail, and be part of an aircraft
 class Part(object):
-    def __init__(self, env, ID, SLEP_limit, lifeTime, endTime, repTime):
+    def __init__(self, env,
+                 ID,
+                 SLEP_limit,
+                 lifeTime,
+                 endTime,
+                 repTime):
         self.bornDate = env.now
         self.ID = ID
         self.SLEP_limit = SLEP_limit
+        self.SLEPadd = 10000
         self.lifeTime = lifeTime
         self.endTime = endTime
         self.repTime = repTime
@@ -63,6 +69,7 @@ class Part(object):
         self.history = pd.DataFrame()
         self.SLEP = False
         self.SLEPtime = float('inf')
+        self.SLEP_TTR = 4320
         
     # Define a fail time for the particular part.
     def failTime(self, env, **kwargs):
@@ -108,12 +115,12 @@ class Part(object):
     # Check if the part needs to go to SLEP. Intend each part to call
     # Looks like I need to put the SLEP stuff into the Resource definition
     # of the thing. This might take some time to untangle. 
-    def SLEP_Part(self, env, SLEP_line, SLEP_TTR, SLEP_addition):
+    def SLEP_Part(self, env, SLEP_line):
         request = SLEP_line.request()
         yield request
-        self.SLEPtime = SLEP_TTR + env.now
+        self.SLEPtime = self.SLEP_TTR + env.now
         # print(self.SLEPtime)
-        yield env.timeout(SLEP_TTR)
+        yield env.timeout(self.SLEP_TTR)
         yield SLEP_line.release(request)
 
 
@@ -129,12 +136,14 @@ def print_stats(res):
 # to nest or do the inheritance part of OOP.
 # Airframes are the source of the BuNo
 class Airframe(Part):
-    def __init__(self, env, ID, endTime, repTime, slplmt):
+    def __init__(self, env, ID, endTime, repTime, slplmt, addhr, sTTR):
         self.env = env
         self.obj = "Airframe"
         self.ageFail = 1000
         self.fltFail = 0
         self.fltFail = self.failTime(env, **{"endTime": endTime})
+        self.SLEPadd = addhr
+        self.SLEP_TTR = sTTR
         super().__init__(env,
                          ID,
                          SLEP_limit = slplmt,
@@ -186,10 +195,10 @@ class Propulsion(Part):
 
 
 class Aircraft(object):
-    def __init__(self, env, af, av, puls, attrit, endTime, repTime, slplmt):
+    def __init__(self, env, af, av, puls, attrit, endTime, repTime, slplmt, addhr, sTTR):
         self.env = env
         self.obj = "Aircraft"
-        self.af = Airframe(env, af, endTime['af'], repTime['af'], slplmt)
+        self.af = Airframe(env, af, endTime['af'], repTime['af'], slplmt, addhr, sTTR)
         self.av = Avionics(env, av, endTime['av'], repTime['av'])
         self.puls = Propulsion(env, puls, endTime['puls'], repTime['puls'])
         self.BuNo = self.af.ID
@@ -495,9 +504,7 @@ class Scheduler(object):
                 self.SLEPlist.update({int(ac.BuNo[2:]):
                                       self.flightLine.pop(int(ac.BuNo[2:]))})
                 self.env.process(ac.af.SLEP_Part(env,
-                                SLEP_line = af_SLEPline,
-                                SLEP_TTR = 4320,
-                                                 SLEP_addition = 9900))
+                                SLEP_line = af_SLEPline))
                 # print("Aircraft " + str(ac.BuNo) + " is off to the FST")
                 # print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
 
@@ -507,7 +514,7 @@ class Scheduler(object):
             if (SLEPac.af.SLEPtime < env.now):
                 # print("Aircraft " + str(SLEPac.BuNo) + " is back from SLEP")
                 SLEPac.af.SLEP_limit = 20000
-                SLEPac.af.lifeTime = 10000
+                SLEPac.af.lifeTime = SLEPac.af.SLEPadd
                 self.flightLine.update({int(SLEPac.BuNo[2:]):
                                         self.SLEPlist.pop(int(SLEPac.BuNo[2:]))})
                 # print('%d of %d slots are allocated.' % (af_SLEPline.count, af_SLEPline.capacity))
@@ -763,12 +770,18 @@ class Scheduler(object):
 
 
 # Build an aircraft. If it is the start, it will build 
-def buildAC(env, numAC, fl, attrit, endTime, repTime, slplmt):
+def buildAC(env, numAC, fl, attrit, endTime, repTime, slplmt, drip, slpAdd, slpTTR):
+    if(drip):
+        SLEPvec = range(int(np.ceil(slplmt * 0.75)),
+                        slplmt,
+                        int(np.ceil(slplmt * 0.25 / numAC)))
+    else:
+        SLEPvec = [slplmt] * numAC
     for n in range(numAC):
         af = "af" + str(n)
         av = "av" + str(n)
         puls = "puls" + str(n)
-        fl[n] = Aircraft(env, af, av, puls, attrit, endTime, repTime, slplmt)
+        fl[n] = Aircraft(env, af, av, puls, attrit, endTime, repTime, SLEPvec[n], slpAdd, slpTTR)
         
 
 def newStuds(env, listname, numStud):
@@ -1025,7 +1038,11 @@ rt_av = studyParam.rt_av
 rt_puls = studyParam.rt_puls
 SLEP_or_not = studyParam.SLEP_or_not
 SLEPspots = studyParam.SLEPspots
-nRuns = 1
+stagger = studyParam.Stagger
+addHours = studyParam.addHours
+TTR = studyParam.TTR
+
+nRuns = 10
 
 
 ######################################################################
@@ -1064,7 +1081,16 @@ for r in range(len(s_o_c)):
         SLEPlist = {}
         et = {'af': et_af[r], 'av': et_av[r], 'puls': et_puls[r]}
         rt = {'af': rt_af[r], 'av': rt_av[r], 'puls': rt_puls[r]}
-        buildAC(env, NUM_AIRCRAFT[r], flightLine, attrit[r], et, rt, sleplimit[r])
+        buildAC(env,
+                NUM_AIRCRAFT[r],
+                flightLine,
+                attrit[r],
+                et,
+                rt,
+                sleplimit[r],
+                stagger[r],
+                addHours[r],
+                TTR[r])
         af_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
         av_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
         puls_SLEPline = simpy.Resource(env, capacity=SLEPspots[r])
