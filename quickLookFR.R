@@ -1,7 +1,7 @@
 library("tidyverse")
 library("readxl")
 
-skedTracker <- read_csv("skedTrackerExp1Run0.csv")
+skedTracker <- read_csv("skedTrackerExp1Run1.csv")
 
 skedTrackerPlotter <-
     skedTracker %>%
@@ -19,7 +19,8 @@ studPlot <-
 skedTrackerNG <-
     skedTrackerPlotter %>%
     filter(Category != "graduates",
-           Category != "attrites")
+           Category != "attrites",
+           Category != "students")
 
 studPlotNoGrads <-
     ggplot(skedTrackerNG,
@@ -29,23 +30,5 @@ studPlotNoGrads <-
     geom_line()
 
 studPlotNoGrads
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
