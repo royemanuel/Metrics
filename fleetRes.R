@@ -1,5 +1,9 @@
 library("tidyverse")
 library("lubridate")
+######################################################################
+## Function to condition the graduation per quarter for resilience
+## analysis
+
 qrtrly_grads <- function(DF){
     DF <-
         DF %>%
@@ -21,6 +25,7 @@ qrtrly_grads <- function(DF){
         gather(Category, Performance, -Time)
 }
 
+######################################################################
 ## Function to condition the flightline data for resilience
 ## Metric is the upAircraft at the start of the flight schedule each day\
 ## Note: when calculating resilience, chi value is zero for availability
@@ -35,77 +40,26 @@ opAvail <- function(DF){
         select(Day, Performance)
 }
 
+######################################################################
+## Functions to condition the aircrew data for resilience analysis
+qrtrly_sat <- function(DF){
+    sumDF <-
+        DF %>%
+        mutate(satisfaction = ifelse(indRes >= 1, 1, 0)) %>%
+        group_by(qrtr) %>%
+        summarise(numGrad = n(),
+                  satisfaction = sum(satisfaction),
+                  Performance = satisfaction / numGrad)
+}
 
-## pullChunk <- function(DF, preIntSub, postIntSub){
-##     DF <-
-##         DF %>%
-##         mutate(diff = Performance - Need,
-##                grp = ifelse(sign(diff) >=0, 1, -1),
-##                modPerf = Performance)
-##     chnklngth <- rle(DF$grp)$lengths
-##     chnkval <- rle(DF$grp)$values
-##     DFchunk <- assignGroupFast(DF)
-##     dflist <- list()
-##     for (g in 1:max(DFchunk$grp)){
-##         print(paste("chunk", g))
-##         wDF <-
-##             DFchunk %>%
-##             filter(grp >= g) %>%
-##             filter(grp <= g + 2)
-##         wDF <- modifyPerformance(wDF, preIntSub, postIntSub)
-##         print(paste("wDF",unique(wDF$grp)))
-##         topDF <-
-##             DFchunk %>%
-##             filter(grp < g)
-##         botDF <-
-##             DFchunk %>%
-##             filter(grp > g + 2)
-##         print(paste("botDf", unique(botDF$grp)))
-##         DFchunk <- bind_rows(topDF, wDF, botDF) %>%
-##             arrange(grp)
-##         print(DFchunk)
-##     }
-##     return(DFchunk)
-## }
-
-##     j <- 1
-##     for (i in 1:length(chnklngth)){
-##         if (chnkval[i] > 0){
-##             j <- j + chnklngth[i]
-##         } else {
-##         }
-##     }
-##     chnk <- 1
-##     while(chnk < dim(DF)[1]){
-##         while(sign(DF$diff[chnk]) >= 0){
-##             chnk <- chnk + 1
-##             if(chnk == dim(DF)[1]){
-##                 break
-##             }
-##         }
-##         startRow <- chnk - length(preIntSub)
-##         while(sign(DF$diff[chnk]) <= 0){
-##             chnk <- chnk + 1
-##             if (chnk == dim(DF)[1]){
-##                 chnk <- chnk - length(postIntSub)
-##                 break
-##             }
-##         }
-##         endRow <- chnk + length(postIntSub)
-##         DFchnk <- DF[startRow:endRow,]
-##         DFchnk <- modifyPerformance(DFchnk, preIntSub, postIntSub)
-##         DF[startRow:endRow,] <- DFchnk[startRow:endRow,]
-##     }
-##     return(DF)
-## }
-
-
-
+######################################################################
 ## Building a method to modify the performance value to satisfy the
 ## need. DF is the data frame with Time, Category, Performance, and Need
 ## defined. preIntSub is the intertemporal substitutability vector for
 ## excess performance prior to the failure. postIntSub is the i.s. vector
 ## for excess performance after the failure
+
+######################################################################
 
 modifyPerformance <- function(DF, preIntSub, postIntSub){
     DF <-
@@ -150,7 +104,7 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
                         ## second case is when you have more shortfall
                         ## than surplus
                         DF$diff[xRow] <- 0
-                        DF$modPerf[xRow] <- DF$modPerf[xRow] - surplus[pre] 
+                        DF$modPerf[xRow] <- DF$modPerf[xRow] - surplus[pre]
                         DF$diff[r] <- xferAvail + DF$diff[r]
                         DF$modPerf[r] <- DF$modPerf[r] + xferAvail
                         ## print("case 2")
@@ -280,3 +234,75 @@ AoRes <- function(DF, nd){
         mutate(modPerf = ifelse(diff < 0, modPerf, Need))
     step_EIR(wDF)
 }
+
+######################################################################
+######################################################################
+## Chunk attempt. Failed. May revive. not now though. Goal was to
+## make the closest failure first filled by pre-surplus then post-surplus
+## then go to the next failure.
+######################################################################
+######################################################################
+
+
+## pullChunk <- function(DF, preIntSub, postIntSub){
+##     DF <-
+##         DF %>%
+##         mutate(diff = Performance - Need,
+##                grp = ifelse(sign(diff) >=0, 1, -1),
+##                modPerf = Performance)
+##     chnklngth <- rle(DF$grp)$lengths
+##     chnkval <- rle(DF$grp)$values
+##     DFchunk <- assignGroupFast(DF)
+##     dflist <- list()
+##     for (g in 1:max(DFchunk$grp)){
+##         print(paste("chunk", g))
+##         wDF <-
+##             DFchunk %>%
+##             filter(grp >= g) %>%
+##             filter(grp <= g + 2)
+##         wDF <- modifyPerformance(wDF, preIntSub, postIntSub)
+##         print(paste("wDF",unique(wDF$grp)))
+##         topDF <-
+##             DFchunk %>%
+##             filter(grp < g)
+##         botDF <-
+##             DFchunk %>%
+##             filter(grp > g + 2)
+##         print(paste("botDf", unique(botDF$grp)))
+##         DFchunk <- bind_rows(topDF, wDF, botDF) %>%
+##             arrange(grp)
+##         print(DFchunk)
+##     }
+##     return(DFchunk)
+## }
+
+##     j <- 1
+##     for (i in 1:length(chnklngth)){
+##         if (chnkval[i] > 0){
+##             j <- j + chnklngth[i]
+##         } else {
+##         }
+##     }
+##     chnk <- 1
+##     while(chnk < dim(DF)[1]){
+##         while(sign(DF$diff[chnk]) >= 0){
+##             chnk <- chnk + 1
+##             if(chnk == dim(DF)[1]){
+##                 break
+##             }
+##         }
+##         startRow <- chnk - length(preIntSub)
+##         while(sign(DF$diff[chnk]) <= 0){
+##             chnk <- chnk + 1
+##             if (chnk == dim(DF)[1]){
+##                 chnk <- chnk - length(postIntSub)
+##                 break
+##             }
+##         }
+##         endRow <- chnk + length(postIntSub)
+##         DFchnk <- DF[startRow:endRow,]
+##         DFchnk <- modifyPerformance(DFchnk, preIntSub, postIntSub)
+##         DF[startRow:endRow,] <- DFchnk[startRow:endRow,]
+##     }
+##     return(DF)
+## }
