@@ -234,15 +234,27 @@ class Aircraft(object):
             avRepTime = 0
             pulsRepTime = 0
             if self.af.status is False:
-                afRepTime = np.random.randint(1, self.af.repTime)
+                ####################
+                # Following line allows input from the file.
+                # afRepTime = np.random.randint(1, self.af.repTime)
+                # Hardcoding the repair times
+                afRepTime = np.random.lognormal(4, 1.2, 1)
                 # print("The Airframe was broken, but we bent some metal %d" % self.env.now)
                 # print("Airframe won't break again until %d." % self.af.fltFail)
             if self.av.status is False:
-                avRepTime = np.random.randint(1, self.av.repTime)
+                ####################
+                # Following line allows input from the file.
+                # avRepTime = np.random.randint(1, self.av.repTime)
+                # Hardcoding the repair times
+                avRepTime = np.random.lognormal(3, 1, 1)
                 # print("The instruments were down. Up and at'em %d" % self.env.now)
                 # print("Avionics won't break again until %d." % self.av.fltFail)
             if self.puls.status is False:
-                pulsRepTime = np.random.randint(1, self.puls.repTime)
+                ####################
+                # Following line allows input from the file.
+                # pulsRepTime = np.random.randint(1, self.af.repTime)
+                # Hardcoding the repair times
+                pulsRepTime = np.random.lognormal(3, 1, 1)
                 # print("The Engine busted, so now it purrs like a kitten %d. " % self.env.now)
                 # print("Engine won't break again until" + str(self.puls.fltFail))
             repTime = max(afRepTime,
