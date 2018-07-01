@@ -480,7 +480,7 @@ class Scheduler(object):
     def __init__(self, env, fl, studList, instList,
                  indocPeriod, size_of_class,
                  SLEP_af, SLEP_av, SLEP_puls, SLEPlist,
-                 sunDownDate, sunDownLength):
+                 sunDownDate, sunDownLength, surge):
         self.env = env
         self.studList = studList
         self.nextStudNo = str(len(studList)) + "S"
@@ -496,6 +496,7 @@ class Scheduler(object):
         self.sunDownDate = sunDownDate
         self.sunDownLength = sunDownLength
         self.sunDownStart = sunDownDate - sunDownLength
+        self.surge = surge
 
     # Build a class of students to start flight training
     def fltClassIndoc(self, env, minSize, maxSize):
@@ -748,7 +749,12 @@ class Scheduler(object):
                 if env.now > self.sunDownStart:
                     self.classSize = np.ceil(self.classSize - (self.classSize / self.sunDownLength * (env.now - self.sunDownStart)))
                     # print("aha" + str(self.classSize))
-                if self.classSize > 0:
+                if env.now > self.surge and env.now < self.surge + 24*365*2:
+                    self.fltClassIndoc(env,
+                                       (self.classSize + 10) * .7,
+                                       (self.classSize + 10) * 1.3)
+                    self.nextIndoc = env.now + self.indocPeriod
+                elif self.classSize > 0:
                     self.fltClassIndoc(env,
                                        self.classSize * .7,
                                        self.classSize * 1.3)
@@ -1077,6 +1083,7 @@ addHours = studyParam.addHours
 TTR = studyParam.TTR
 sDD = studyParam.sunDownDate
 sDL = studyParam.sunDownLength
+surgetime = studyParam.surgetime
 nRuns = 1
 
 
@@ -1147,7 +1154,8 @@ for r in range(len(s_o_c)):
                          SLEP_puls = puls_SLEPline,
                          SLEPlist = SLEPlist,
                          sunDownDate = sDD[r],
-                         sunDownLength = sDL[r])
+                         sunDownLength = sDL[r],
+                         surge = surgetime[r])
         print(time_line[r])
         env.run(until=time_line[r])
         current_run = r + 1
