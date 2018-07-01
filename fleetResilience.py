@@ -802,10 +802,10 @@ class Scheduler(object):
 
 # Build an aircraft. If it is the start, it will build 
 def buildAC(env, numAC, fl, attrit, failureRate, repTime, slplmt, drip, slpAdd, slpTTR):
-    if(drip):
-        SLEPvec = range(int(np.ceil(slplmt * 0.75)),
+    if(drip > 0):
+        SLEPvec = range(int(np.ceil(slplmt * drip)),
                         slplmt,
-                        int(np.ceil(slplmt * 0.25 / numAC)))
+                        int(np.ceil(slplmt * (1-drip) / numAC)))
     else:
         SLEPvec = [slplmt] * numAC
     for n in range(numAC):
