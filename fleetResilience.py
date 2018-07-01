@@ -53,14 +53,16 @@ class Part(object):
                  ID,
                  SLEP_limit,
                  lifeTime,
-                 endTime,
-                 repTime):
+                 failureRate,
+                 repTime,
+                 SLEPadd,
+                 SLEP_TTR):
         self.bornDate = env.now
         self.ID = ID
         self.SLEP_limit = SLEP_limit
-        self.SLEPadd = 10000
+        self.SLEPadd = SLEPadd
         self.lifeTime = lifeTime
-        self.endTime = endTime
+        self.failureRate = failureRate
         self.repTime = repTime
         self.age = 0
         self.fltHours = 0
@@ -69,16 +71,16 @@ class Part(object):
         self.history = pd.DataFrame()
         self.SLEP = False
         self.SLEPtime = float('inf')
-        self.SLEP_TTR = 4320
+        self.SLEP_TTR = SLEP_TTR
         
     # Define a fail time for the particular part.
     def failTime(self, env, **kwargs):
-        # print("from failTime" + str(kwargs['endTime']))
-        time_of_failure = np.ceil(np.random.exponential(kwargs['endTime']))
+        # print("from failTime" + str(kwargs['failureRate']))
+        time_of_failure = np.ceil(np.random.exponential(kwargs['failureRate']))
         # print(self.obj + " will fail at time " + str(time_of_failure))
         return(time_of_failure)
         # for kw in kwargs:
-        #     if kwargs[kw] == "endTime":
+        #     if kwargs[kw] == "failureRate":
         #         print("rollin' the dice")
         #         self.fltFail = np.random.random_integers(1, kwargs[kw])
 
@@ -97,8 +99,8 @@ class Part(object):
             #??#                                   ignore_index=True)
             # THis section will go with a repair function, but for now
             # I want to check the validity
-            # print("from failFlight " + self.obj + str(self.endTime))
-            self.fltFail = self.failTime(env, **{"endTime": self.endTime})
+            # print("from failFlight " + self.obj + str(self.failureRate))
+            self.fltFail = self.failTime(env, **{"failureRate": self.failureRate})
             self.fltHrsSinceFail = 0
         else:
             self.fltFail -= fltTime
@@ -136,20 +138,20 @@ def print_stats(res):
 # to nest or do the inheritance part of OOP.
 # Airframes are the source of the BuNo
 class Airframe(Part):
-    def __init__(self, env, ID, endTime, repTime, slplmt, addhr, sTTR):
+    def __init__(self, env, ID, failureRate, repTime, slplmt, addhr, sTTR):
         self.env = env
         self.obj = "Airframe"
         self.ageFail = 1000
         self.fltFail = 0
-        self.fltFail = self.failTime(env, **{"endTime": endTime})
-        self.SLEPadd = addhr
-        self.SLEP_TTR = sTTR
+        self.fltFail = self.failTime(env, **{"failureRate": failureRate})
         super().__init__(env,
                          ID,
                          SLEP_limit = slplmt,
                          lifeTime = 7200,
-                         endTime = endTime,
-                         repTime = repTime)
+                         failureRate = failureRate,
+                         repTime = repTime,
+                         SLEPadd = addhr,
+                         SLEP_TTR = sTTR)
         # This needs to be a call to a method for part. ID the parameters
         # in the particular part
         # self.fltFail = np.random.randint(1, 100 + 1)
@@ -160,7 +162,7 @@ class Airframe(Part):
 # different distributions and be party to different updates / Tech
 # refreshes.
 class Avionics(Part):
-    def __init__(self, env, ID, endTime, repTime):
+    def __init__(self, env, ID, failureRate, repTime, slplmt, addhr, sTTR):
         self.env = env
         self.obj = "Avionics"
         self.fltFail = 0
@@ -168,39 +170,43 @@ class Avionics(Part):
                          ID,
                          SLEP_limit = 120,
                          lifeTime = 10000,
-                         endTime = endTime,
-                         repTime = repTime)
+                         failureRate = failureRate,
+                         repTime = repTime,
+                         SLEPadd = addhr,
+                         SLEP_TTR = sTTR)
         self.ageFail = 20
-        self.fltFail = self.failTime(env, **{"endTime": self.endTime})
+        self.fltFail = self.failTime(env, **{"failureRate": self.failureRate})
         # self.fltFail = np.random.randint(1, 20 + 1)
         # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
 class Propulsion(Part):
-    def __init__(self, env, ID, endTime, repTime):
+    def __init__(self, env, ID, failureRate, repTime, slplmt, addhr, sTTR):
         self.env = env
         self.obj = "Propulsion"
         self.fltFail = 0
-        self.fltFail = self.failTime(env, **{"endTime": endTime})
+        self.fltFail = self.failTime(env, **{"failureRate": failureRate})
         super().__init__(env,
                          ID,
                          SLEP_limit = 120,
                          lifeTime = 10000,
-                         endTime = endTime,
-                         repTime = repTime)
+                         failureRate = failureRate,
+                         repTime = repTime,
+                         SLEPadd = addhr,
+                         SLEP_TTR = sTTR)
         self.ageFail = 30
-        self.fltFail = self.failTime(env, **{"endTime": self.endTime})
+        self.fltFail = self.failTime(env, **{"failureRate": self.failureRate})
         # self.fltFail = np.random.randint(1, 30 + 1)
         # print("Aircraft " + str(self.ID) + " " + str(self.fltFail))
 
 
 class Aircraft(object):
-    def __init__(self, env, af, av, puls, attrit, endTime, repTime, slplmt, addhr, sTTR):
+    def __init__(self, env, af, av, puls, attrit, failureRate, repTime, slplmt, addhr, sTTR):
         self.env = env
         self.obj = "Aircraft"
-        self.af = Airframe(env, af, endTime['af'], repTime['af'], slplmt, addhr, sTTR)
-        self.av = Avionics(env, av, endTime['av'], repTime['av'])
-        self.puls = Propulsion(env, puls, endTime['puls'], repTime['puls'])
+        self.af = Airframe(env, af, failureRate['af'], repTime['af'], slplmt, addhr, sTTR)
+        self.av = Avionics(env, av, failureRate['av'], repTime['av'], slplmt, addhr, sTTR)
+        self.puls = Propulsion(env, puls, failureRate['puls'], repTime['puls'], slplmt, addhr, sTTR)
         self.BuNo = self.af.ID
         self.status = self.af.status & self.av.status & self.puls.status
         self.bornDate = env.now
@@ -368,7 +374,7 @@ class Student(Aircrew):
         self.syllabus = 0
         self.downs = 0
         self.graduated = False
-        self.gradDate = "learning, yo"
+        self.gradDate = "learning yo"
         self.attrited = False
 
     def checkGraduate(self, env):
@@ -727,13 +733,16 @@ class Scheduler(object):
             # a method or something.
             if (env.now > self.nextIndoc):
                 # print("There is no one left to learn at time " + str(env.now))
-                cs = self.classSize
                 if env.now > self.sunDownStart:
-                    cs = cs - (cs / sunDownLength * (env.now - sunDownStart))
-                self.fltClassIndoc(env,
-                                   cs * .7,
-                                   cs * 1.3)
-                self.nextIndoc = env.now + self.indocPeriod
+                    self.classSize = np.ceil(self.classSize - (self.classSize / self.sunDownLength * (env.now - self.sunDownStart)))
+                    # print("aha" + str(self.classSize))
+                if self.classSize > 0:
+                    self.fltClassIndoc(env,
+                                       self.classSize * .7,
+                                       self.classSize * 1.3)
+                    self.nextIndoc = env.now + self.indocPeriod
+                else:
+                    self.nextIndoc = float('inf')
                 # Pretty sure this if statement is in the wrong place
                 # if i > 4:
                 #    nextEvent = 12
@@ -771,13 +780,16 @@ class Scheduler(object):
             if len(self.flightLine) == 0 and len(self.SLEPlist) == 0:
                 print(self.env.now)
                 break
+            if len(self.studList) == 0 and self.classSize <= 0:
+                print(env.now)
+                break
 
 
 
 
 
 # Build an aircraft. If it is the start, it will build 
-def buildAC(env, numAC, fl, attrit, endTime, repTime, slplmt, drip, slpAdd, slpTTR):
+def buildAC(env, numAC, fl, attrit, failureRate, repTime, slplmt, drip, slpAdd, slpTTR):
     if(drip):
         SLEPvec = range(int(np.ceil(slplmt * 0.75)),
                         slplmt,
@@ -788,7 +800,7 @@ def buildAC(env, numAC, fl, attrit, endTime, repTime, slplmt, drip, slpAdd, slpT
         af = "af" + str(n)
         av = "av" + str(n)
         puls = "puls" + str(n)
-        fl[n] = Aircraft(env, af, av, puls, attrit, endTime, repTime, SLEPvec[n], slpAdd, slpTTR)
+        fl[n] = Aircraft(env, af, av, puls, attrit, failureRate, repTime, SLEPvec[n], slpAdd, slpTTR)
         
 
 def newStuds(env, listname, numStud):
@@ -847,9 +859,13 @@ def newInsts(env, listname, numInst, syllabus):
 # for ac in flightLine:
 #     aircraftHistory = aircraftHistory.append(flightLine[ac].blueBook)
 
-timeNow = "fleetData/" + time.strftime("%Y%m%d-%H%M%S")
+timeNow = "fleetData/" + time.strftime("%Y%m%d-%H%M%S") 
 os.makedirs(timeNow)
 os.path.join(timeNow +'/')
+rl = int(input('Choose the random seed: '))
+rdmsd = "RS" + str(rl)
+np.random.seed([rl])
+random.seed(rl)
 
 print('New directory is'  + timeNow + '/')
 
@@ -862,7 +878,7 @@ def allBB(sim_run, acDict):
                                ignore_index = True)
             acStor.append(acHist)
     allacHist = pd.concat(acStor)
-    filename = timeNow + '/AC' + str(num) + 'history' + str(sim_run) + '.csv'
+    filename = timeNow + '/AC' + str(num) + 'history' + str(sim_run) + rdmsd + '.csv'
     allacHist.to_csv(filename)
 
 def concBB(sim_run, acDict, sr):
@@ -871,21 +887,20 @@ def concBB(sim_run, acDict, sr):
         df.append(ac.blueBook)
     if len(df) > 0:
         dfcsv = pd.concat(df)
-        filename = timeNow + '/ALL' + sr + 'run' + str(sim_run) + '.csv'
+        filename = timeNow + '/ALL' + sr + 'run' + str(sim_run) + rdmsd + '.csv'
         dfcsv.to_csv(filename)
         return(dfcsv)
 
 def buildFiles(sim_run, acListDict, st, gr, at):
-    fn = timeNow + '/ALL' + 'run' + str(sim_run) + '.csv'
-    fnst = timeNow + '/skedTrackerExp' + str(sim_run) + 'Run' + str(n) + '.csv'
+    fnst = timeNow + '/skedTrackerExp' + str(sim_run) + 'Run' + str(n) + rdmsd + '.csv'
     sked.tracker.to_csv(fnst)
     allBB(sim_run, acListDict)
     aircrewInfo = studInfo(sim_run, st, gr, at)
     aircrewInfo.to_csv(timeNow + '/aircrewExp' + str(sim_run) +'Run' +
-                            str(n) + '.csv')
+                            str(n) + rdmsd + '.csv')
     aircraftInfo = acInfo(sim_run, acListDict)
     aircraftInfo.to_csv(timeNow +'/ACexp' + str(sim_run) + 'Run' +
-                            str(n) + '.csv')
+                            str(n) + rdmsd + '.csv')
     
 
 def studInfo(sim_run, studs, grads, attrits):
@@ -961,61 +976,60 @@ def calcShape(Mode, Mean):
     Shape = np.sqrt((2/3)*np.log(Mean)-(2/3)*np.log(Mode))
     return Shape
 
-rl = int(input('Choose the random seed: '))
 
 copy('FleetResParam.xlsx', timeNow + '/' + 'ParametersRdmSd' +
          str(rl) + '.xlsx' )
 
-NUM_AIRCRAFT =   [100, 90, 80, 70, 60, 50,
-                  100, 90, 80, 70, 60, 50]#    [15, 30, 80]
-NUM_STUDENT =    [100, 100, 100, 100, 100, 100,
-                  100, 100, 100, 100, 100, 100]#    [20, 30, 50]
-NUM_INSTRUCTOR = [80, 80, 80, 80, 80, 80,
-                  80, 80, 80, 80, 80, 80] #    [15, 25, 50]
-s_o_c =          [25, 25, 25, 25, 25, 25,
-                  25, 25, 25, 25, 25, 25]
-#rl =             [42, 42, 23, 23, 122809, 122809,
-#                  42, 42, 23, 23, 122809, 122809]
-ip =             [720, 720, 720, 720, 720, 720,
-                  720, 720, 720, 720, 720, 720]
-attrit =         [.035, .035, .035, .035, .035, .035,
-                  .035, .035, .035, .035, .035, .035,]
-time_line =      [50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365,
-                  50*24*365]
-sleplimit = [7000,
-             6800,
-             6600,
-             6400,
-             6200,
-             6000,
-             5800,
-             5600,
-             5400,
-             5200,
-             5000,
-             4800]
-
-et = {'af':720,
-      'av':240,
-      'puls':360}
-rt = {'af':720,
-      'av':480,
-      'puls':240}
-SLEP_or_not = [True, True, True, True, True, True,
-                   True, True, True, True, True, True]
-              # False, False, False, False, False, False]
-SLEPspots =      [4, 8, 4, 8, 4, 8,
-                  4, 8, 4, 8, 4, 8]
+# NUM_AIRCRAFT =   [100, 90, 80, 70, 60, 50,
+#                   100, 90, 80, 70, 60, 50]#    [15, 30, 80]
+# NUM_STUDENT =    [100, 100, 100, 100, 100, 100,
+#                   100, 100, 100, 100, 100, 100]#    [20, 30, 50]
+# NUM_INSTRUCTOR = [80, 80, 80, 80, 80, 80,
+#                   80, 80, 80, 80, 80, 80] #    [15, 25, 50]
+# s_o_c =          [25, 25, 25, 25, 25, 25,
+#                   25, 25, 25, 25, 25, 25]
+# #rl =             [42, 42, 23, 23, 122809, 122809,
+# #                  42, 42, 23, 23, 122809, 122809]
+# ip =             [720, 720, 720, 720, 720, 720,
+#                   720, 720, 720, 720, 720, 720]
+# attrit =         [.035, .035, .035, .035, .035, .035,
+#                   .035, .035, .035, .035, .035, .035,]
+# time_line =      [50*24*365,
+#                   50*24*365,
+#                   50*24*365,
+#                   50*24*365,
+#                   50*24*365,
+#                   50*24*365,
+#                   50*24*365,
+#                   50*24*365,
+#                   50*24*365,
+#                   50*24*365,
+#                   50*24*365,
+#                   50*24*365]
+# sleplimit = [7000,
+#              6800,
+#              6600,
+#              6400,
+#              6200,
+#              6000,
+#              5800,
+#              5600,
+#              5400,
+#              5200,
+#              5000,
+#              4800]
+# 
+# et = {'af':720,
+#       'av':240,
+#       'puls':360}
+# rt = {'af':720,
+#       'av':480,
+#       'puls':240}
+# SLEP_or_not = [True, True, True, True, True, True,
+#                    True, True, True, True, True, True]
+#               # False, False, False, False, False, False]
+# SLEPspots =      [4, 8, 4, 8, 4, 8,
+#                   4, 8, 4, 8, 4, 8]
 
 studyParamWB = pd.ExcelFile('FleetResParam.xlsx')
 studyParam = studyParamWB.parse('Sheet1')
@@ -1038,9 +1052,9 @@ time_line = studyParam.time_line
 
 sleplimit = studyParam.sleplimit
 
-et_af = studyParam.et_af
-et_av = studyParam.et_av
-et_puls = studyParam.et_puls
+fr_af = studyParam.et_af
+fr_av = studyParam.et_av
+fr_puls = studyParam.et_puls
 rt_af = studyParam.rt_af
 rt_av = studyParam.rt_av
 rt_puls = studyParam.rt_puls
@@ -1063,8 +1077,6 @@ allACstore = {}
 #random.seed(42)
 
 for r in range(len(s_o_c)):
-    np.random.seed([rl])
-    random.seed(rl)
     for n in range(nRuns):
         tic_run = time.clock()
         SLEP_in_run = SLEP_or_not[r]
@@ -1088,13 +1100,13 @@ for r in range(len(s_o_c)):
         flightLine = {}
         boneYard = {}
         SLEPlist = {}
-        et = {'af': et_af[r], 'av': et_av[r], 'puls': et_puls[r]}
+        fr = {'af': fr_af[r], 'av': fr_av[r], 'puls': fr_puls[r]}
         rt = {'af': rt_af[r], 'av': rt_av[r], 'puls': rt_puls[r]}
         buildAC(env,
                 NUM_AIRCRAFT[r],
                 flightLine,
                 attrit[r],
-                et,
+                fr,
                 rt,
                 sleplimit[r],
                 stagger[r],
