@@ -747,7 +747,8 @@ class Scheduler(object):
             if (env.now > self.nextIndoc):
                 # print("There is no one left to learn at time " + str(env.now))
                 if env.now > self.sunDownStart:
-                    self.classSize = np.ceil(self.classSize - (self.classSize / self.sunDownLength * (env.now - self.sunDownStart)))
+                    if env.now - self.sunDownStart < 8760:
+                        self.classSize = self.classSize - np.floor((env.now - self.sunDownStart) / 8760)
                     # print("aha" + str(self.classSize))
                 if env.now > self.surge and env.now < self.surge + 24*365*2:
                     self.fltClassIndoc(env,
@@ -1084,7 +1085,7 @@ TTR = studyParam.TTR
 sDD = studyParam.sunDownDate
 sDL = studyParam.sunDownLength
 surgetime = studyParam.surgetime
-nRuns = 10
+nRuns = 7
 
 
 ######################################################################
