@@ -496,6 +496,7 @@ class Scheduler(object):
         self.sunDownDate = sunDownDate
         self.sunDownLength = sunDownLength
         self.sunDownStart = sunDownDate - sunDownLength
+        self.sunDownTrack = 0
         self.surge = surge
 
     # Build a class of students to start flight training
@@ -746,9 +747,10 @@ class Scheduler(object):
             # a method or something.
             if (env.now > self.nextIndoc):
                 # print("There is no one left to learn at time " + str(env.now))
-                if env.now > self.sunDownStart:
-                    if env.now - self.sunDownStart < 8760:
-                        self.classSize = self.classSize - np.floor((env.now - self.sunDownStart) / 8760)
+                yearsIn = np.floor((env.now - self.sunDownStart) / 8760)
+                if yearsIn > self.sunDownTrack:
+                    self.sunDownTrack += 1
+                    self.classSize = self.classSize - 5 * self.sunDownTrack
                     # print("aha" + str(self.classSize))
                 if env.now > self.surge and env.now < self.surge + 24*365*2:
                     self.fltClassIndoc(env,
@@ -1085,7 +1087,7 @@ TTR = studyParam.TTR
 sDD = studyParam.sunDownDate
 sDL = studyParam.sunDownLength
 surgetime = studyParam.surgetime
-nRuns = 7
+nRuns = 10
 
 
 ######################################################################
