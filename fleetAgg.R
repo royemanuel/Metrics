@@ -3,9 +3,8 @@
 #setwd("fleetData/20180630-090621")
 
 starttime <- Sys.time()
-timetoGradFiles <- list.files(path = ".", pattern = "aircrew")
-
-skedFiles <- list.files(path = ".", pattern = "sked")
+timetoGradFilesMstr <- list.files(path = ".", pattern = "aircrew")
+skedFilesMstr <- list.files(path = ".", pattern = "sked")
 
 ######################################################################
 ## Define different Chi for each requirement
@@ -23,7 +22,7 @@ rseed <-
     list.files(path = ".", pattern = "ParametersRdm") %>%
     str_remove("ParametersRdmSd") %>%
     str_remove(".xlsx")
-rseed <- as.integer(rseed)
+
 
 ######################################################################
 ## Lists where the final resilience values are stored
@@ -36,38 +35,72 @@ rList <- c()
 
 ######################################################################
 ## Big for loop to go through the directory where I put the data
-
-
-for (ttg in 1:length(timetoGradFiles)){
-    DFrun <- read_csv(timetoGradFiles[ttg], col_types = list(col_integer(),
-                                                             col_character(),
-                                                             col_character(),
-                                                             col_double(),
-                                                             col_double(),
-                                                             col_character()))
-    DFrun$Need <- .85
-    satList <- c(satList, satRes(DFrun, .85, 1200))
+resilienceDF <- tibble(SAT = 0, GRAD = 0, Ao = 0,
+                       Run = '0', Experiment = '0', Seed = 0)
+resilienceDF <- filter(resilienceDF, SAT == 1)
+for(rs in 1:length(rseed)){
+    ttgBin <- str_detect(timetoGradFilesMstr, as.character(rseed[rs]))
+    sfBin <- str_detect(skedFilesMstr, as.character(rseed[rs]))
+    timetoGradFiles <- timetoGradFilesMstr[ttgBin]
+    skedFiles <- skedFilesMstr[sfBin]
+    mstrList = list()
+    for (ttg in 1:length(timetoGradFiles)){
+        DFrun <- read_csv(timetoGradFiles[ttg],
+                          col_types = list(col_integer(),
+                                           col_character(),
+                                           col_character(),
+                                           col_double(),
+                                           col_double(),
+                                           col_character()))
+        DFrun$Need <- .85
+        satVal <- satRes(DFrun, .85, 1200)
+        sked <- read_csv(skedFiles[ttg])
+        AoVal <- AoRes(sked, 0.85)
+        gradVal <- gradRes(sked, 65, chiGradPre, chiGradPost)
+        exprmnt <-
+            skedFiles[ttg] %>%
+            str_extract("(?<=Exp?)\\d+")
+        xpVal <- exprmnt
+        run <-
+            skedFiles[ttg] %>%
+            str_extract("(?<=Run?)\\d+")
+        rVal <- run
+        sked <-
+            sked %>%
+            mutate(Run = run,
+                   Experiment = exprmnt,
+                   Seed = rseed[rs])
+        mstrList[[ttg]] <- sked
+        resilienceDF <- add_row(resilienceDF,
+                                SAT = satVal,
+                                GRAD = gradVal,
+                                Ao = AoVal,
+                                Run = rVal,
+                                Experiment = xpVal,
+                                Seed = rs)
+    }
 }
 
-mstrList = list()
-for (skd in 1:length(skedFiles)){
-    sked <- read_csv(skedFiles[skd])
-    AoList <- c(AoList, AoRes(sked, 0.85))
-    gradList <- c(gradList, gradRes(sked, 65, chiGradPre, chiGradPost))
-    exprmnt <-
-        skedFiles[skd] %>%
-        str_extract("(?<=Exp?)\\d+")
-    xpList <- c(xpList, as.integer(exprmnt))
-    run <-
-        skedFiles[skd] %>%
-        str_extract("(?<=Run?)\\d+")
-    rList <- c(rList, as.integer(run))
-    sked <-
-        sked %>%
-        mutate(Run = as.integer(run),
-               Experiment = as.integer(exprmnt))
-    mstrList[[skd]] <- sked    
+## Get rid of the "seed" from resilience DF and do a proper count of runs
+
+runCheck <- function(DF){
+    wDF <-
+        DF %>%
+        group_by(Experiment) %>%
+        summarise(MAXRUN = max(Run))
+    k <- wDF$MAXRUN != max(wDF$MAXRUN)
+    if(sum(k) == 0){
+        DF <-
+            DF %>%
+            mutate(Run = (Run + 1) + (max(Run + 1)) * (Seed - 1),
+                   Run = as.character(Run))
+        return(DF)
+    } else {
+        print("not the same number of runs")
+    }
 }
+
+
 
 mstrSked <- bind_rows(mstrList)
 
@@ -87,12 +120,12 @@ studView <-
 acVplot <-
     ggplot(acView, aes(Time, Count, group = Category, color = Category)) +
     geom_line() +
-    facet_grid(Run ~ Experiment)
+    facet_grid(Experiment ~ Run)
 
 studVplot <- 
     ggplot(studView, aes(Time, Count, group = Category, color = Category)) +
     geom_line() +
-    facet_grid(Run ~ Experiment)
+    facet_grid(Experiment ~ Run)
 
 timeView <-
     mstrSked %>%
@@ -110,3 +143,11 @@ resDF$Seed <- rseed
 endtime <- Sys.time()
 print(endtime - starttime)
 
+gthrRes <-
+    resilienceDF %>%
+    gather(ResilienceType, ResilienceValue,)
+
+resiliencePlots <-
+    
+    ggplot(resilienceDF,
+           aes(Experiment, ))

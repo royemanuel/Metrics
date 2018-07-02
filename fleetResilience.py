@@ -1087,7 +1087,7 @@ TTR = studyParam.TTR
 sDD = studyParam.sunDownDate
 sDL = studyParam.sunDownLength
 surgetime = studyParam.surgetime
-nRuns = 5
+nRuns = 10
 
 
 ######################################################################
