@@ -790,7 +790,7 @@ class Scheduler(object):
                 nextEvent =  3 if int(env.now) % 3 == 0 else env.now % 3                
                 yield self.env.timeout(nextEvent)
 
-            if self.env.now % 100 == 0:
+            if self.env.now % 1000 == 0:
                 print("Simulation at time " + str(self.env.now), end='\r')
             ##if len(flightLine) == 0 and len(self.SLEPlist) > 0:
             ##    next_SLEP_complete_dict = {}
@@ -1087,7 +1087,7 @@ TTR = studyParam.TTR
 sDD = studyParam.sunDownDate
 sDL = studyParam.sunDownLength
 surgetime = studyParam.surgetime
-nRuns = 10
+nRuns = 1
 
 
 ######################################################################
