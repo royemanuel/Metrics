@@ -39,7 +39,12 @@ rList <- c()
 
 
 for (ttg in 1:length(timetoGradFiles)){
-    DFrun <- read_csv(timetoGradFiles[ttg])
+    DFrun <- read_csv(timetoGradFiles[ttg], col_types = list(col_integer(),
+                                                             col_character(),
+                                                             col_character(),
+                                                             col_double(),
+                                                             col_double(),
+                                                             col_character()))
     DFrun$Need <- .85
     satList <- c(satList, satRes(DFrun, .85, 1200))
 }
@@ -51,13 +56,11 @@ for (skd in 1:length(skedFiles)){
     gradList <- c(gradList, gradRes(sked, 65, chiGradPre, chiGradPost))
     exprmnt <-
         skedFiles[skd] %>%
-        str_remove("skedTrackerExp") %>%
-        str_replace("Run\\S+", "")
+        str_extract("(?<=Exp?)\\d+")
     xpList <- c(xpList, as.integer(exprmnt))
     run <-
         skedFiles[skd] %>%
-        str_remove("skedTrackerExp(.)Run") %>%
-        str_replace("RS\\S+", "")
+        str_extract("(?<=Run?)\\d+")
     rList <- c(rList, as.integer(run))
     sked <-
         sked %>%
