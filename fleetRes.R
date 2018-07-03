@@ -47,6 +47,7 @@ qrtrly_sat <- function(DF, desiredTIS){
         DF %>%
         filter(Disp == "G") %>%
         mutate(Time =  as.integer(exitDate),
+               TimeInSqdn = as.double(TimeInSqdn),
                ## number of hour
                indRes = desiredTIS / TimeInSqdn,
                date = as_datetime(3600 * Time +

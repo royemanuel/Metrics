@@ -39,6 +39,7 @@ resilienceDF <- tibble(SAT = 0, GRAD = 0, Ao = 0,
                        Run = '0', Experiment = '0', Seed = 0)
 resilienceDF <- filter(resilienceDF, SAT == 1)
 for(rs in 1:length(rseed)){
+    print(rs)
     ttgBin <- str_detect(timetoGradFilesMstr, as.character(rseed[rs]))
     sfBin <- str_detect(skedFilesMstr, as.character(rseed[rs]))
     timetoGradFiles <- timetoGradFilesMstr[ttgBin]
@@ -49,10 +50,9 @@ for(rs in 1:length(rseed)){
                           col_types = list(col_integer(),
                                            col_character(),
                                            col_character(),
-                                           col_double(),
-                                           col_double(),
+                                           col_character(),
+                                           col_character(),
                                            col_character()))
-        DFrun$Need <- .85
         satVal <- satRes(DFrun, .85, 1200)
         sked <- read_csv(skedFiles[ttg])
         AoVal <- AoRes(sked, 0.85)
@@ -78,8 +78,21 @@ for(rs in 1:length(rseed)){
                                 Run = rVal,
                                 Experiment = xpVal,
                                 Seed = rs)
+        print(paste("From Seed", rseed[rs],
+                    "added Experiment", exprmnt,
+                    "Run", run))
     }
+    print(paste("Seed", rseed[rs]))
 }
+
+mstrSked <- bind_rows(mstrList)
+
+
+##countFiles <- function(lst, seedlst){
+##    for(1 in 1:length(seedlst)){
+##        strp <- str_detect(lst, as.character(seedlst[rs]))
+##    }
+##}
 
 ## Get rid of the "seed" from resilience DF and do a proper count of runs
 
@@ -87,22 +100,24 @@ runCheck <- function(DF){
     wDF <-
         DF %>%
         group_by(Experiment) %>%
+        mutate(Run = as.integer(Run)) %>%
         summarise(MAXRUN = max(Run))
     k <- wDF$MAXRUN != max(wDF$MAXRUN)
     if(sum(k) == 0){
         DF <-
             DF %>%
-            mutate(Run = (Run + 1) + (max(Run + 1)) * (Seed - 1),
-                   Run = as.character(Run))
+            mutate(Run = as.integer(Run),
+                   Run = (Run + 1) + (max(Run + 1)) * (Seed - 1),
+                   Run = as.character(Run)) %>%
+            select(-Seed)
         return(DF)
     } else {
         print("not the same number of runs")
     }
 }
 
+workRDF <- runCheck(resilienceDF)
 
-
-mstrSked <- bind_rows(mstrList)
 
 acView <-
     mstrSked %>%
@@ -136,18 +151,10 @@ timePlot <- ggplot(timeView, aes(Experiment, EndTime, group = Experiment)) +
     geom_boxplot()
     
 
-resDF <- tibble(SAT = satList, GRAD = gradList, Ao = AoList,
-                    Run = rList, Experiment = xpList)
-resDF$Seed <- rseed
+#resDF <- tibble(SAT = satList, GRAD = gradList, Ao = AoList,
+#                    Run = rList, Experiment = xpList)
+#resDF$Seed <- rseed
 
 endtime <- Sys.time()
 print(endtime - starttime)
 
-gthrRes <-
-    resilienceDF %>%
-    gather(ResilienceType, ResilienceValue,)
-
-resiliencePlots <-
-    
-    ggplot(resilienceDF,
-           aes(Experiment, ))
