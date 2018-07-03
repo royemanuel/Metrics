@@ -114,8 +114,8 @@ for(rs in 1:length(rseed)){
                 gradVal <- gradVal * skedEnd$simEnd / TH
             }
             DFrunsumTH$EndTime <- skedEnd$simEnd
+            DFrunsumTH$TimeHorizon <- TH
             ttgDF <- bind_rows(ttgDF, DFrunsumTH)
-            ttgDF$TimeHorizon <- TH
             if (BIG){
                 mstrList[[ttg]] <- sked
             }
@@ -148,37 +148,50 @@ if(BIG){
 ##}
 
 ## Get rid of the "seed" from resilience DF and do a proper count of runs
+## On second thought, there does not seem to be a purpose to this at all!
 
-runCheck <- function(DF){
-    wDF <-
-        DF %>%
-        group_by(Experiment) %>%
-        mutate(Run = as.integer(Run)) %>%
-        summarise(MAXRUN = max(Run))
-    k <- wDF$MAXRUN != max(wDF$MAXRUN)
-    if(sum(k) == 0){
-        DF <-
-            DF %>%
-            mutate(Run = as.integer(Run),
-                   Run = (Run + 1) + (max(Run + 1)) * (Seed - 1),
-                   Run = as.character(Run)) %>%
-            select(-Seed)
-        return(DF)
-    } else {
-        print("not the same number of runs")
-    }
-}
+## runCheck <- function(DF){
+##     storeDF <- tibble()
+##     timehorizon <- unique(DF$TimeHorizon)
+##     print(timehorizon)
+##     for(TH in 1:length(timehorizon)){
+##         wDF <-
+##             DF %>%
+##             filter(TimeHorizon == timehorizon[TH]) %>%
+##             group_by(Experiment) %>%
+##             mutate(Run = as.integer(Run)) %>%
+##             summarise(MAXRUN = max(Run))
+##         k <- wDF$MAXRUN != max(wDF$MAXRUN)
+##         if(sum(k) == 0){
+##             aDF <-
+##                 DF %>%               
+##                 filter(TimeHorizon == timehorizon[TH]) %>%
+##                 mutate(Run = as.integer(Run),
+##                        Run = (Run + 1) + (max(Run + 1)) * (Seed - 1),
+##                        Run = as.character(Run)) %>%
+##                 select(-Seed)
+##             print(aDF)
+##             return(aDF)
+##         } else {
+##             print("not the same number of runs")
+##         }
+##         storeDF <- bind_rows(storeDF, aDF)
+##         print(storeDF)
+##     }
+##     return(storeDF)
+## }
 
-ttgDF <- runCheck(ttgDF)
+        
+
+ttgDFtst <- runCheck(ttgDF)
 
 ttgSum <-
     ttgDF %>%
-    group_by(Experiment) %>%
+    group_by(Experiment, TimeHorizon) %>%
     summarise(MAX = max(MAX), min = min(MIN), MEAN = mean(MEAN))
 
 workRDF <- runCheck(resilienceDF)
-dir.create(a)
-write_csv(resilienceDF, "resChi[c()]")
+
 ######################################################################
 ## troubleshooting dataframes and plots
 ## acView <-
