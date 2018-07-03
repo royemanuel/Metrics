@@ -40,7 +40,8 @@ rList <- c()
 ######################################################################
 ## Big for loop to go through the directory where I put the data
 resilienceDF <- tibble(SAT = 0, GRAD = 0, Ao = 0,
-                       Run = '0', Experiment = '0', Seed = 0)
+                       Run = '0', Experiment = '0', Seed = 0,
+                       TimeHorizon = 0)
 resilienceDF <- filter(resilienceDF, SAT == 1)
 ttgDF <- tibble(MAX = 0, MIN = 0, MED = 0, SD = 0,
                 Run = '0', Experiment = '0', Seed = 0,
@@ -80,11 +81,11 @@ for(rs in 1:length(rseed)){
                              col_integer(),
                              col_integer(),
                              col_integer()))
-        for(th in 1:lenght(timeHorizonList)){
+        for(th in 1:length(timeHorizonList)){
             TH <- timeHorizonList[th]
             DFrunTH <-
                 DFrun %>%
-                filter( < TH)
+                filter(exitDate < TH)
             skedTH <-
                 sked %>%
                 filter(Time < TH)
@@ -99,7 +100,7 @@ for(rs in 1:length(rseed)){
                           MEAN = mean(TimeInSqdn),
                           SD = sd(TimeInSqdn)) %>%
                 mutate(Run = run, Experiment = exprmnt, Seed = rs)
-            satVal <- satRes(DFrunsumTH, .85, 1440)
+            satVal <- satRes(DFrunTH, .85, 1440)
             AoVal <- AoRes(skedTH, 0.85)
             gradVal <- gradRes(skedTH, 65, chiGradPre, chiGradPost)
             xpVal <- exprmnt
@@ -107,8 +108,14 @@ for(rs in 1:length(rseed)){
             skedEnd <-
                 sked %>%
                 summarise(simEnd = max(Time))
+            if (skedEnd$simEnd < TH){
+                satVal <- satVal * skedEnd$simEnd / TH
+                AoVal <- AoVal * skedEnd$simEnd / TH
+                gradVal <- gradVal * skedEnd$simEnd / TH
+            }
             DFrunsumTH$EndTime <- skedEnd$simEnd
             ttgDF <- bind_rows(ttgDF, DFrunsumTH)
+            ttgDF$TimeHorizon <- TH
             if (BIG){
                 mstrList[[ttg]] <- sked
             }
@@ -118,17 +125,21 @@ for(rs in 1:length(rseed)){
                                     Ao = AoVal,
                                     Run = rVal,
                                     Experiment = xpVal,
-                                    Seed = rs)
-            print(paste("From Seed", rseed[rs],
-                        "added Experiment", exprmnt,
-                        "Run", run))
+                                    Seed = rs,
+                                    TimeHorizon = TH)
         }
-        print(paste("Seed", rseed[rs]))
+        print(paste("From Seed", rseed[rs],
+                    "added Experiment", exprmnt,
+                    "Run", run))
     }
+    print(paste("Seed", rseed[rs]))
+}
 
-    if(BIG){
-        mstrSked <- bind_rows(mstrList)
-    }
+if(BIG){
+    mstrSked <- bind_rows(mstrList)
+}
+
+
     
 ##countFiles <- function(lst, seedlst){
 ##    for(1 in 1:length(seedlst)){
