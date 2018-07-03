@@ -6,6 +6,10 @@ starttime <- Sys.time()
 timetoGradFilesMstr <- list.files(path = ".", pattern = "aircrew")
 skedFilesMstr <- list.files(path = ".", pattern = "sked")
 
+## If you want the big master schedule, set BIG to True
+
+BIG <- FALSE
+
 ######################################################################
 ## Define different Chi for each requirement
 
@@ -38,6 +42,10 @@ rList <- c()
 resilienceDF <- tibble(SAT = 0, GRAD = 0, Ao = 0,
                        Run = '0', Experiment = '0', Seed = 0)
 resilienceDF <- filter(resilienceDF, SAT == 1)
+ttgDF <- tibble(MAX = 0, MIN = 0, MED = 0, SD = 0,
+                Run = '0', Experiment = '0', Seed = 0,
+                EndTime = 0)
+ttgDF <- filter(ttgDF, MAX == 1)
 for(rs in 1:length(rseed)){
     print(rs)
     ttgBin <- str_detect(timetoGradFilesMstr, as.character(rseed[rs]))
@@ -46,6 +54,12 @@ for(rs in 1:length(rseed)){
     skedFiles <- skedFilesMstr[sfBin]
     mstrList = list()
     for (ttg in 1:length(timetoGradFiles)){
+        run <-
+            skedFiles[ttg] %>%
+            str_extract("(?<=Run?)\\d+")
+        exprmnt <-
+            skedFiles[ttg] %>%
+            str_extract("(?<=Exp?)\\d+")
         DFrun <- read_csv(timetoGradFiles[ttg],
                           col_types = list(col_integer(),
                                            col_character(),
@@ -53,24 +67,43 @@ for(rs in 1:length(rseed)){
                                            col_character(),
                                            col_character(),
                                            col_character()))
-        satVal <- satRes(DFrun, .85, 1200)
-        sked <- read_csv(skedFiles[ttg])
+        satVal <- satRes(DFrun, .85, 1440)
+        DFrun <-
+            DFrun %>%
+            filter(Disp == 'G') %>%
+            select(TimeInSqdn) %>%
+            mutate(TimeInSqdn = as.double(TimeInSqdn)) %>%
+            summarise(MAX = max(TimeInSqdn),
+                      MIN = min(TimeInSqdn),
+                      MED = median(TimeInSqdn),
+                      MEAN = mean(TimeInSqdn),
+                      SD = sd(TimeInSqdn)) %>%
+            mutate(Run = run, Experiment = exprmnt, Seed = rs)
+        sked <- read_csv(skedFiles[ttg],
+                         col_types = list(
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer()))
         AoVal <- AoRes(sked, 0.85)
         gradVal <- gradRes(sked, 65, chiGradPre, chiGradPost)
-        exprmnt <-
-            skedFiles[ttg] %>%
-            str_extract("(?<=Exp?)\\d+")
         xpVal <- exprmnt
-        run <-
-            skedFiles[ttg] %>%
-            str_extract("(?<=Run?)\\d+")
         rVal <- run
-        sked <-
-            sked %>%
-            mutate(Run = run,
-                   Experiment = exprmnt,
-                   Seed = rseed[rs])
-        mstrList[[ttg]] <- sked
+        skedEnd <-
+            sked %>%           
+            summarise(simEnd = max(Time))
+        DFrun$EndTime <- skedEnd$simEnd
+        ttgDF <- bind_rows(ttgDF, DFrun)
+        if (BIG){
+            mstrList[[ttg]] <- sked
+            }
         resilienceDF <- add_row(resilienceDF,
                                 SAT = satVal,
                                 GRAD = gradVal,
@@ -85,8 +118,9 @@ for(rs in 1:length(rseed)){
     print(paste("Seed", rseed[rs]))
 }
 
-mstrSked <- bind_rows(mstrList)
-
+if(BIG){
+    mstrSked <- bind_rows(mstrList)
+}
 
 ##countFiles <- function(lst, seedlst){
 ##    for(1 in 1:length(seedlst)){
@@ -116,41 +150,49 @@ runCheck <- function(DF){
     }
 }
 
+ttgDF <- runCheck(ttgDF)
+
+ttgSum <-
+    ttgDF %>%
+    group_by(Experiment) %>%
+    summarise(MAX = max(MAX), min = min(MIN), MEAN = mean(MEAN))
+
 workRDF <- runCheck(resilienceDF)
 
-
-acView <-
-    mstrSked %>%
-    select(Time, SLEPlist, boneYard, flightLine, upAircraft, Run, Experiment) %>%
-    gather(Category, Count, -Time, -Run, -Experiment) %>%
-    mutate(Time = Time / (24 * 365))
-
-studView <- 
-    mstrSked %>%
-    select(Time, SLEPlist, boneYard, flightLine,
-           students, upAircraft, Run, Experiment) %>%
-    gather(Category, Count, -Time, -Run, -Experiment) %>%
-    mutate(Time = Time / (24 * 365))
-
-acVplot <-
-    ggplot(acView, aes(Time, Count, group = Category, color = Category)) +
-    geom_line() +
-    facet_grid(Experiment ~ Run)
-
-studVplot <- 
-    ggplot(studView, aes(Time, Count, group = Category, color = Category)) +
-    geom_line() +
-    facet_grid(Experiment ~ Run)
-
-timeView <-
-    mstrSked %>%
-    group_by(Experiment, Run) %>%
-    summarise(EndTime = max(Time) / (365 * 24))
-
-timePlot <- ggplot(timeView, aes(Experiment, EndTime, group = Experiment)) +
-    geom_boxplot()
-    
-
+######################################################################
+## troubleshooting dataframes and plots
+## acView <-
+##     mstrSked %>%
+##     select(Time, SLEPlist, boneYard, flightLine, upAircraft, Run, Experiment) %>%
+##     gather(Category, Count, -Time, -Run, -Experiment) %>%
+##     mutate(Time = Time / (24 * 365))
+## 
+## studView <- 
+##     mstrSked %>%
+##     select(Time, SLEPlist, boneYard, flightLine,
+##            students, upAircraft, Run, Experiment) %>%
+##     gather(Category, Count, -Time, -Run, -Experiment) %>%
+##     mutate(Time = Time / (24 * 365))
+## 
+## acVplot <-
+##     ggplot(acView, aes(Time, Count, group = Category, color = Category)) +
+##     geom_line() +
+##     facet_grid(Experiment ~ Run)
+## 
+## studVplot <- 
+##     ggplot(studView, aes(Time, Count, group = Category, color = Category)) +
+##     geom_line() +
+##     facet_grid(Experiment ~ Run)
+## 
+## timeView <-
+##     mstrSked %>%
+##     group_by(Experiment, Run) %>%
+##     summarise(EndTime = max(Time) / (365 * 24))
+## 
+## timePlot <- ggplot(timeView, aes(Experiment, EndTime, group = Experiment)) +
+##     geom_boxplot()
+##     
+## 
 #resDF <- tibble(SAT = satList, GRAD = gradList, Ao = AoList,
 #                    Run = rList, Experiment = xpList)
 #resDF$Seed <- rseed
