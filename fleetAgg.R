@@ -5,7 +5,7 @@
 starttime <- Sys.time()
 timetoGradFilesMstr <- list.files(path = ".", pattern = "aircrew")
 skedFilesMstr <- list.files(path = ".", pattern = "sked")
-
+timeHorizonList <- c(15, 20, 25, 30, 35) * 24 * 365
 ## If you want the big master schedule, set BIG to True
 
 BIG <- FALSE
@@ -19,8 +19,8 @@ chiSatPost <- c(0)
 chiAoPre <- c(0)
 chiAoPost <- c(0)
 
-chiGradPre <- c(1, .5, .25)
-chiGradPost <- c(1, 1, .5)
+chiGradPre <- c(0)
+chiGradPost <- c(1, .5)
 
 rseed <-
     list.files(path = ".", pattern = "ParametersRdm") %>%
@@ -67,18 +67,6 @@ for(rs in 1:length(rseed)){
                                            col_character(),
                                            col_character(),
                                            col_character()))
-        satVal <- satRes(DFrun, .85, 1440)
-        DFrun <-
-            DFrun %>%
-            filter(Disp == 'G') %>%
-            select(TimeInSqdn) %>%
-            mutate(TimeInSqdn = as.double(TimeInSqdn)) %>%
-            summarise(MAX = max(TimeInSqdn),
-                      MIN = min(TimeInSqdn),
-                      MED = median(TimeInSqdn),
-                      MEAN = mean(TimeInSqdn),
-                      SD = sd(TimeInSqdn)) %>%
-            mutate(Run = run, Experiment = exprmnt, Seed = rs)
         sked <- read_csv(skedFiles[ttg],
                          col_types = list(
                              col_integer(),
@@ -92,36 +80,56 @@ for(rs in 1:length(rseed)){
                              col_integer(),
                              col_integer(),
                              col_integer()))
-        AoVal <- AoRes(sked, 0.85)
-        gradVal <- gradRes(sked, 65, chiGradPre, chiGradPost)
-        xpVal <- exprmnt
-        rVal <- run
-        skedEnd <-
-            sked %>%           
-            summarise(simEnd = max(Time))
-        DFrun$EndTime <- skedEnd$simEnd
-        ttgDF <- bind_rows(ttgDF, DFrun)
-        if (BIG){
-            mstrList[[ttg]] <- sked
+        for(th in 1:lenght(timeHorizonList)){
+            TH <- timeHorizonList[th]
+            DFrunTH <-
+                DFrun %>%
+                filter( < TH)
+            skedTH <-
+                sked %>%
+                filter(Time < TH)
+            DFrunsumTH <-
+                DFrunTH %>%
+                filter(Disp == 'G') %>%
+                select(TimeInSqdn) %>%
+                mutate(TimeInSqdn = as.double(TimeInSqdn)) %>%
+                summarise(MAX = max(TimeInSqdn),
+                          MIN = min(TimeInSqdn),
+                          MED = median(TimeInSqdn),
+                          MEAN = mean(TimeInSqdn),
+                          SD = sd(TimeInSqdn)) %>%
+                mutate(Run = run, Experiment = exprmnt, Seed = rs)
+            satVal <- satRes(DFrunsumTH, .85, 1440)
+            AoVal <- AoRes(skedTH, 0.85)
+            gradVal <- gradRes(skedTH, 65, chiGradPre, chiGradPost)
+            xpVal <- exprmnt
+            rVal <- run
+            skedEnd <-
+                sked %>%
+                summarise(simEnd = max(Time))
+            DFrunsumTH$EndTime <- skedEnd$simEnd
+            ttgDF <- bind_rows(ttgDF, DFrunsumTH)
+            if (BIG){
+                mstrList[[ttg]] <- sked
             }
-        resilienceDF <- add_row(resilienceDF,
-                                SAT = satVal,
-                                GRAD = gradVal,
-                                Ao = AoVal,
-                                Run = rVal,
-                                Experiment = xpVal,
-                                Seed = rs)
-        print(paste("From Seed", rseed[rs],
-                    "added Experiment", exprmnt,
-                    "Run", run))
+            resilienceDF <- add_row(resilienceDF,
+                                    SAT = satVal,
+                                    GRAD = gradVal,
+                                    Ao = AoVal,
+                                    Run = rVal,
+                                    Experiment = xpVal,
+                                    Seed = rs)
+            print(paste("From Seed", rseed[rs],
+                        "added Experiment", exprmnt,
+                        "Run", run))
+        }
+        print(paste("Seed", rseed[rs]))
     }
-    print(paste("Seed", rseed[rs]))
-}
 
-if(BIG){
-    mstrSked <- bind_rows(mstrList)
-}
-
+    if(BIG){
+        mstrSked <- bind_rows(mstrList)
+    }
+    
 ##countFiles <- function(lst, seedlst){
 ##    for(1 in 1:length(seedlst)){
 ##        strp <- str_detect(lst, as.character(seedlst[rs]))
@@ -158,7 +166,8 @@ ttgSum <-
     summarise(MAX = max(MAX), min = min(MIN), MEAN = mean(MEAN))
 
 workRDF <- runCheck(resilienceDF)
-
+dir.create(a)
+write_csv(resilienceDF, "resChi[c()]")
 ######################################################################
 ## troubleshooting dataframes and plots
 ## acView <-
