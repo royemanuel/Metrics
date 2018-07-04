@@ -41,105 +41,117 @@ rList <- c()
 
 ######################################################################
 ## Big for loop to go through the directory where I put the data
-for(c in 1:length(listChi)){
-    resilienceDF <- tibble(SAT = 0, GRAD = 0, Ao = 0,
-                           Run = '0', Experiment = '0', Seed = 0,
-                           TimeHorizon = 0)
-    resilienceDF <- filter(resilienceDF, SAT == 1)
-    ttgDF <- tibble(MAX = 0, MIN = 0, MED = 0, SD = 0,
-                    Run = '0', Experiment = '0', Seed = 0,
-                    EndTime = 0)
-    ttgDF <- filter(ttgDF, MAX == 1)
-    chiGradPost <- listChi[[c]]
-    for(rs in 1:length(rseed)){
-        print(rs)
-        ttgBin <- str_detect(timetoGradFilesMstr, as.character(rseed[rs]))
-        sfBin <- str_detect(skedFilesMstr, as.character(rseed[rs]))
-        timetoGradFiles <- timetoGradFilesMstr[ttgBin]
-        skedFiles <- skedFilesMstr[sfBin]
-        mstrList = list()
-        for (ttg in 1:length(timetoGradFiles)){
-            run <-
-                skedFiles[ttg] %>%
-                str_extract("(?<=Run?)\\d+")
-            exprmnt <-
-                skedFiles[ttg] %>%
-                str_extract("(?<=Exp?)\\d+")
-            DFrun <- read_csv(timetoGradFiles[ttg],
-                              col_types = list(col_integer(),
-                                               col_character(),
-                                               col_character(),
-                                               col_character(),
-                                               col_character(),
-                                               col_character()))
-            sked <- read_csv(skedFiles[ttg],
-                             col_types = list(
-                                 col_integer(),
-                                 col_integer(),
-                                 col_integer(),
-                                 col_integer(),
-                                 col_integer(),
-                                 col_integer(),
-                                 col_integer(),
-                                 col_integer(),
-                                 col_integer(),
-                                 col_integer(),
-                                 col_integer()))
-            for(th in 1:length(timeHorizonList)){
-                TH <- timeHorizonList[th]
-                DFrunTH <-
-                    DFrun %>%
-                    filter(exitDate < TH)
-                skedTH <-
-                    sked %>%
-                    filter(Time < TH)
-                DFrunsumTH <-
-                    DFrunTH %>%
-                    filter(Disp == 'G') %>%
-                    select(TimeInSqdn) %>%
-                    mutate(TimeInSqdn = as.double(TimeInSqdn)) %>%
-                    summarise(MAX = max(TimeInSqdn),
-                              MIN = min(TimeInSqdn),
-                              MED = median(TimeInSqdn),
-                              MEAN = mean(TimeInSqdn),
-                              SD = sd(TimeInSqdn)) %>%
-                    mutate(Run = run, Experiment = exprmnt, Seed = rs)
-                satVal <- satRes(DFrunTH, .85, 1440)
-                AoVal <- AoRes(skedTH, 0.85)
-                gradVal <- gradRes(skedTH, 65, chiGradPre, chiGradPost)
-                xpVal <- exprmnt
-                rVal <- run
-                skedEnd <-
-                    sked %>%
-                    summarise(simEnd = max(Time))
-                if (skedEnd$simEnd < TH){
-                    satVal <- satVal * skedEnd$simEnd / TH
-                    AoVal <- AoVal * skedEnd$simEnd / TH
-                    gradVal <- gradVal * skedEnd$simEnd / TH
-                }
-                DFrunsumTH$EndTime <- skedEnd$simEnd
-                DFrunsumTH$TimeHorizon <- TH
-                ttgDF <- bind_rows(ttgDF, DFrunsumTH)
-                if (BIG){
-                    mstrList[[ttg]] <- sked
-                }
-                resilienceDF <- add_row(resilienceDF,
-                                        SAT = satVal,
-                                        GRAD = gradVal,
-                                        Ao = AoVal,
-                                        Run = rVal,
-                                        Experiment = xpVal,
-                                         Seed = rs,
-                                        TimeHorizon = TH)
+## resilienceDF <- tibble(SAT = 0, GRAD = 0, Ao = 0,
+##                        Run = '0', Experiment = '0', Seed = 0,
+##                        TimeHorizon = 0)
+## resilienceDF <- filter(resilienceDF, SAT == 1)
+ttgDF <- tibble(MAX = 0, MIN = 0, MED = 0, SD = 0,
+                Run = '0', Experiment = '0', Seed = 0,
+                EndTime = 0)
+ttgDF <- filter(ttgDF, MAX == 1)
+chiGradPost <- listChi[[c]]
+for(rs in 1:length(rseed)){
+    resilienceDF <- tibble()
+    print(rs)
+    ttgBin <- str_detect(timetoGradFilesMstr, as.character(rseed[rs]))
+    sfBin <- str_detect(skedFilesMstr, as.character(rseed[rs]))
+    timetoGradFiles <- timetoGradFilesMstr[ttgBin]
+    skedFiles <- skedFilesMstr[sfBin]
+    mstrList = list()
+    for (ttg in 1:length(timetoGradFiles)){
+        run <-
+            skedFiles[ttg] %>%
+            str_extract("(?<=Run?)\\d+")
+        exprmnt <-
+            skedFiles[ttg] %>%
+            str_extract("(?<=Exp?)\\d+")
+        DFrun <- read_csv(timetoGradFiles[ttg],
+                          col_types = list(col_integer(),
+                                           col_character(),
+                                           col_character(),
+                                           col_character(),
+                                           col_character(),
+                                           col_character()))
+        sked <- read_csv(skedFiles[ttg],
+                         col_types = list(
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer(),
+                             col_integer()))
+        for(th in 1:length(timeHorizonList)){
+            TH <- timeHorizonList[th]
+            DFrunTH <-
+                DFrun %>%
+                filter(exitDate < TH)
+            skedTH <-
+                sked %>%
+                filter(Time < TH)
+            DFrunsumTH <-
+                DFrunTH %>%
+                filter(Disp == 'G') %>%
+                select(TimeInSqdn) %>%
+                mutate(TimeInSqdn = as.double(TimeInSqdn)) %>%
+                summarise(MAX = max(TimeInSqdn),
+                          MIN = min(TimeInSqdn),
+                          MED = median(TimeInSqdn),
+                          MEAN = mean(TimeInSqdn),
+                          SD = sd(TimeInSqdn)) %>%
+                mutate(Run = run, Experiment = exprmnt, Seed = rs)
+            satVal <- satRes(DFrunTH, .85, 1440)
+            AoVal <- AoRes(skedTH, 0.85)
+            gTib <- tibble()
+            for(c in 1:length(listChi)){
+                gradVal <- gradRes(skedTH, 65, c(0), listChi[[c]])
+                gv <- tibble(GRAD = gradVal, Chi = c, Run = run)
+                gTib <- bind_rows(gTib, gv)
             }
-            print(paste("From Seed", rseed[rs],
-                        "added Experiment", exprmnt,
-                        "Run", run))
+            xpVal <- exprmnt
+            rVal <- run
+            skedEnd <-
+                sked %>%
+                summarise(simEnd = max(Time))
+            if (skedEnd$simEnd < TH){
+                satVal <- satVal * skedEnd$simEnd / TH
+                AoVal <- AoVal * skedEnd$simEnd / TH
+                gradVal <- gradVal * skedEnd$simEnd / TH
+            }
+            DFrunsumTH$EndTime <- skedEnd$simEnd
+            DFrunsumTH$TimeHorizon <- TH
+            ttgDF <- bind_rows(ttgDF, DFrunsumTH)
+            if (BIG){
+                mstrList[[ttg]] <- sked
+            }
+            thDF <- tibble(Run = run,
+                           SAT = satVal,
+                           Ao = AoVal,
+                           Experiment = xpVal,
+                           Seed = rs,
+                           TimeHorizon = TH)
+            thDF <- inner_join(thDF, gTib, by = "Run")
+            resilienceDF <- bind_rows(resilienceDF, thDF)
+            ## resilienceDF <- add_row(resilienceDF,
+            ##                         SAT = satVal,
+            ##                         GRAD = gradVal,
+            ##                         Ao = AoVal,
+            ##                         Run = rVal,
+            ##                         Experiment = xpVal,
+            ##                          Seed = rs,
+            ##                         TimeHorizon = TH)
         }
-        print(paste("Seed", rseed[rs]))
+        print(paste("From Seed", rseed[rs],
+                    "added Experiment", exprmnt,
+                    "Run", run))
+        write_csv(resilienceDF, paste0("allRes", rs, ".csv"))
+        write_csv(ttgDF, "ttgDF.csv")
     }
-    resilienceDF$Chi <- c
-    write_csv(resilienceDF, paste0("allRes", c, ".csv"))
+    print(paste("Seed", rseed[rs]))
 }
 
 
