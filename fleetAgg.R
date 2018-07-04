@@ -17,10 +17,10 @@ chiSatPre <- c(0)
 chiSatPost <- c(0)
 
 chiAoPre <- c(0)
-chiAoPost <- c(0)
+chiAoPost <- c(.5)
 
 chiGradPre <- c(0)
-chiGradPost <- c(1, .5)
+chiGradPost <- c(0)
 
 rseed <-
     list.files(path = ".", pattern = "ParametersRdm") %>%
@@ -125,7 +125,7 @@ for(rs in 1:length(rseed)){
                                     Ao = AoVal,
                                     Run = rVal,
                                     Experiment = xpVal,
-                                    Seed = rs,
+                                     Seed = rs,
                                     TimeHorizon = TH)
         }
         print(paste("From Seed", rseed[rs],
@@ -183,14 +183,14 @@ if(BIG){
 
         
 
-ttgDFtst <- runCheck(ttgDF)
+#ttgDFtst <- runCheck(ttgDF)
 
 ttgSum <-
     ttgDF %>%
     group_by(Experiment, TimeHorizon) %>%
     summarise(MAX = max(MAX), min = min(MIN), MEAN = mean(MEAN))
 
-workRDF <- runCheck(resilienceDF)
+#workRDF <- runCheck(resilienceDF)
 
 ######################################################################
 ## troubleshooting dataframes and plots
