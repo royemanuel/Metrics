@@ -58,7 +58,6 @@ ttgDF <- tibble(MAX = 0, MIN = 0, MED = 0, SD = 0,
                 Run = '0', Experiment = '0', Seed = 0,
                 EndTime = 0)
 ttgDF <- filter(ttgDF, MAX == 1)
-chiGradPost <- listChi[[c]]
 for(rs in 1:length(rseed)){
     resilienceDF <- tibble()
     print(rs)
@@ -167,14 +166,13 @@ for(rs in 1:length(rseed)){
         print(paste("From Seed", rseed[rs],
                     "added Experiment", exprmnt,
                     "Run", run))
-        write_csv(resilienceDF, paste0("allReswithPre", rs,
-                                       "Exp", exprmnt,
-                                       "Run", run,
-                                       ".csv"))
     }
+    write_csv(resilienceDF, paste0("5JULres/allReswithPre", rs,
+                                   "Exp", exprmnt,
+                                   ".csv"))
     print(paste("Seed", rseed[rs]))
 }
-write_csv(ttgDF, "ttgDF.csv")
+write_csv(ttgDF, "5JULres/ttgDF.csv")
 
 
 if(BIG){
