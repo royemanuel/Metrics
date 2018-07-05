@@ -19,7 +19,16 @@ chiSatPost <- c(0)
 chiAoPre <- c(0)
 chiAoPost <- c(0)
 
-listChi <- list(c(0), c(.5), c(1, 5.), c(1, .75, .5, .25), rep(1, 10000000))
+listChi <- list(list(c(0), c(0)),
+                list(c(0), c(.5)),
+                list(c(0), c(1, .5)) ,
+                list(c(0), c(.5, .25)) ,
+                list(c(0), rep(1, 10000000)),
+                list(c(.5), c(.5)),
+                list(c(1, .5), c(1, .5)) ,
+                list(c(1, .75, .5, .25), c(1, .75, .5, .25)) ,
+                list(rep(1, 10000000), rep(1, 10000000)))
+
 
 chiGradPre <- c(0)
 chiGradPost <- c(0)
@@ -65,6 +74,12 @@ for(rs in 1:length(rseed)){
         exprmnt <-
             skedFiles[ttg] %>%
             str_extract("(?<=Exp?)\\d+")
+        if(as.integer(exprmnt) > 3){
+            srg <- TRUE
+        } else {
+            srg <- FALSE
+        }
+        print(srg)
         DFrun <- read_csv(timetoGradFiles[ttg],
                           col_types = list(col_integer(),
                                            col_character(),
@@ -108,7 +123,11 @@ for(rs in 1:length(rseed)){
             AoVal <- AoRes(skedTH, 0.85)
             gTib <- tibble()
             for(c in 1:length(listChi)){
-                gradVal <- gradRes(skedTH, 65, c(0), listChi[[c]])
+                gradVal <- gradRes(skedTH,
+                                   65,
+                                   listChi[[c]][[1]],
+                                   listChi[[c]][[2]],
+                                   srg)
                 gv <- tibble(GRAD = gradVal, Chi = c, Run = run)
                 gTib <- bind_rows(gTib, gv)
             }
@@ -148,11 +167,14 @@ for(rs in 1:length(rseed)){
         print(paste("From Seed", rseed[rs],
                     "added Experiment", exprmnt,
                     "Run", run))
-        write_csv(resilienceDF, paste0("allRes", rs, ".csv"))
-        write_csv(ttgDF, "ttgDF.csv")
+        write_csv(resilienceDF, paste0("allReswithPre", rs,
+                                       "Exp", exprmnt,
+                                       "Run", run,
+                                       ".csv"))
     }
     print(paste("Seed", rseed[rs]))
 }
+write_csv(ttgDF, "ttgDF.csv")
 
 
 if(BIG){

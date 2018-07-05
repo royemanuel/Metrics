@@ -240,9 +240,26 @@ satRes <- function(DF, nd, dtis){
     step_EIR(wDF)
 }
 
-gradRes <- function(DF, nd, chiPre, chiPost){
+gradRes <- function(DF, nd, chiPre, chiPost, surge){
     wDF <- qrtrly_grads(DF)
-    wDF <- wDF %>% mutate(Need = nd)
+    lngth <- dim(DF)[1]
+    if (surge){
+        wDF <-
+            wDF %>%
+            mutate(Need = ifelse(Time > 105120, nd + 10, nd),
+                   Need = ifelse(Time > 122640, Need - 10, Need))
+    } else {
+        wDF <-
+            wDF %>%
+            mutate(Need = nd)
+    }
+    ## wDF <-
+    ##     wDF %>%
+    ##     mutate(Need = ifelse(surge,
+    ##                   ifelse(Time > 105120 & Time < 122640,
+    ##                          nd + 10, nd),
+    ##                   nd))
+    # print(unique(wDF$Need))
     wDF <- modifyPerformance(wDF, chiPre, chiPost)
     wDF <-
         assignGroupFast(wDF) %>%
