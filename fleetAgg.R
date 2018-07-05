@@ -17,7 +17,18 @@ chiSatPre <- c(0)
 chiSatPost <- c(0)
 
 chiAoPre <- c(0)
-chiAoPost <- c(.5)
+chiAoPost <- c(0)
+
+listChi <- list(list(c(0), c(0)),
+                list(c(0), c(.5)),
+                list(c(0), c(1, .5)) ,
+                list(c(0), c(.5, .25)) ,
+                list(c(0), rep(1, 10000000)),
+                list(c(.5), c(.5)),
+                list(c(1, .5), c(1, .5)) ,
+                list(c(1, .75, .5, .25), c(1, .75, .5, .25)) ,
+                list(rep(1, 10000000), rep(1, 10000000)))
+
 
 chiGradPre <- c(0)
 chiGradPost <- c(0)
@@ -39,15 +50,16 @@ rList <- c()
 
 ######################################################################
 ## Big for loop to go through the directory where I put the data
-resilienceDF <- tibble(SAT = 0, GRAD = 0, Ao = 0,
-                       Run = '0', Experiment = '0', Seed = 0,
-                       TimeHorizon = 0)
-resilienceDF <- filter(resilienceDF, SAT == 1)
+## resilienceDF <- tibble(SAT = 0, GRAD = 0, Ao = 0,
+##                        Run = '0', Experiment = '0', Seed = 0,
+##                        TimeHorizon = 0)
+## resilienceDF <- filter(resilienceDF, SAT == 1)
 ttgDF <- tibble(MAX = 0, MIN = 0, MED = 0, SD = 0,
                 Run = '0', Experiment = '0', Seed = 0,
                 EndTime = 0)
 ttgDF <- filter(ttgDF, MAX == 1)
 for(rs in 1:length(rseed)){
+    resilienceDF <- tibble()
     print(rs)
     ttgBin <- str_detect(timetoGradFilesMstr, as.character(rseed[rs]))
     sfBin <- str_detect(skedFilesMstr, as.character(rseed[rs]))
@@ -61,6 +73,12 @@ for(rs in 1:length(rseed)){
         exprmnt <-
             skedFiles[ttg] %>%
             str_extract("(?<=Exp?)\\d+")
+        if(as.integer(exprmnt) > 3){
+            srg <- TRUE
+        } else {
+            srg <- FALSE
+        }
+        print(srg)
         DFrun <- read_csv(timetoGradFiles[ttg],
                           col_types = list(col_integer(),
                                            col_character(),
@@ -102,7 +120,16 @@ for(rs in 1:length(rseed)){
                 mutate(Run = run, Experiment = exprmnt, Seed = rs)
             satVal <- satRes(DFrunTH, .85, 1440)
             AoVal <- AoRes(skedTH, 0.85)
-            gradVal <- gradRes(skedTH, 65, chiGradPre, chiGradPost)
+            gTib <- tibble()
+            for(c in 1:length(listChi)){
+                gradVal <- gradRes(skedTH,
+                                   65,
+                                   listChi[[c]][[1]],
+                                   listChi[[c]][[2]],
+                                   srg)
+                gv <- tibble(GRAD = gradVal, Chi = c, Run = run)
+                gTib <- bind_rows(gTib, gv)
+            }
             xpVal <- exprmnt
             rVal <- run
             skedEnd <-
@@ -119,21 +146,34 @@ for(rs in 1:length(rseed)){
             if (BIG){
                 mstrList[[ttg]] <- sked
             }
-            resilienceDF <- add_row(resilienceDF,
-                                    SAT = satVal,
-                                    GRAD = gradVal,
-                                    Ao = AoVal,
-                                    Run = rVal,
-                                    Experiment = xpVal,
-                                     Seed = rs,
-                                    TimeHorizon = TH)
+            thDF <- tibble(Run = run,
+                           SAT = satVal,
+                           Ao = AoVal,
+                           Experiment = xpVal,
+                           Seed = rs,
+                           TimeHorizon = TH)
+            thDF <- inner_join(thDF, gTib, by = "Run")
+            resilienceDF <- bind_rows(resilienceDF, thDF)
+            ## resilienceDF <- add_row(resilienceDF,
+            ##                         SAT = satVal,
+            ##                         GRAD = gradVal,
+            ##                         Ao = AoVal,
+            ##                         Run = rVal,
+            ##                         Experiment = xpVal,
+            ##                          Seed = rs,
+            ##                         TimeHorizon = TH)
         }
         print(paste("From Seed", rseed[rs],
                     "added Experiment", exprmnt,
                     "Run", run))
     }
+    write_csv(resilienceDF, paste0("5JULres/allReswithPre", rs,
+                                   "Exp", exprmnt,
+                                   ".csv"))
     print(paste("Seed", rseed[rs]))
 }
+write_csv(ttgDF, "5JULres/ttgDF.csv")
+
 
 if(BIG){
     mstrSked <- bind_rows(mstrList)
