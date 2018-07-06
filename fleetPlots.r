@@ -52,6 +52,8 @@ arGradStat <-
               GRAD_MAX = max(GRAD),
               GRAD_MIN = min(GRAD))
 ######################################################################
+## Plots with no graduate data             
+
 arNoGradGather <-
     arNoGrad %>%
     gather(Type, Resilience, -Experiment, -TimeHorizon)
@@ -61,6 +63,33 @@ pltNoGrad <-
     geom_boxplot(position="dodge") +
     facet_grid(Type ~ TimeHorizon)
 
+## Graduate Data Plot
+
+arGradGather <-
+    arGrad %>%
+    gather(Type, Resilience, -Experiment, -TimeHorizon, -Chi)
+
+pltGrad <-
+    ggplot(arGradGather,
+           aes(Chi, Resilience, fill = Chi)) +
+    geom_boxplot(position = "dodge") +
+    facet_grid(Type ~ Experiment)
+
+arGradChi1379 <-
+    arGradGather %>%
+    filter(Chi == "1" |
+           Chi == "3" |
+           Chi == "7" |
+           Chi == "9" )
+
+pltGrad1379byExp <-
+    ggplot(arGradChi1379, aes(Experiment, Resilience, fill = Chi)) +
+    geom_boxplot(position = "dodge") 
+
+pltGrad1379byChi <-
+    ggplot(arGradChi1379, aes(Chi, Resilience, fill = Experiment)) +
+    geom_boxplot(position = "dodge") +
+    facet_wrap(~ TimeHorizon)
 ######################################################################
 ## Plots for availability and student satisfaction
 
