@@ -133,12 +133,14 @@ for(rs in 1:length(rseed)){
             xpVal <- exprmnt
             rVal <- run
             skedEnd <-
-                sked %>%
+                skedTH %>%
                 summarise(simEnd = max(Time))
             if (skedEnd$simEnd < TH){
                 satVal <- satVal * skedEnd$simEnd / TH
                 AoVal <- AoVal * skedEnd$simEnd / TH
-                gradVal <- gradVal * skedEnd$simEnd / TH
+                gTib <-
+                    gTib %>%
+                    mutate(GRAD = GRAD * skedEnd$simEnd / TH)
             }
             DFrunsumTH$EndTime <- skedEnd$simEnd
             DFrunsumTH$TimeHorizon <- TH
@@ -167,12 +169,12 @@ for(rs in 1:length(rseed)){
                     "added Experiment", exprmnt,
                     "Run", run))
     }
-    write_csv(resilienceDF, paste0("5JULres/allReswithPre", rs,
+    write_csv(resilienceDF, paste0("allReswithPre", rs,
                                    "Exp", exprmnt,
                                    ".csv"))
     print(paste("Seed", rseed[rs]))
 }
-write_csv(ttgDF, "5JULres/ttgDF.csv")
+write_csv(ttgDF, "ttgDF.csv")
 
 
 if(BIG){
