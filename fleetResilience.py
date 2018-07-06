@@ -883,10 +883,13 @@ def newInsts(env, listname, numInst, syllabus):
 timeNow = "fleetData/" + time.strftime("%Y%m%d-%H%M%S") 
 os.makedirs(timeNow)
 os.path.join(timeNow +'/')
-rl = int(input('Choose the random seed: '))
-rdmsd = "RS" + str(rl)
-np.random.seed([rl])
-random.seed(rl)
+# rl = int(input('Choose the random seed: '))
+rl = np.random.randint(1, 2147483647, 1)
+print("Random Seed is: " + str(rl[0]))
+
+rdmsd = "RS" + str(rl[0])
+np.random.seed(rl)
+random.seed(rl[0])
 
 print('New directory is'  + timeNow + '/')
 
@@ -999,7 +1002,7 @@ def calcShape(Mode, Mean):
 
 
 copy('FleetResParam.xlsx', timeNow + '/' + 'ParametersRdmSd' +
-         str(rl) + '.xlsx' )
+         str(rl[0]) + '.xlsx' )
 
 # NUM_AIRCRAFT =   [100, 90, 80, 70, 60, 50,
 #                   100, 90, 80, 70, 60, 50]#    [15, 30, 80]
