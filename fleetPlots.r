@@ -3,7 +3,7 @@
 library("tidyverse")
 
 setwd("d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience")
-ar0 <- read_csv("allRes.csv", col_types = list(col_character(),
+ar0 <- read_csv("allRes7JUL.csv", col_types = list(col_character(),
                                         col_double(),
                                         col_double(),
                                         col_character(),
@@ -84,7 +84,8 @@ arGradChi1379 <-
 
 pltGrad1379byExp <-
     ggplot(arGradChi1379, aes(Experiment, Resilience, fill = Chi)) +
-    geom_boxplot(position = "dodge") 
+    geom_boxplot(position = "dodge") +
+    facet_wrap(~ TimeHorizon)
 
 pltGrad1379byChi <-
     ggplot(arGradChi1379, aes(Chi, Resilience, fill = Experiment)) +

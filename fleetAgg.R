@@ -1,8 +1,9 @@
-#source("fleetRes.R")
+# source("fleetRes.R")
+# This file takes a folder of fleet results and calculates the resilience
+# using a list of Chi values. 
+# setwd("fleetData/20180630-090621")
 
-#setwd("fleetData/20180630-090621")
-
-starttime <- Sys.time()
+starttime <- Sys.time()               
 timetoGradFilesMstr <- list.files(path = ".", pattern = "aircrew")
 skedFilesMstr <- list.files(path = ".", pattern = "sked")
 timeHorizonList <- c(15, 20, 25, 30, 35) * 24 * 365
@@ -169,12 +170,11 @@ for(rs in 1:length(rseed)){
                     "added Experiment", exprmnt,
                     "Run", run))
     }
-    write_csv(resilienceDF, paste0("allReswithPre", rs,
-                                   "Exp", exprmnt,
+    write_csv(resilienceDF, paste0("allReswithPre8JUL", rs,
                                    ".csv"))
     print(paste("Seed", rseed[rs]))
 }
-write_csv(ttgDF, "ttgDF.csv")
+write_csv(ttgDF, "ttgDF8JUL.csv")
 
 
 if(BIG){
