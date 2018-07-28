@@ -104,11 +104,11 @@ pltGrad1379byChi <-
 
 ar0forSatAo <-
     ar0 %>%
-    select(SAT, Ao, Experiment, Time
+    select(SAT, Ao, Experiment, TimeHorizon)
 
 AoStudRes <-
     ar0forSatAo %>%
-    mutate(TimeHorizon = paste(as.character(TimeHorizon / 8760), "years")) %>%
+    mutate(TimeHorizon = paste(TimeHorizon, "years")) %>%
     mutate(Experiment = as.character(Experiment)) %>%
     gather(Type, Resilience, -TimeHorizon, -Experiment)
 
@@ -122,25 +122,26 @@ AoStudPlot <-
 
 ######################################################################
 ## Plots for graduation rates
+## I don't know what the purpose of the folloowing is, so I am commenting
+## it out'
+## chiRes <-
+##     bind_rows(ar0, ar1,  ar0forSatAo) %>%
+##     mutate(Experiment = as.character(Experiment)) %>%
+##     select(-Run, -Seed, -Ao, -SAT)
 
-chiRes <-
-    bind_rows(ar0, ar1, ar1and5, ar0forSatAo) %>%
-    mutate(Experiment = as.character(Experiment)) %>%
-    select(-Run, -Seed, -GRAD, -Ao, -SAT)
+## allResPrep <-
+##     chiRes %>%
+##     mutate(TimeHorizon = paste(TimeHorizon, "years")) %>%
+##     # select(-Run, -Seed) %>%
+##     group_by(Chi, TimeHorizon, Experiment) %>%
+##     gather(Type, Resilience, -TimeHorizon, -Chi, -Experiment, -Surge, -ExpDesc)
 
-allResPrep <-
-    allRes %>%
-    mutate(TimeHorizon = paste(as.character(TimeHorizon / 8760), "years")) %>%
-    select(-Run, -Seed) %>%
-    group_by(Chi, TimeHorizon, Experiment) %>%
-    gather(Type, Resilience, -TimeHorizon, -Chi, -Experiment)
-
-allParamPlot <-
-    ggplot(allResPrep) +
-    theme_bw() +
-    geom_boxplot(aes(x = Experiment,
-                     y = Resilience,
-                     group = Experiment),
-                 position = "dodge") +
-    scale_colour_manual(c("grey90", "grey70", "grey50", "grey30")) +
-    facet_grid(Type ~ TimeHorizon)
+## allParamPlot <-
+##     ggplot(allResPrep) +
+##     theme_bw() +
+##     geom_boxplot(aes(x = Experiment,
+##                      y = Resilience,
+##                      group = Experiment),
+##                  position = "dodge") +
+##     scale_colour_manual(c("grey90", "grey70", "grey50", "grey30")) +
+##     facet_grid(Type ~ TimeHorizon)
