@@ -3,7 +3,15 @@
 library("tidyverse")
 
 setwd("d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience")
-ar0 <- read_csv("allRes7JUL.csv", col_types = list(col_character(),
+ar0 <- read_csv("allRes6JUL.csv", col_types = list(col_character(),
+                                        col_double(),
+                                        col_double(),
+                                        col_character(),
+                                        col_character(),
+                                        col_character(),
+                                        col_double(),
+                                        col_character()))
+ar1 <- read_csv("allRes7JUL.csv", col_types = list(col_character(),
                                         col_double(),
                                         col_double(),
                                         col_character(),
@@ -13,7 +21,7 @@ ar0 <- read_csv("allRes7JUL.csv", col_types = list(col_character(),
                                         col_character()))
 
 ar0 <-
-    ar0 %>%
+    bind_rows(ar0, ar1) %>%
     mutate(ExpInt = as.integer(Experiment),
            Surge = ifelse(ExpInt < 4, "No Surge", "Surge"),
            ExpDesc = ifelse(ExpInt == 1 | ExpInt == 4,
