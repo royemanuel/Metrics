@@ -40,8 +40,10 @@ skedTrackerNG <-
     filter(Category != "graduates",
            Category != "attrites",
            Category != "students",
-           Category != "boneYard") %>%
-    mutate(Percentage = Count / 50) %>%
+           Category != "boneYard",
+           Category != "flightLine") %>%
+    mutate(Perce ntage = Count / 50,
+           Exp = map(nameExperiments(Exp)) %>%
     select( -Count)
 
 studPlotNoGrads <-
@@ -54,6 +56,17 @@ studPlotNoGrads <-
     geom_hline(yintercept = 0.85,
                colour = "grey70") +
     theme_bw()
+
+nameExperiments <- function(expList){
+    switch(expList,
+           1 == "No SLEP, Constant Student Rate",
+           2 == "SLEP to 14,400 Hours, Constant Student Rate",
+           3 == "SLEP to 18,000 Hours, Constant Student Rate",
+           4 == "No SLEP, Student Surge",
+           5 == "SLEP to 14,400 Hours, Student Surge",
+           6 == "SLEP to 18,000 Hours, Student Surge")
+}
+
 
 studPlotNoGrads
 

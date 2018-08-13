@@ -90,6 +90,25 @@ arGradChi1379 <-
            Chi == "7" |
            Chi == "9" )
 
+arGradChi1379stat <-
+    arGradChi1379 %>%
+    group_by(TimeHorizon, Experiment, Chi) %>%
+    summarise(MAX = max(Resilience),
+              MIN = min(Resilience),
+              MEAN = mean(Resilience),
+              tukMED = fivenum(Resilience)[3],
+              tukBH = fivenum(Resilience)[2],
+              tukUH = fivenum(Resilience)[4],
+              ) %>%
+    gather(Stat, Value, -TimeHorizon, -Experiment, -Chi)
+
+aGCsPlot <-
+    ggplot(arGradChi1379stat,
+           aes(Experiment, Value, colour = Stat, shape = Chi)) +
+    geom_point() +
+    facet_grid(Chi ~ TimeHorizon )
+
+
 pltGrad1379byExp <-
     ggplot(arGradChi1379, aes(Experiment, Resilience, fill = Chi)) +
     geom_boxplot(position = "dodge") +
