@@ -6,9 +6,8 @@ source("anyLogicDataPull.R")
 ######################################################################
 ## The output files from the model
 
-waterNameList <- c("singleRunOutputPR-good.csv")
-    #c("AsIs2Week.csv", "RobustOnly.csv", "TTR.csv",
-    #          "RecLevel.csv")
+waterNameList <- c("AsIs2Week.csv", "RobustOnly.csv", "TTR.csv",
+              "RecLevel.csv")
 
 ## The needs for the stakeholder
 fireNeed <- 0.3
@@ -91,9 +90,10 @@ waterResPointPlot <- ggplot(waterResilienceMelt7, aes(Scenario, Resilience)) +
                           legend.title = element_blank())
 
 ggsave(plot = waterResPointPlot,
-       filename = paste0("waterResPointPlot.png",
+       filename = paste0("waterResPointPlot",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
+           ".pdf"),
+       device = cairo_pdf,
        width = 6.5, height = 6)
 
 ## Plot of  the integral resilience values at time 20160
@@ -132,9 +132,10 @@ waterElecPerfPlot <- ggplot(waterPerformance, aes(Time,
                     theme(legend.position = "none")
 
 ggsave(plot = waterElecPerfPlot,
-       filename = paste0("waterElecPefPlot.png",
+       filename = paste0("waterElecPefPlot",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
+           ".pdf"),
+       device = cairo_pdf,
        width = 6.5, height = 4)
 
 

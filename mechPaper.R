@@ -4,6 +4,7 @@
 ## HERE
 ######################################################################
 source("metrics.R")
+library("reshape2")
 
 
 
@@ -698,14 +699,16 @@ thPlot <- ggplot(allTimeHor, aes(Time, Resilience, group = variable)) +
 ggsave(plot = thPlot,
        filename = paste0("TimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
+           ".pdf"),
+       device = cairo_pdf,
        width = 9,
        height = 5.2)
 
 ggsave(plot = thPlot,
        filename = paste0("TimeHorizonPortrait",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
+           ".pdf"),
+       device = cairo_pdf,
        width = 6,
        height = 5.2)
 
@@ -761,14 +764,16 @@ needPlot <- ggplot(allNeed, aes(Need, Resilience, group = variable)) +
 ggsave(plot = needPlot,
        filename = paste0("Need",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
+           ".pdf"),
+       device = cairo_pdf,
        width = 9,
        height = 5.2)
 
 ggsave(plot = needPlot,
        filename = paste0("NeedPortrait",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
+           ".pdf"),
+       device = cairo_pdf,
        width = 6,
        height = 5.2)
 ######################################################################
@@ -827,14 +832,16 @@ sigmaPlot <- ggplot(allSigma, aes(Sigma, Resilience, group = variable)) +
 ggsave(plot = sigmaPlot,
        filename = paste0("Sigma",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
+           ".pdf"),
+       device = cairo_pdf,
        width = 9,
        height = 5.2)
 
 ggsave(plot = sigmaPlot,
        filename = paste0("SigmaPortrait",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
+           ".pdf"),
+       device = cairo_pdf,
        width = 6,
        height = 5.2)
 
@@ -843,118 +850,118 @@ ggsave(plot = sigmaPlot,
 ggsave(plot = plotSteppedRecoveryTimeHorizon,
        filename = paste0("plotSteppedRecoveryTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 ggsave(plot = steppedRecoveryPerformance,
        filename = paste0("ShortsteppedRecoveryPerformance",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 3)
 ggsave(plot = plotNeed0to1SteppedRecovery,
        filename = paste0("plotNeed0to1SteppedRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5.0)
 ggsave(plot = plotSigma0to1SteppedRecovery,
        filename = paste0("plotSigma0to1SteppedRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 ggsave(plot = plotFailLevel0to1,
        filename = paste0("plotFailLevel0to1",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 ggsave(plot = plotRecoveryLevel0to1,
        filename = paste0("plotRecoveryLevel0to1",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 ggsave(plot = plotRecoveryTime21to60,
        filename = paste0("plotRecoveryTime21to60",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 ggsave(plot = plotLinearRecoveryTimeHorizon,
        filename = paste0("plotLinearRecoveryTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 ggsave(plot = linearRecoveryPerformance,
        filename = paste0("ShortlinearRecoveryPerformance",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 3)
 ggsave(plot = plotNeed0to1LinearRecovery,
        filename = paste0("plotNeed0to1LinearRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5.0)
 ggsave(plot = plotSigma0to1LinearRecovery,
        filename = paste0("plotSigma0to1LinearRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 ggsave(plot = plotnoRecoveryTimeToFail,
        filename = paste0("plotnoRecoveryTimeToFail",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 ggsave(plot = noRecoveryPerformance,
        filename = paste0("ShortnoRecoveryPerformance",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 3)
 ggsave(plot = plotNoRecoveryTimeHorizon,
        filename = paste0("plotNoRecoveryTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 ggsave(plot = plotNeed0to1NoRecovery,
        filename = paste0("plotNeed0to1NoRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 ggsave(plot = plotSigma0to1NoRecovery,
        filename = paste0("plotSigma0to1NoRecovery",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 plotNoFailureTimeHorizon <- resilienceVersusTimeHorizon(noFailureTimeHorizonData)
 performanceNoFailureNeedBump <- pltPerf(noFailureTimeHorizonData)
 ggsave(plot = performanceNoFailureNeedBump,
        filename = paste0("ShortperformanceNoFailureNeedBump",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 3)
 ggsave(plot = plotNoFailureTimeHorizon,
        filename = paste0("plotNoFailureTimeHorizon",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 ggsave(plot = plotNoFailureSigma0to1,
        filename = paste0("plotNoFailureSigma0to1",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 3.5,
+           ".pdf"),
+       device = cairo_pdf, width = 3.5,
        height = 5)
 
 ######################################################################
@@ -1030,8 +1037,8 @@ performancePlots <- performancePlots +
 ggsave(plot = performancePlots,
        filename = paste0("performancePlots",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
-       width = 7,
+           ".pdf"),
+       device = cairo_pdf, width = 7,
        height = 5)
 
 

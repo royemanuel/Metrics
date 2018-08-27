@@ -1,8 +1,8 @@
 source("metrics.R")
 source("anyLogicDataPull.R")
 
-infNameList <-  c("singleRunOutputPR-good.csv")# c("AsIs2Week.csv", "RobustOnly.csv", "TTR.csv",
-                #   "RecLevel.csv")
+infNameList <-  c("AsIs2Week.csv", "RobustOnly.csv", "TTR.csv",
+                  "RecLevel.csv")
 nl <- c(.9, .5, .3, .9, .75, .95, .8, .3)
 sl <- c(.0, .0, .0, .05, .2, .0, .0, 0)
 
@@ -20,7 +20,7 @@ rMat <-data.frame(tDelta = 30,
 allInfrastructures <- multScenarioFast(fileNames = infNameList,
                                        N = nMat,
                                        R = rMat,
-                                       TH = (171560 - 40) / 1440) # (20200 - 40) / 1440)
+                                       TH =  (20200 - 40) / 1440)
 
 infFactor <- allInfrastructures %>%
     filter(Infrastructure == "Electricity.Availability" & nRun == 1 |
@@ -95,9 +95,10 @@ infResPointPlot <- ggplot(infFactor, aes(Scenario, Resilience)) +
                           legend.title = element_blank())
 
 ggsave(plot = infResPointPlot,
-       filename = paste0("infFactResPointPlot.png",
+       filename = paste0("infFactResPointPlot",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
+           ".pdf"),
+       device = cairo_pdf,
        width = 6.5, height = 9)
 
 infResPointPlotPres <- ggplot(infFactor, aes(Scenario, Resilience)) +
@@ -112,7 +113,8 @@ infResPointPlotPres <- ggplot(infFactor, aes(Scenario, Resilience)) +
 ggsave(plot = infResPointPlotPres,
        filename = paste0("infFactResPointPlotPres",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
+           ".pdf"),
+       device = cairo_pdf,
        width = 9, height = 6)
 
 
@@ -163,9 +165,10 @@ elecPerfPlot <- ggplot(infPerformance, aes(Time,
                     theme(legend.position = "none")
 
 ggsave(plot = elecPerfPlot,
-       filename = paste0("ElecPefPlot.png",
+       filename = paste0("ElecPefPlot",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
+           ".pdf"),
+       device = cairo_pdf,
        width = 6.5, height = 8.5)
 
 elecPerfPlotPres <- ggplot(infPerformance, aes(Time,
@@ -180,7 +183,8 @@ elecPerfPlotPres <- ggplot(infPerformance, aes(Time,
 ggsave(plot = elecPerfPlotPres,
        filename = paste0("ElecPefPlotPres",
            format(Sys.time(), "%Y-%m-%d-%I-%M"),
-           ".png"),
+           ".pdf"),
+       device = cairo_pdf,
        width = 11, height = 5.5 )
 
 
