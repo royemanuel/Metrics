@@ -36,7 +36,7 @@ ar0 <-
 arNoGrad <-
     ar0 %>%
     filter(Chi == 1) %>%
-    select(SAT, Ao, Experiment, TimeHorizon) 
+    select(SAT, Ao, Experiment, TimeHorizon, ExpDesc, Surge) 
 
 arNoGradStat <-
     arNoGrad %>%
@@ -51,7 +51,7 @@ arNoGradStat <-
 ## Now with graduates
 arGrad <-
     ar0 %>%
-    select(GRAD, Experiment, TimeHorizon, Chi)
+    select(GRAD, Experiment, TimeHorizon, Chi, ExpDesc, Surge)
 
 arGradStat <-
     arGrad %>%
@@ -62,20 +62,56 @@ arGradStat <-
 ######################################################################
 ## Plots with no graduate data             
 
-arNoGradGather <-
-    arNoGrad %>%
-    gather(Type, Resilience, -Experiment, -TimeHorizon)
-        
-pltNoGrad <-
-    ggplot(arNoGradGather, aes(Experiment, Resilience)) +
-    geom_boxplot(position="dodge") +
-    facet_grid(Type ~ TimeHorizon)
-
-## Graduate Data Plot
-
 arGradGather <-
     arGrad %>%
-    gather(Type, Resilience, -Experiment, -TimeHorizon, -Chi)
+    gather(Type, Resilience, -Experiment, -TimeHorizon, -Chi, -ExpDesc, -Surge)
+
+arNoGradGather <-
+    arNoGrad %>%
+    gather(Type, Resilience, -Experiment, -TimeHorizon, -ExpDesc, -Surge)
+        
+pltNoGrad <-
+    ggplot(arNoGradGather, aes(ExpDesc, Resilience)) +
+    geom_boxplot(position="dodge") +
+    facet_grid(Type + Surge ~ TimeHorizon)
+
+## Graduate Data Plot
+## Only chi = 0 and chi = 1
+arGradChi0and1 <-
+    arGradGather %>%
+    filter(Chi == "1" |
+           Chi == "9" )
+
+arGradChi0and1stat <-
+    arGradChi0and1 %>%
+    group_by(TimeHorizon, Experiment, Chi) %>%
+    summarise(MAX = max(Resilience),
+              MIN = min(Resilience),
+              MEAN = mean(Resilience),
+              tukMED = fivenum(Resilience)[3],
+              tukBH = fivenum(Resilience)[2],
+              tukUH = fivenum(Resilience)[4],
+              ) %>%
+    gather(Stat, Value, -TimeHorizon, -Experiment, -Chi)
+
+aGCsPlot <-
+    ggplot(arGradChi0and1stat,
+           aes(Experiment, Value, colour = Stat, shape = Chi)) +
+    geom_point() +
+    facet_grid(Chi ~ TimeHorizon )
+
+
+pltGrad0and1byExp <-
+    ggplot(arGradChi0and1, aes(ExpDesc, Resilience, fill = Chi)) +
+    geom_boxplot(position = "dodge") +
+    facet_grid(Type + Surge ~ TimeHorizon)
+
+pltGrad0and1byChi <-
+    ggplot(arGradChi0and1, aes(Chi, Resilience, fill = Experiment)) +
+    geom_boxplot(position = "dodge") +
+    facet_wrap(~ TimeHorizon)
+
+## Multiple chis
 
 pltGrad <-
     ggplot(arGradGather,
@@ -118,6 +154,8 @@ pltGrad1379byChi <-
     ggplot(arGradChi1379, aes(Chi, Resilience, fill = Experiment)) +
     geom_boxplot(position = "dodge") +
     facet_wrap(~ TimeHorizon)
+
+
 ######################################################################
 ## Plots for availability and student satisfaction
 
