@@ -2,6 +2,15 @@
 
 library("tidyverse")
 
+formatPlot <- function(plotList){
+    for (p in length(plotList)){
+        plotList[p] <- plotList[p] +
+            theme_bw() +
+
+    }
+}
+
+
 setwd("d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience")
 ar0 <- read_csv("allRes6JUL.csv", col_types = list(col_character(),
                                         col_double(),
@@ -75,6 +84,23 @@ pltNoGrad <-
     geom_boxplot(position="dodge") +
     facet_grid(Type + Surge ~ TimeHorizon)
 
+pltNoGradAo <-
+    ggplot(filter(arNoGradGather, Type == "Ao"),
+           aes(ExpDesc, Resilience)) +
+    geom_boxplot(position="dodge") +
+    facet_grid(Surge ~ TimeHorizon) +
+    theme_bw() +
+    theme(axis.text.x = element_text(vjust = 1, hjust = .9, angle = 45 ))
+
+pltNoGradSAT <-
+    ggplot(filter(arNoGradGather, Type == "SAT"),
+           aes(ExpDesc, Resilience)) +
+    geom_boxplot(position="dodge") +
+    facet_grid(Surge ~ TimeHorizon) +
+    theme_bw() +
+    theme(axis.text.x = element_text(vjust = 1, hjust = .9, angle = 45 ))
+    
+
 ## Graduate Data Plot
 ## Only chi = 0 and chi = 1
 arGradChi0and1 <-
@@ -104,7 +130,9 @@ aGCsPlot <-
 pltGrad0and1byExp <-
     ggplot(arGradChi0and1, aes(ExpDesc, Resilience, fill = Chi)) +
     geom_boxplot(position = "dodge") +
-    facet_grid(Type + Surge ~ TimeHorizon)
+    facet_grid(Type + Surge ~ TimeHorizon) +
+    theme_bw() +
+    theme(axis.text.x = element_text(vjust = 1, hjust = .9, angle = 45 ))
 
 pltGrad0and1byChi <-
     ggplot(arGradChi0and1, aes(Chi, Resilience, fill = Experiment)) +
