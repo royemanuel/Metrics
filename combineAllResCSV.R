@@ -1,4 +1,4 @@
-setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/7JULdata/")
+setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/8JULdata/")
 
 allResFiles <- list.files(path = ".", pattern = "allRes")
 
@@ -21,4 +21,4 @@ allRes2 <-
     mutate(TimeHorizon = as.integer(round(TimeHorizon / 8764, 1)))
 
 
-write_csv(allRes2, "d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience/allRes7JUL.csv")
+write_csv(allRes2, "d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience/allRes8JUL.csv")

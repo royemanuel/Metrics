@@ -1,7 +1,11 @@
-# source("fleetRes.R")
-# This file takes a folder of fleet results and calculates the resilience
-# using a list of Chi values. 
-# setwd("fleetData/20180630-090621")
+## source("fleetRes.R")
+## This file takes a folder of fleet results and calculates the resilience
+## using a list of Chi values. 
+## setwd("fleetData/20180630-090621")
+
+######################################################################
+This file takes all the output files from the simulation, sorts
+through them by seed and combines a single seed into 
 
 starttime <- Sys.time()               
 timetoGradFilesMstr <- list.files(path = ".", pattern = "aircrew")
@@ -11,6 +15,7 @@ timeHorizonList <- c(15, 20, 25, 30, 35) * 24 * 365
 
 BIG <- FALSE
 
+dataDate <- "6JUL"
 ######################################################################
 ## Define different Chi for each requirement
 
@@ -20,15 +25,21 @@ chiSatPost <- c(0)
 chiAoPre <- c(0)
 chiAoPost <- c(0)
 
-listChi <- list(list(c(0), c(0)),
-                list(c(0), c(.5)),
-                list(c(0), c(1, .5)) ,
-                list(c(0), c(.5, .25)) ,
-                list(c(0), rep(1, 10000000)),
-                list(c(.5), c(.5)),
-                list(c(1, .5), c(1, .5)) ,
-                list(c(1, .75, .5, .25), c(1, .75, .5, .25)) ,
-                list(rep(1, 10000000), rep(1, 10000000)))
+######################################################################
+## listChi for an expanded intertemporal substitutability study. 
+## listChi <- list(list(c(0), c(0)),
+##                 list(c(0), c(.5)),
+##                 list(c(0), c(1, .5)) ,
+##                 list(c(0), c(.5, .25)) ,
+##                 list(c(0), rep(1, 10000000)),
+##                 list(c(.5), c(.5)),
+##                 list(c(1, .5), c(1, .5)) ,
+##                 list(c(1, .75, .5, .25), c(1, .75, .5, .25)) ,
+##                 list(rep(1, 10000000), rep(1, 10000000)))
+######################################################################
+## listChi for ephemeral and permanent cases only
+listChi <- list(list(c(0)),
+                list(rep(1, 500000), rep(1, 500000)))
 
 
 chiGradPre <- c(0)
@@ -153,7 +164,7 @@ for(rs in 1:length(rseed)){
                            SAT = satVal,
                            Ao = AoVal,
                            Experiment = xpVal,
-                           Seed = rs,
+                           Seed = rseed[rs],
                            TimeHorizon = TH)
             thDF <- inner_join(thDF, gTib, by = "Run")
             resilienceDF <- bind_rows(resilienceDF, thDF)
@@ -170,7 +181,7 @@ for(rs in 1:length(rseed)){
                     "added Experiment", exprmnt,
                     "Run", run))
     }
-    write_csv(resilienceDF, paste0("allReswithPre8JUL", rs,
+    write_csv(resilienceDF, paste0("allReswithPre", dataDate, rs,
                                    ".csv"))
     print(paste("Seed", rseed[rs]))
 }

@@ -2,13 +2,6 @@
 
 library("tidyverse")
 
-formatPlot <- function(plotList){
-    for (p in length(plotList)){
-        plotList[p] <- plotList[p] +
-            theme_bw() +
-
-    }
-}
 
 
 setwd("d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience")
@@ -29,7 +22,7 @@ ar1 <- read_csv("allRes7JUL.csv", col_types = list(col_character(),
                                         col_double(),
                                         col_character()))
 
-ar0 <-
+arAll <-
     bind_rows(ar0, ar1) %>%
     mutate(ExpInt = as.integer(Experiment),
            Surge = ifelse(ExpInt < 4, "No Surge", "Surge"),
@@ -43,7 +36,7 @@ ar0 <-
 ## First the stats without the graduates
 
 arNoGrad <-
-    ar0 %>%
+    arAll %>%
     filter(Chi == 1) %>%
     select(SAT, Ao, Experiment, TimeHorizon, ExpDesc, Surge) 
 
@@ -59,7 +52,7 @@ arNoGradStat <-
 
 ## Now with graduates
 arGrad <-
-    ar0 %>%
+    arAll %>%
     select(GRAD, Experiment, TimeHorizon, Chi, ExpDesc, Surge)
 
 arGradStat <-
@@ -187,12 +180,12 @@ pltGrad1379byChi <-
 ######################################################################
 ## Plots for availability and student satisfaction
 
-ar0forSatAo <-
-    ar0 %>%
+arAllforSatAo <-
+    arAll %>%
     select(SAT, Ao, Experiment, TimeHorizon)
 
 AoStudRes <-
-    ar0forSatAo %>%
+    arAllforSatAo %>%
     mutate(TimeHorizon = paste(TimeHorizon, "years")) %>%
     mutate(Experiment = as.character(Experiment)) %>%
     gather(Type, Resilience, -TimeHorizon, -Experiment)
