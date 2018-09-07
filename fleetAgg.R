@@ -1,11 +1,14 @@
 ## source("fleetRes.R")
 ## This file takes a folder of fleet results and calculates the resilience
 ## using a list of Chi values. 
-## setwd("fleetData/20180630-090621")
+source("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetRes.R")
+setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/8JULData")
+library("tidyverse")
+library("readxl")
 
 ######################################################################
-This file takes all the output files from the simulation, sorts
-through them by seed and combines a single seed into 
+## This file takes all the output files from the simulation, sorts
+## through them by seed and combines a single seed into 
 
 starttime <- Sys.time()               
 timetoGradFilesMstr <- list.files(path = ".", pattern = "aircrew")
@@ -15,7 +18,7 @@ timeHorizonList <- c(15, 20, 25, 30, 35) * 24 * 365
 
 BIG <- FALSE
 
-dataDate <- "6JUL"
+dataDate <- "8JUL"
 ######################################################################
 ## Define different Chi for each requirement
 
@@ -38,7 +41,7 @@ chiAoPost <- c(0)
 ##                 list(rep(1, 10000000), rep(1, 10000000)))
 ######################################################################
 ## listChi for ephemeral and permanent cases only
-listChi <- list(list(c(0)),
+listChi <- list(list(c(0), c(0)),
                 list(rep(1, 500000), rep(1, 500000)))
 
 
@@ -181,11 +184,11 @@ for(rs in 1:length(rseed)){
                     "added Experiment", exprmnt,
                     "Run", run))
     }
-    write_csv(resilienceDF, paste0("allReswithPre", dataDate, rs,
+    write_csv(resilienceDF, paste0("0and1/allRes0and1", dataDate, rs,
                                    ".csv"))
     print(paste("Seed", rseed[rs]))
 }
-write_csv(ttgDF, "ttgDF8JUL.csv")
+write_csv(ttgDF, "0and1/ttgDF8JUL.csv")
 
 
 if(BIG){
