@@ -30,21 +30,20 @@ chiAoPost <- c(0)
 
 ######################################################################
 ## listChi for an expanded intertemporal substitutability study. 
-## listChi <- list(list(c(0), c(0)),
-##                 list(c(0), c(.5)),
-##                 list(c(0), c(1, .5)) ,
-##                 list(c(0), c(.5, .25)) ,
-##                 list(c(0), rep(1, 10000000)),
-##                 list(c(.5), c(.5)),
-##                 list(c(1, .5), c(1, .5)) ,
-##                 list(c(1, .75, .5, .25), c(1, .75, .5, .25)) ,
-##                 list(rep(1, 10000000), rep(1, 10000000)))
-######################################################################
-## listChi for ephemeral and permanent cases only
 listChi <- list(list(c(0), c(0)),
-                list(rep(1, 500000), rep(1, 500000)))
-
-
+                list(c(0), c(.5)),
+                list(c(0), c(1, .5)) ,
+                list(c(0), c(.5, .25)) ,
+                list(c(0), rep(1, 10000000)),
+                list(c(0),             c(0)), 
+                list(c(.5),            c(0)), 
+                list(c(1, .5) ,        c(0)), 
+                list(c(.5, .25) ,      c(0)), 
+                list(rep(1, 10000000), c(0)), 
+                list(c(.5), c(.5)),
+                list(c(1, .5), c(1, .5)) ,
+                list(c(1, .75, .5, .25), c(1, .75, .5, .25)) ,
+                list(rep(1, 10000000), rep(1, 10000000)))
 chiGradPre <- c(0)
 chiGradPost <- c(0)
 
