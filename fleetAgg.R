@@ -2,7 +2,7 @@
 ## This file takes a folder of fleet results and calculates the resilience
 ## using a list of Chi values. 
 source("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetRes.R")
-setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/8JULData")
+setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/8JULData/test")
 library("tidyverse")
 library("readxl")
 
@@ -64,6 +64,13 @@ rList <- c()
 
 
 ######################################################################
+## Student satisfaction values
+timeToGraduate <- 1440
+desiredPercentSatisfied <- .85
+COorderlength <- 3
+desiredGrads <- 65
+
+######################################################################
 ## Big for loop to go through the directory where I put the data
 ## resilienceDF <- tibble(SAT = 0, GRAD = 0, Ao = 0,
 ##                        Run = '0', Experiment = '0', Seed = 0,
@@ -73,6 +80,7 @@ ttgDF <- tibble(MAX = 0, MIN = 0, MED = 0, SD = 0,
                 Run = '0', Experiment = '0', Seed = 0,
                 EndTime = 0)
 ttgDF <- filter(ttgDF, MAX == 1)
+k = 0
 for(rs in 1:length(rseed)){
     resilienceDF <- tibble()
     print(rs)
@@ -81,6 +89,8 @@ for(rs in 1:length(rseed)){
     timetoGradFiles <- timetoGradFilesMstr[ttgBin]
     skedFiles <- skedFilesMstr[sfBin]
     mstrList = list()
+    COSATlist = list()
+    COgradList = list()
     for (ttg in 1:length(timetoGradFiles)){
         run <-
             skedFiles[ttg] %>%
@@ -93,7 +103,7 @@ for(rs in 1:length(rseed)){
         } else {
             srg <- FALSE
         }
-        print(srg)
+        print(paste("Was there a surge?", srg))
         DFrun <- read_csv(timetoGradFiles[ttg],
                           col_types = list(col_integer(),
                                            col_character(),
@@ -101,6 +111,16 @@ for(rs in 1:length(rseed)){
                                            col_character(),
                                            col_character(),
                                            col_character()))
+        ##Squadron CO work, ensure the inputs match below
+        runSatCO <- COsatRes(DFrun,
+                             desiredPercentSatisfied,
+                             timeToGraduate,
+                             COorderlength) %>%
+            mutate(Exp = exprmnt,
+                   Run = run,
+                   Seed = rseed[rs])
+        k <- k + 1
+        COSATlist[[k]] <- runSatCO
         sked <- read_csv(skedFiles[ttg],
                          col_types = list(
                              col_integer(),
@@ -114,6 +134,20 @@ for(rs in 1:length(rseed)){
                              col_integer(),
                              col_integer(),
                              col_integer()))
+        gradChi <- list()
+        for(chi in 1:length(listChi)){
+            runGradCO <- COgradRes(sked,
+                                   desiredGrads,
+                                   listChi[[chi]][[1]],
+                                   listChi[[chi]][[2]],
+                                   srg,
+                                   COorderlength)
+            runGradCO <-
+                runGradCO %>%
+                mutate(Chi = chi)
+            gradChi[[chi]] <- runGradCO
+        }
+        COgradList[[k]] <- bind_rows(runGradCO)
         for(th in 1:length(timeHorizonList)){
             TH <- timeHorizonList[th]
             DFrunTH <-
@@ -133,12 +167,12 @@ for(rs in 1:length(rseed)){
                           MEAN = mean(TimeInSqdn),
                           SD = sd(TimeInSqdn)) %>%
                 mutate(Run = run, Experiment = exprmnt, Seed = rs)
-            satVal <- satRes(DFrunTH, .85, 1440)
+            satVal <- satRes(DFrunTH, desiredPercentSatisfied, timeToGraduate)
             AoVal <- AoRes(skedTH, 0.85)
             gTib <- tibble()
             for(c in 1:length(listChi)){
                 gradVal <- gradRes(skedTH,
-                                   65,
+                                   desiredGrads,
                                    listChi[[c]][[1]],
                                    listChi[[c]][[2]],
                                    srg)
@@ -184,18 +218,22 @@ for(rs in 1:length(rseed)){
                     "added Experiment", exprmnt,
                     "Run", run))
     }
-    write_csv(resilienceDF, paste0("0and1/allRes0and1", dataDate, rs,
+    write_csv(resilienceDF, paste0("allRestest", dataDate, rs,
                                    ".csv"))
     print(paste("Seed", rseed[rs]))
 }
-write_csv(ttgDF, "0and1/ttgDF8JUL.csv")
+write_csv(ttgDF, "ttgDF8JUL.csv")
 
 
 if(BIG){
     mstrSked <- bind_rows(mstrList)
 }
 
-
+COSATlist <- bind_rows(COSATlist)
+write_csv(COSATlist, "COsatResilience.csv")
+COgradList <- bind_rows(COgradList)
+write_csv(COgradList, "COgradResilience.csv")
+    
     
 ##countFiles <- function(lst, seedlst){
 ##    for(1 in 1:length(seedlst)){
