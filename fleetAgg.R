@@ -2,7 +2,7 @@
 ## This file takes a folder of fleet results and calculates the resilience
 ## using a list of Chi values. 
 source("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetRes.R")
-setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/8JULData/test")
+setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/8JULData")
 library("tidyverse")
 library("readxl")
 
@@ -18,7 +18,7 @@ timeHorizonList <- c(15, 20, 25, 30, 35) * 24 * 365
 
 BIG <- FALSE
 
-dataDate <- "8JUL"
+dataDate <- "8JULscrubbed7SEP"
 ######################################################################
 ## Define different Chi for each requirement
 
@@ -143,10 +143,13 @@ for(rs in 1:length(rseed)){
                                    COorderlength)
             runGradCO <-
                 runGradCO %>%
-                mutate(Chi = chi)
+                mutate(Chi = chi,
+                       Exp = exprmnt,
+                       Run = run,
+                       Seed = rseed[rs])                       
             gradChi[[chi]] <- runGradCO
         }
-        COgradList[[k]] <- bind_rows(runGradCO)
+        COgradList[[k]] <- bind_rows(gradChi)
         for(th in 1:length(timeHorizonList)){
             TH <- timeHorizonList[th]
             DFrunTH <-
@@ -217,8 +220,12 @@ for(rs in 1:length(rseed)){
                     "added Experiment", exprmnt,
                     "Run", run))
     }
-    write_csv(resilienceDF, paste0("allRestest", dataDate, rs,
+    write_csv(resilienceDF, paste0("allRes", dataDate, rs,
                                    ".csv"))
+    COSATlist <- bind_rows(COSATlist)
+    write_csv(COSATlist, paste0("COsatResilience", dataDate, rseed[rs], ".csv"))
+    COgradList <- bind_rows(COgradList)
+    write_csv(COgradList, paste0("COgradResilience.csv", dataDate, rseed[rs], ".csv"))
     print(paste("Seed", rseed[rs]))
 }
 write_csv(ttgDF, "ttgDF8JUL.csv")
