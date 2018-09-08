@@ -1,9 +1,10 @@
 
 
-setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/8JULdata/")
+setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/7JULdata/7JULResilience")
 
 allResFiles <- list.files(path = ".", pattern = "allRes")
 
+DDate <- "7JUL"
 
 allRes <- tibble()
 for(ar in 1:length(allResFiles)){
@@ -22,5 +23,38 @@ allRes2 <-
     allRes %>%
     mutate(TimeHorizon = as.integer(round(TimeHorizon / 8764, 1)))
 
+COsatAll <- list()
+COgradAll <- list()
 
-write_csv(allRes2, "d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience/allRes8JUL.csv")
+allCOsatFiles <- list.files(path = ".", pattern = "COsat")
+allCOgradFiles <- list.files(path = ".", pattern = "COgrad")
+for(CO in 1:length(allCOsatFiles)){
+    COsatAll[[CO]] <- read_csv(allCOsatFiles[CO])
+    COgradAll[[CO]] <- read_csv(allCOgradFiles[CO])
+}
+
+COsatAll <- bind_rows(COsatAll)
+COgradAll <- bind_rows(COgradAll)
+
+
+write_csv(allRes2,
+          paste0(
+              "d:/OneDrive/PhD Work/Dissertation/Word/",
+              "Journal Articles/Fleet Resilience/",
+              "datallRes",
+              DDate,
+              ".csv"))
+write_csv(COsatAll, 
+          paste0(
+              "d:/OneDrive/PhD Work/Dissertation/Word/",
+              "Journal Articles/Fleet Resilience/",
+              "COsatAll",
+              DDate,
+              ".csv"))
+write_csv(COgradAll,
+          paste0(
+              "d:/OneDrive/PhD Work/Dissertation/Word/",
+              "Journal Articles/Fleet Resilience/",
+              "COgradAll",
+              DDate,
+              ".csv"))
