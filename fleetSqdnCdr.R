@@ -41,8 +41,8 @@ COgradRes <- function(DF, ND, Xpre, Xpost, SRG, orders){
     if (SRG){
         wDF <-
             wDF %>%
-            mutate(Need = ifelse(Time > 105120, ND + 10, ND),
-                   Need = ifelse(Time > 122640, Need - 10, Need))
+            mutate(Need = ifelse(Time > 105120, ND + 25, ND),
+                   Need = ifelse(Time > 122640, Need - 25, Need))
     } else {
         wDF <-
             wDF %>%

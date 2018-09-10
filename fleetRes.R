@@ -251,8 +251,8 @@ gradRes <- function(DF, nd, chiPre, chiPost, surge){
     if (surge){
         wDF <-
             wDF %>%
-            mutate(Need = ifelse(Time > 105120, nd + 10, nd),
-                   Need = ifelse(Time > 122640, Need - 10, Need))
+            mutate(Need = ifelse(Time > 105120, nd + 25, nd),
+                   Need = ifelse(Time > 122640, Need - 25, Need))
     } else {
         wDF <-
             wDF %>%
