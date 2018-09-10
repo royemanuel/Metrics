@@ -2,7 +2,7 @@
 ## This file takes a folder of fleet results and calculates the resilience
 ## using a list of Chi values. 
 source("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetRes.R")
-setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/6JULData")
+setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/8SEPData")
 library("tidyverse")
 library("readxl")
 source("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetSqdnCdr.R")
@@ -18,7 +18,7 @@ timeHorizonList <- c(15, 20, 25, 30, 35) * 24 * 365
 
 BIG <- FALSE
 
-dataDate <- "6JULscrubbed7SEP"
+dataDate <- "8SEPscrubbed7SEP"
 ######################################################################
 ## Define different Chi for each requirement
 
@@ -228,7 +228,7 @@ for(rs in 1:length(rseed)){
     write_csv(COgradList, paste0("COgradResilience", dataDate, rseed[rs], ".csv"))
     print(paste("Seed", rseed[rs]))
 }
-write_csv(ttgDF, "ttgDF6JUL.csv")
+write_csv(ttgDF, "ttgDF8SEP.csv")
 
 
 if(BIG){
