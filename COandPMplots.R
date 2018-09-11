@@ -115,18 +115,19 @@ COSatdataPrepped <-
     COSatdata %>%
     group_by(Seed, Exp, Run, SqCO)
 
-COSatPlot <- ggplot(COSatdata, aes(SqCO, Resilience)) +
+COSatPlot <- ggplot(COSatdata, aes(SqCO, Resilience, color = ExpDesc)) +
     geom_boxplot(position = "dodge") +
-    facet_grid(ExpDesc ~ Surge)
+    facet_grid(Surge ~ .)
 
 COGrad0and1 <-
     COGraddata %>%
     filter(Chi == "1" | Chi == "11" | Chi == "14") %>%
     mutate(Chi = ifelse(Chi == "1", "Ephemeral",
-                        ifelse(Chi == "11", "Adjacent", "Permanent")))
-COGradPlot <- ggplot(COGrad0and1, aes(SqCO, Resilience, color = Chi)) +
+                 ifelse(Chi == "11", "Adjacent", "Permanent")))
+
+COGradPlot <- ggplot(COGrad0and1, aes(SqCO, Resilience, color = ExpDesc)) +
     geom_boxplot(position = "dodge") +
-    facet_grid(ExpDesc ~ Surge)
+    facet_grid(Chi ~ Surge)
 
 
 

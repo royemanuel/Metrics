@@ -1,42 +1,15 @@
 ## Plots for the proposed fleet resilience paper.
 
 library("tidyverse")
+library("lubridate")
+setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics")
+source("COandPMplots.R")
+## COandPMplots sets the working directory to
+## d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience
 
-
-
-setwd("d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience")
-ar0 <- read_csv("allRes6JUL.csv", col_types = list(col_character(),
-                                        col_double(),
-                                        col_double(),
-                                        col_character(),
-                                        col_character(),
-                                        col_character(),
-                                        col_double(),
-                                        col_character()))
-ar1 <- read_csv("allRes7JUL.csv", col_types = list(col_character(),
-                                        col_double(),
-                                        col_double(),
-                                        col_character(),
-                                        col_character(),
-                                        col_character(),
-                                        col_double(),
-                                        col_character()))
-
-arAll <-
-    bind_rows(ar0, ar1) %>%
-    mutate(ExpInt = as.integer(Experiment),
-           Surge = ifelse(ExpInt < 4, "No Surge", "Surge"),
-           ExpDesc = ifelse(ExpInt == 1 | ExpInt == 4,
-                            "No SLEP",
-                     ifelse(ExpInt == 2 | ExpInt == 5,
-                            "Small SLEP",
-                            "Big SLEP")))
-######################################################################
-## Summarize the statistics
-## First the stats without the graduates
 
 arNoGrad <-
-    arAll %>%
+    PMdata %>%
     filter(Chi == 1) %>%
     select(SAT, Ao, Experiment, TimeHorizon, ExpDesc, Surge) 
 
@@ -52,7 +25,7 @@ arNoGradStat <-
 
 ## Now with graduates
 arGrad <-
-    arAll %>%
+    PMdata %>%
     select(GRAD, Experiment, TimeHorizon, Chi, ExpDesc, Surge)
 
 arGradStat <-
@@ -181,20 +154,19 @@ pltGrad1379byChi <-
 ## Plots for availability and student satisfaction
 
 arAllforSatAo <-
-    arAll %>%
-    select(SAT, Ao, Experiment, TimeHorizon)
+    PMdata %>%
+    select(SAT, Ao, ExpDesc, Surge, TimeHorizon)
 
 AoStudRes <-
     arAllforSatAo %>%
     mutate(TimeHorizon = paste(TimeHorizon, "years")) %>%
-    mutate(Experiment = as.character(Experiment)) %>%
-    gather(Type, Resilience, -TimeHorizon, -Experiment)
+    gather(Type, Resilience, -TimeHorizon, -ExpDesc, -Surge)
 
 
 AoStudPlot <-
     ggplot(AoStudRes,
-           aes(Experiment, Resilience, group=Experiment)) +
-    geom_boxplot() +
+           aes(Surge, Resilience, color=ExpDesc)) +
+    geom_boxplot(position = "dodge") +
     facet_grid(Type ~ TimeHorizon) +
     theme_bw()
 

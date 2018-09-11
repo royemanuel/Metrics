@@ -2,7 +2,7 @@
 ## csv's we will be working from. All data is stored with the document
 ## information so we are not mixing it up with the raw data.
 ######################################################################
-
+library("lubridate")
 setwd("d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience/")
 
 PMResFiles <- list.files(path = ".", pattern = "datallRes")
