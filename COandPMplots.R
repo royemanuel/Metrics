@@ -8,7 +8,7 @@ setwd("d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience"
 
 if(!exists("PMdata") | !exists("COGraddata") | !exists("COGraddata")){
     print("loading data...")
-    currentData <- "9-9-2018--8-54.csv"
+    currentData <- "9-11-2018--6-59.csv"
     PMdata <- read_csv(paste0("PMRes", currentData),
                        col_types = list(col_character(),
                                         col_double(),
