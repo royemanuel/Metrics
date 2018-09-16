@@ -219,7 +219,7 @@ for(rs in 1:length(rseed)){
         print(paste("From Seed", rseed[rs],
                     "added Experiment", exprmnt,
                     "Run", run))
-    }
+    } 
     write_csv(resilienceDF, paste0("allRes", dataDate, rseed[rs],
                                    ".csv"))
     COSATlist <- bind_rows(COSATlist)

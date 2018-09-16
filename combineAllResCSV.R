@@ -1,10 +1,10 @@
 
 
-setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/6JULData/")
+setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/8SEPData/")
 
 allResFiles <- list.files(path = ".", pattern = "allRes")
 
-DDate <- "6JULdata-11SEPbld"
+DDate <- "8SEPdata-15SEPbld"
 
 allRes <- tibble()
 for(ar in 1:length(allResFiles)){

@@ -17,25 +17,16 @@ for(f in 1:length(PMResFiles)){
     COSat[[f]] <- read_csv(COsatFiles[f])
 }
 
+dateID <- paste0(as.character(month(now())), "-",
+                 as.character(day(now())), "-",
+                 as.character(year(now())), "--",
+                 as.character(hour(now())), "-",
+                 as.character(minute(now())),".csv")
+
 PMRes <- bind_rows(PMRes)
 COGrad <- bind_rows(COGrad)
 COSat <- bind_rows(COSat)
 
-write_csv(PMRes, paste0("PMRes",
-                        as.character(month(now())), "-",
-                        as.character(day(now())), "-",
-                        as.character(year(now())), "--",
-                        as.character(hour(now())), "-",
-                        as.character(minute(now())),".csv"))
-write_csv(COGrad, paste0("COGrad", 
-                        as.character(month(now())), "-",
-                        as.character(day(now())), "-",
-                        as.character(year(now())), "--",
-                        as.character(hour(now())), "-",
-                        as.character(minute(now())),".csv"))
-write_csv(COSat, paste0("COSat",  
-                        as.character(month(now())), "-",
-                        as.character(day(now())), "-",
-                        as.character(year(now())), "--",
-                        as.character(hour(now())), "-",
-                        as.character(minute(now())),".csv"))
+write_csv(PMRes, paste0("PMRes", dateID))
+write_csv(COGrad, paste0("COGrad", dateID))
+write_csv(COSat, paste0("COSat",  dateID))
