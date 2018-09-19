@@ -7,7 +7,7 @@ library("xtable")
 setwd("d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience")
 
 
-if(!exists("PMdata") | !exists("COGraddata") | !exists("COGraddata")){
+if(!exists("PMdata") | !exists("COGraddata") | !exists("COSatdata") |!exists("PMdata")){
     print("loading data...")
     currentData <- "9-15-2018--9-56.csv"
     PMdata <- read_csv(paste0("PMRes", currentData),
@@ -143,6 +143,8 @@ COGradBPdata_E <-
               middleY = median(Resilience),
               upperY = quantile(Resilience, 0.75)) %>%
     filter(Chi == "1" | Chi == "13" | Chi == "14") %>%
+    mutate(Chi = ifelse(Chi == "1", "Ephemeral",
+                 ifelse(Chi == "13", "Adjacent", "Permanent"))) %>%
     filter(SqCO == "E")
 
 COGradBPdata <-
@@ -154,8 +156,14 @@ COGradBPdata <-
               maxY = max(Resilience),
               lowerY = quantile(Resilience, 0.25),
               middleY = median(Resilience),
-              upperY = quantile(Resilience, 0.75)) %>%
-    filter(Chi == "1" | Chi == "14")
+              upperY = quantile(Resilience, 0.75),
+              meanY = mean(Resilience)) %>%
+    ## Going to only ephemeral to keep with everything and make it
+    ## viewable
+    filter(Chi == "1") # %>%
+    ## mutate(Chi = ifelse(Chi == "1", "Ephemeral",
+    ##              ifelse(Chi == "13", "C4", "Permanent")))
+    
 
 COGradsumPlot_CO_E <-
     ggplot(COGradBPdata_E) +
@@ -168,7 +176,8 @@ COGradsumPlot_CO_E <-
                      upper = upperY),
                      stat = "identity") +
     facet_grid(Surge ~ ExpDesc) +
-    theme_bw()
+    theme_bw() 
+                      )
 
 COGradsumPlot_CO <-
     ggplot(COGradBPdata) +
@@ -178,11 +187,16 @@ COGradsumPlot_CO <-
                      ymax = maxY,
                      lower = lowerY,
                      middle = middleY,
-                     upper = upperY,
-                     fill = Chi),
+                     upper = upperY),
                      stat = "identity") +
-    facet_grid(Surge ~ ExpDesc) +
-    theme_bw()
+    facet_grid(ExpDesc ~ Surge) +
+    theme_bw() +
+    labs(x = "Squadron Commanding Officers",
+         y = "Resilience",
+         fill = "Intertemporal\nSubstitutability")
+
+## Plots for selected adjacentness
+
 
 
 COSatBPdata <-
@@ -206,7 +220,7 @@ COSatsumPlot <-
                      middle = middleY,
                      upper = upperY),
                      stat = "identity") +
-    facet_grid(Surge ~ ExpDesc) +
+    facet_grid(ExpDesc ~ Surge) +
     theme_bw()
 
 
@@ -243,6 +257,8 @@ PMGradBPdata <-
     PMdata %>%
     ungroup(.) %>%
     filter(Chi == 1 | Chi == 13 | Chi == 14) %>%
+    mutate(Chi = ifelse(Chi == "1", "Ephemeral",
+                 ifelse(Chi == "13", "Adjacent", "Permanent"))) %>%
     mutate(Resilience = GRAD) %>%
     select(-ExpInt,  -SAT, -GRAD, -Ao) %>%
     group_by( TimeHorizon, ExpDesc, Surge, Chi) %>%
@@ -294,6 +310,37 @@ PMAosumPlot <-
     theme_bw()
 
 ######################################################################
+## Building the "ratings" for courses of action. That is, which slep
+## decision works best for each scenario and functional output
+
+PMGradRating <-
+    PMGradBPdata %>%
+    ungroup(.) %>%
+    group_by(Surge, TimeHorizon, Chi) %>%
+    filter(middleY == max(middleY)) %>%
+    arrange(
+            Surge, TimeHorizon, Chi) %>%
+    select(Surge, TimeHorizon, Chi, ExpDesc, middleY)
+
+PMAoRating <-
+    PMAoBPdata %>%
+    ungroup(.) %>%
+    group_by(Surge, TimeHorizon) %>%
+    filter(middleY == max(middleY)) %>%
+    arrange(
+            Surge, TimeHorizon) %>%
+    select(Surge, TimeHorizon,ExpDesc, middleY)
+
+PMSatRating <-
+    PMSatBPdata %>%
+    ungroup(.) %>%
+    group_by(Surge, TimeHorizon) %>%
+    filter(middleY == max(middleY)) %>%
+    arrange(
+            Surge, TimeHorizon) %>%
+    select(Surge, TimeHorizon,ExpDesc, middleY)
+
+######################################################################
 ## Let's build some LaTeX tables
 
 
@@ -317,11 +364,89 @@ ltxCOGR_E <-
 COGr_E<- xtable(ltxCOGR_E)
 
 
+######################################################################
+## Chi analysis
+
+    
+PMGradChidata <-
+    PMdata %>%
+    ungroup(.) %>%
+    mutate(Resilience = GRAD) %>%
+    select(-ExpInt,  -SAT, -GRAD, -Ao) %>%
+    group_by( TimeHorizon, ExpDesc, Surge, Chi) %>%
+    filter(Surge == "Surge",
+           Chi != "6") %>%
+    filter(ExpDesc == "Large SLEP" | ExpDesc == "Small SLEP") %>%
+    filter(TimeHorizon == 30) %>%
+    summarise(minY = min(Resilience),
+              maxY = max(Resilience),
+              lowerY = quantile(Resilience, 0.25),
+              middleY = median(Resilience),
+              upperY = quantile(Resilience, 0.75)) %>%
+    mutate(Chi = ifelse(Chi == "1", "E",
+                 ifelse(Chi == "2", "A1",
+                 ifelse(Chi == "3", "A2",
+                 ifelse(Chi == "4", "A3",
+                 ifelse(Chi == "5", "A4",
+                 ifelse(Chi == "7", "B1",
+                 ifelse(Chi == "8", "B2",
+                 ifelse(Chi == "9", "B3",
+                 ifelse(Chi == "10", "B4",
+                 ifelse(Chi == "11", "C1",
+                 ifelse(Chi == "12", "C2",
+                 ifelse(Chi == "13", "C3", "P"  )))))))))))))
 
 
+PMGradChiPlot <-
+    ggplot(PMGradChidata) +
+    geom_boxplot(
+        aes(x = Chi,
+            ymin = minY,
+            ymax = maxY,
+            lower = lowerY,
+            middle = middleY,
+            upper = upperY,
+            fill = ExpDesc),
+        stat = "identity") +
+    theme_bw()
 
+COGradChidata <-
+    COGraddata %>%
+    ungroup(.) %>%
+    select(-ExpInt) %>%
+    group_by( SqCO, ExpDesc, Surge, Chi) %>%
+    filter(Surge == "Surge",
+           Chi != "6") %>%
+    filter(Chi != "5") %>%
+    filter(Chi != "10") %>%
+    summarise(minY = min(Resilience),
+              maxY = max(Resilience),
+              lowerY = quantile(Resilience, 0.25),
+              middleY = median(Resilience),
+              upperY = quantile(Resilience, 0.75)) %>%
+    mutate(Chi = ifelse(Chi == "1", "E",
+                 ifelse(Chi == "2", "A1",
+                 ifelse(Chi == "4", "A2",
+                 ifelse(Chi == "3", "A3",
+                 ifelse(Chi == "5", "A4",
+                 ifelse(Chi == "7", "B1",
+                 ifelse(Chi == "9", "B2",
+                 ifelse(Chi == "8", "B3",
+                 ifelse(Chi == "10", "B4",
+                 ifelse(Chi == "11", "C1",
+                 ifelse(Chi == "12", "C2",
+                 ifelse(Chi == "13", "C3", "P"  )))))))))))))    
 
-
-
-
+COGradChiPlot <-
+    ggplot(COGradChidata) +
+    geom_boxplot(
+        aes(x = Chi,
+            ymin = minY,
+            ymax = maxY,
+            lower = lowerY,
+            middle = middleY,
+            upper = upperY,
+            fill = ExpDesc),
+        stat = "identity") +
+    theme_bw() 
 
