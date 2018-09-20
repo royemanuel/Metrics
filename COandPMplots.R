@@ -681,6 +681,11 @@ PMGradAllChilist <-
 
 PMGradAllChiPltList <- list()
 for(i in 1:length(PMGradAllChilist)){
+    if(PMGradAllChilist[[i]]$TimeHorizon[1] != "15"){
+        PMGradAllChiPltList[[i]] <- 
+            PMGradAllChiPltList[[i]] %>%
+            filter(ExpDesc != "As-Is")
+    }
     PMGradAllChiPltList[[i]] <-
         ggplot(PMGradAllChilist[[i]]) +
         geom_boxplot(

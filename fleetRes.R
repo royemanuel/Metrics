@@ -149,8 +149,7 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
                     if (r <= postTime){
                         postSteps <- r - 1
                         print(length(postIntSub))
-                        postIntSub <- postIntSub[1:postSteps]
-                        print(paste("pIS, ", postIntSub))
+                        ## postIntSub <- postIntSub[1:postSteps]
                     } else {
                         postSteps <- postTime
                     }
@@ -166,7 +165,7 @@ modifyPerformance <- function(DF, preIntSub, postIntSub){
                             xferAvail <- surplus[post] * postIntSub[post]
                             print(paste("post, ", post))
                             print(paste("surplus[post], ", surplus[post]))
-                            print(paste("postIntSub length, ", postIntSub))
+                            print(paste("postIntSub length, ", length(postIntSub)))
                             print(paste("postIntSub[post], ", postIntSub[post]))
                             print(paste("xferAvail", xferAvail))
                             ## First case is when you have more surplus than
