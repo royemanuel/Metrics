@@ -27,37 +27,36 @@ COsatRes <- function(DF, nd, dtis, orders){
 
 ## Takes in one sked file and puts out the resilience for each CO
 COgradRes <- function(DF, ND, Xpre, Xpost, SRG, orders){
-    wDF1 <-
+    wDF <-
         qrtrly_grads(DF) %>%
         mutate(qrtr = quarter(as_datetime(3600 *
                                           Time +
                                           make_datetime(2005, 1, 1, 8)),
                               with_year = TRUE))
-    stTime <- wDF1$qrtr[1]
-    wDF2 <-
-        wDF1 %>%
+    stTime <- wDF$qrtr[1]
+    wDF <-
+        wDF %>%
         mutate(SqCO = floor(qrtr - stTime) %/% orders)
     ## Anchor to the time the simulation begins to count the COs
     if (SRG){
-        wDF3 <-
-            wDF2 %>%
+        wDF <-
+            wDF %>%
             mutate(Need = ifelse(Time > 105120, ND + 25, ND),
                    Need = ifelse(Time > 122640, Need - 25, Need))
     } else {
-        wDF3 <-
-            wDF2 %>%
+        wDF <-
+            wDF %>%
             mutate(Need = ND)
     }
-    wDF4 <- modifyPerformance(wDF3, Xpre, Xpost) %>%
+    wDF <- modifyPerformance(wDF, Xpre, Xpost) %>%
         mutate(modPerf = ifelse(diff < 0, modPerf, Need))
-    wDF5 <-
-        wDF4 %>%
+    wDF <-
+        wDF %>%
         split(.$SqCO) %>%
         map(assignGroupFast) %>%
         map(step_EIR) %>%
         bind_rows(.)  %>%
         gather(SqCO, Resilience)
-    wDFlist <- list(wDF1, wDF2, wDF3, wDF4, wDF5)
 }
 
 

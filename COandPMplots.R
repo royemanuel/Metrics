@@ -487,7 +487,39 @@ ggsave(filename="CDR_Echo_GradRes.pdf",
        width = 6.5,
        height = 6)
                           
+CO_D_GradChidata <-
+    COGradChidata %>%
+    filter(SqCO == "E")
 
+CO_D_Grad_Plot <-
+    ggplot(CO_D_GradChidata,
+           group = ExpDesc) +
+    geom_boxplot(
+        aes(x = Chi,
+            ymin = minY,
+            ymax = maxY,
+            lower = lowerY,
+            middle = middleY,
+            upper = upperY,
+            fill = ExpDesc),
+        stat = "identity") +
+    ## geom_point(data = CO_D_GradChidata,
+    ##            aes(x = Chi, y = meanY, group = ExpDesc),
+    ##            position = position_dodge(width = .9)) +
+    facet_grid(Surge ~ .) +
+    theme_bw() +
+        labs(x = "Intertemporal Substitutability Matrix",
+             y = "Resilience") +
+    guides(fill = guide_legend("Course of Action")) +
+    scale_fill_manual(values = c("white","gray90", "gray70")) +
+    theme(legend.position = "top")
+
+ggsave(filename="CDR_Delta_GradRes.pdf",
+       plot = CO_D_Grad_Plot,
+       device = cairo_pdf,
+       width = 6.5,
+       height = 6)
+                      
 ######################################################################
 ## Write up all the PM data and build one massive plot
 
@@ -682,8 +714,8 @@ PMGradAllChilist <-
 PMGradAllChiPltList <- list()
 for(i in 1:length(PMGradAllChilist)){
     if(PMGradAllChilist[[i]]$TimeHorizon[1] != "15"){
-        PMGradAllChiPltList[[i]] <- 
-            PMGradAllChiPltList[[i]] %>%
+        PMGradAllChilist[[i]] <- 
+            PMGradAllChilist[[i]] %>%
             filter(ExpDesc != "As-Is")
     }
     PMGradAllChiPltList[[i]] <-

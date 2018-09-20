@@ -6,8 +6,11 @@ library("lubridate")
 setwd("d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience/")
 
 PMResFiles <- list.files(path = ".", pattern = "datallRes")
+PMResFiles <- PMResFiles[str_detect(PMResFiles, pattern = "20SEP")]
 COgradFiles <- list.files(path = ".", pattern = "COgrad")
+COgradFiles <- COgradFiles[str_detect(COgradFiles, pattern = "20SEP")]
 COsatFiles <- list.files(path = ".", pattern = "COsat")
+COsatFiles <- COsatFiles[str_detect(COsatFiles, pattern = "20SEP")]
 PMRes <- list()
 COGrad <- list()
 COSat <- list()
