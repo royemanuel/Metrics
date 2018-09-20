@@ -2,7 +2,7 @@
 ## This file takes a folder of fleet results and calculates the resilience
 ## using a list of Chi values. 
 source("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetRes.R")
-setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetData/RFR2/8SEPData")
+setwd("c:/RFR2/8JULData")
 library("tidyverse")
 library("readxl")
 source("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/fleetSqdnCdr.R")
@@ -18,7 +18,7 @@ timeHorizonList <- c(15, 20, 25, 30, 35) * 24 * 365
 
 BIG <- FALSE
 
-dataDate <- "8SEPscrubbed7SEP"
+dataDate <- "8JULscrubbed20SEP"
 ######################################################################
 ## Define different Chi for each requirement
 
@@ -65,7 +65,7 @@ rList <- c()
 ######################################################################
 ## Student satisfaction values
 timeToGraduate <- 1440
-desiredPercentSatisfied <- .85
+desiredPercentSatisfied <- .95
 COorderlength <- 3
 desiredGrads <- 65
 

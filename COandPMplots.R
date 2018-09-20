@@ -4,12 +4,14 @@
 
 library("tidyverse")
 library("xtable")
-##setwd("d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience")
-setwd("c:/Users/emanurn1/Documents/fleetResiliencePaper/")
+## Home Computer
+setwd("d:/OneDrive/PhD Work/Dissertation/Word/Journal Articles/Fleet Resilience")
+## Work Computer
+## setwd("c:/Users/emanurn1/Documents/fleetResiliencePaper/")
 
-if(!exists("PMdata") | !exists("COGraddata") | !exists("COSatdata") |!exists("PMdata")){
+if(!exists("PMdata") | !exists("COGraddata") | !exists("COSatdata") ){
     print("loading data...")
-    currentData <- "9-15-2018--9-56.csv"
+    currentData <- "9-20-2018--16-32.csv"
     PMdata <- read_csv(paste0("PMRes", currentData),
                        col_types = list(col_character(),
                                         col_double(),
@@ -236,7 +238,7 @@ PMSatBPdata <-
               maxY = max(Resilience),
               lowerY = quantile(Resilience, 0.25),
               middleY = median(Resilience),
-              upperY = quantile(Resilience, 0.75)x)
+              upperY = quantile(Resilience, 0.75))
 
 PMSatsumPlot <-
     ggplot(PMSatBPdata) +
@@ -420,8 +422,8 @@ COGradChidata <-
     group_by( SqCO, ExpDesc, Surge, Chi) %>%
     filter(#Surge == "Surge",
            Chi != "6") %>%
-    filter(Chi != "5") %>%
-    filter(Chi != "10") %>%
+    ## filter(Chi != "5") %>%
+    ## filter(Chi != "10") %>%
     summarise(minY = min(Resilience),
               maxY = max(Resilience),
               lowerY = quantile(Resilience, 0.25),
@@ -682,8 +684,8 @@ PMGradAllChiBPdata <-
     ungroup(.) %>%
     filter(#Surge == "Surge",
            Chi != "6") %>%
-    filter(Chi != "5") %>%
-    filter(Chi != "10") %>%
+    ## filter(Chi != "5") %>%
+    ## filter(Chi != "10") %>%
     mutate(Chi = ifelse(Chi == "1", "E",
                  ifelse(Chi == "2", "A1",
                  ifelse(Chi == "4", "A2",
