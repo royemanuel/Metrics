@@ -162,9 +162,9 @@ COGradBPdata <-
               meanY = mean(Resilience)) %>%
     ## Going to only ephemeral to keep with everything and make it
     ## viewable
-    filter(Chi == "1") # %>%
-    ## mutate(Chi = ifelse(Chi == "1", "Ephemeral",
-    ##              ifelse(Chi == "13", "C4", "Permanent")))
+    filter(Chi == "1" | Chi == "13" | Chi == "14")  %>%
+    mutate(Chi = ifelse(Chi == "1", "Ephemeral",
+                 ifelse(Chi == "13", "C4", "Permanent")))
     
 
 COGradsumPlot_CO_E <-
@@ -191,7 +191,7 @@ COGradsumPlot_CO <-
                      middle = middleY,
                      upper = upperY),
                      stat = "identity") +
-    facet_grid(ExpDesc ~ Surge) +
+    facet_grid(Surge ~ ExpDesc) +
     theme_bw() +
     labs(x = "Squadron Commanding Officers",
          y = "Resilience",
@@ -345,6 +345,15 @@ PMSatRating <-
             Surge, TimeHorizon) %>%
     select(Surge, TimeHorizon,ExpDesc, middleY)
 
+COGradRating <-
+    COGradBPdata %>%
+    ungroup(.) %>%
+    group_by(Surge, SqCO, Chi) %>%
+    filter(middleY == max(middleY)) %>%
+    arrange(
+            Surge, SqCO, Chi) %>%
+    select(Surge, SqCO, Chi, ExpDesc, middleY)
+
 ######################################################################
 ## Let's build some LaTeX tables
 
@@ -357,6 +366,12 @@ ltxPMGr <-
                  ifelse(Chi == "13", "Adjacent", "Permanent"))) %>%
     arrange(Surge)
 PMGr <- xtable(ltxPMGr)
+
+
+## PMAoMedian <-
+##     ltx
+
+
 
 PMSa <- xtable(PMSatBPdata)
 
