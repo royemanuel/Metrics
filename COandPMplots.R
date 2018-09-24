@@ -224,6 +224,8 @@ COSatsumPlot <-
                      upper = upperY),
                      stat = "identity") +
     facet_grid(ExpDesc ~ Surge) +
+    labs(x = "Squadron Commanding Officers",
+         y = "Resilience") +
     theme_bw() 
 
 
@@ -693,6 +695,76 @@ for(i in 1:length(PMGradlist)){
 }
 
 
+## Single Plot
+
+PMGradAllTHPlot <-
+    ggplot(PMGradBPdata) +
+            geom_boxplot(
+            aes(x = ExpDesc,
+                ymin = minY,
+                ymax = maxY,
+                lower = lowerY,
+                middle = middleY,
+                upper = upperY,
+                color = Chi),
+            stat = "identity") +
+    facet_grid(.~ Surge + TimeHorizon) +
+        theme_bw() +
+        labs(x = "Course of Action",
+             y = "Resilience") +
+        theme(axis.text.x = element_text(angle = -90,
+                                         vjust = 1,
+                                         hjust = 0)) +
+        theme(legend.position = "top") +
+        guides(fill = guide_legend(title = "Intertemporal Substitutability")) +
+        ylim(c(0, 1.05))  +
+    scale_color_manual(values = c("gray50", "black"))
+
+PMSatAllTHPlot <-
+    ggplot(PMSatBPdata) +
+            geom_boxplot(
+            aes(x = ExpDesc,
+                ymin = minY,
+                ymax = maxY,
+                lower = lowerY,
+                middle = middleY,
+                upper = upperY),
+            stat = "identity") +
+    facet_grid(.~ Surge + TimeHorizon) +
+        theme_bw() +
+        labs(x = "Course of Action",
+             y = "Resilience") +
+        theme(axis.text.x = element_text(angle = -90,
+                                         vjust = 1,
+                                         hjust = 0)) +
+        ylim(c(0, 1.05))  +
+    scale_color_manual(values = c("gray50", "black"))
+
+PMAoAllTHPlot <-
+    ggplot(PMAoBPdata) +
+            geom_boxplot(
+            aes(x = ExpDesc,
+                ymin = minY,
+                ymax = maxY,
+                lower = lowerY,
+                middle = middleY,
+                upper = upperY),
+            stat = "identity") +
+    facet_grid(.~ Surge + TimeHorizon) +
+        theme_bw() +
+        labs(x = "Course of Action",
+             y = "Resilience") +
+        theme(axis.text.x = element_text(angle = -90,
+                                         vjust = 1,
+                                         hjust = 0)) +
+        ylim(c(0, 1.05))  +
+    scale_color_manual(values = c("gray50", "black"))
+
+
+
+ggsave(filename = "PMGradTH.pdf", plot = PMGradAllTHPlot, width = 8.2, height = 5, device = cairo_pdf)
+ggsave(filename = "PMSatTH.pdf", plot = PMSatAllTHPlot, width = 8.2, height = 5, device = cairo_pdf)
+ggsave(filename = "PMAoTH.pdf", plot = PMAoAllTHPlot, width = 8.2, height = 5, device = cairo_pdf)
 
 PMGradAllChiBPdata <-
     PMdata %>%
@@ -751,7 +823,7 @@ for(i in 1:length(PMGradAllChilist)){
         labs(x = "Intertemporal Substitutability Matrix",
              y = "Resilience") +
         theme(legend.position = "top") +
-        guides(color = guide_legend("Course of Action")) +
+        guides(fill = guide_legend(title = "Course of Action")) +
         scale_fill_manual(values = c("white", "gray70", "gray90")) 
     ggsave(filename = paste0("PMGradAllChiPlotTimeHorizon",
                              PMGradAllChilist[[i]]$TimeHorizon[1],
