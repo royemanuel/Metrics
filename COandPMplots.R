@@ -1,3 +1,4 @@
+
 ######################################################################
 ## Building the plots for the paper now that I have firm data produced
 ## by the workingFleetData.R file
@@ -178,11 +179,11 @@ COGradsumPlot_CO_E <-
                      upper = upperY),
                      stat = "identity") +
     facet_grid(Surge ~ ExpDesc) +
-    theme_bw() 
+    theme_bw(base_size = 12, base_family = "serif") 
                       
 
 COGradsumPlot_CO <-
-    ggplot(COGradBPdata) +
+    ggplot(filter(COGradBPdata, Chi == "Ephemeral")) +
     geom_boxplot(
                  aes(x = SqCO,
                      ymin = minY,
@@ -192,7 +193,7 @@ COGradsumPlot_CO <-
                      upper = upperY),
                      stat = "identity") +
     facet_grid(Surge ~ ExpDesc) +
-    theme_bw() +
+    theme_bw(base_size = 12, base_family = "serif") +
     labs(x = "Squadron Commanding Officers",
          y = "Resilience",
          fill = "Intertemporal\nSubstitutability")
@@ -226,7 +227,7 @@ COSatsumPlot <-
     facet_grid(ExpDesc ~ Surge) +
     labs(x = "Squadron Commanding Officers",
          y = "Resilience") +
-    theme_bw() 
+    theme_bw(base_size = 12, base_family = "serif") 
 
 
 PMSatBPdata <-
@@ -253,7 +254,7 @@ PMSatsumPlot <-
                      upper = upperY),
                      stat = "identity") +
     facet_grid(Surge ~ ExpDesc) +
-    theme_bw() +
+    theme_bw(base_size = 12, base_family = "serif") +
     labs(x = "Time Horizon", y = "Resilience")
 
 
@@ -284,7 +285,7 @@ PMGradsumPlot <-
             fill = Chi,),
         stat = "identity") +
     facet_grid(Surge ~ ExpDesc) +
-    theme_bw() +
+    theme_bw(base_size = 12, base_family = "serif") +
     labs(x = "Time Horizon", y = "Resilience")
 
 
@@ -312,7 +313,7 @@ PMAosumPlot <-
                      upper = upperY),
                      stat = "identity") +
     facet_grid(Surge ~ ExpDesc) +
-    theme_bw() +
+    theme_bw(base_size = 12, base_family = "serif") +
     labs(x = "Time Horizon", y = "Resilience")
     
 
@@ -430,7 +431,7 @@ PMGradChiPlot <-
             upper = upperY,
             fill = ExpDesc),
         stat = "identity") +
-    theme_bw()
+    theme_bw(base_size = 12, base_family = "serif")
 
 COGradChidata <-
     COGraddata %>%
@@ -471,7 +472,7 @@ COGradChiPlot <-
             upper = upperY,
             fill = ExpDesc),
         stat = "identity") +
-    theme_bw() 
+    theme_bw(base_size = 12, base_family = "serif") 
 
 CO_E_GradChidata <-
     COGradChidata %>%
@@ -493,7 +494,7 @@ CO_E_Grad_Plot <-
     ##            aes(x = Chi, y = meanY, group = ExpDesc),
     ##            position = position_dodge(width = .9)) +
     facet_grid(Surge ~ .) +
-    theme_bw() +
+    theme_bw(base_size = 12, base_family = "serif") +
         labs(x = "Intertemporal Substitutability Matrix",
              y = "Resilience") +
     guides(fill = guide_legend("Course of Action")) +
@@ -526,7 +527,7 @@ CO_D_Grad_Plot <-
     ##            aes(x = Chi, y = meanY, group = ExpDesc),
     ##            position = position_dodge(width = .9)) +
     facet_grid(Surge ~ .) +
-    theme_bw() +
+    theme_bw(base_size = 12, base_family = "serif") +
         labs(x = "Intertemporal Substitutability Matrix",
              y = "Resilience") +
     guides(fill = guide_legend("Course of Action")) +
@@ -576,7 +577,7 @@ PMAoPlot <-
             fill = TimeHorizon),
         stat = "identity") +
     facet_grid(FuncOut + TimeHorizon ~ Surge) +
-    theme_bw()
+    theme_bw(base_size = 12, base_family = "serif")
 
 
 ### build an automatic plot of the metrics. Break it down smaller
@@ -601,7 +602,7 @@ for(i in 1:length(PMAolist)){
                 upper = upperY),
             stat = "identity") +
         facet_grid(. ~ Surge) +
-        theme_bw() +
+        theme_bw(base_size = 12, base_family = "serif") +
         labs(x = "Course of Action",
              y = "Resilience") +
         theme(axis.text.x = element_text(angle = -60,
@@ -638,7 +639,7 @@ for(i in 1:length(PMSatlist)){
                 upper = upperY),
             stat = "identity") +
         facet_grid(. ~ Surge) +
-        theme_bw() +
+        theme_bw(base_size = 12, base_family = "serif") +
         labs(x = "Course of Action",
              y = "Resilience") +
         theme(axis.text.x = element_text(angle = -60,
@@ -675,7 +676,7 @@ for(i in 1:length(PMGradlist)){
                 color = Chi),
             stat = "identity") +
         facet_grid(. ~ Surge) +
-        theme_bw() +
+        theme_bw(base_size = 12, base_family = "serif") +
         labs(x = "Course of Action",
              y = "Resilience") +
         theme(axis.text.x = element_text(angle = -60,
@@ -709,7 +710,7 @@ PMGradAllTHPlot <-
                 color = Chi),
             stat = "identity") +
     facet_grid(.~ Surge + TimeHorizon) +
-        theme_bw() +
+        theme_bw(base_size = 12, base_family = "serif") +
         labs(x = "Course of Action",
              y = "Resilience") +
         theme(axis.text.x = element_text(angle = -90,
@@ -731,7 +732,7 @@ PMSatAllTHPlot <-
                 upper = upperY),
             stat = "identity") +
     facet_grid(.~ Surge + TimeHorizon) +
-        theme_bw() +
+        theme_bw(base_size = 12, base_family = "serif") +
         labs(x = "Course of Action",
              y = "Resilience") +
         theme(axis.text.x = element_text(angle = -90,
@@ -751,7 +752,7 @@ PMAoAllTHPlot <-
                 upper = upperY),
             stat = "identity") +
     facet_grid(.~ Surge + TimeHorizon) +
-        theme_bw() +
+        theme_bw(base_size = 12, base_family = "serif") +
         labs(x = "Course of Action",
              y = "Resilience") +
         theme(axis.text.x = element_text(angle = -90,
@@ -819,7 +820,7 @@ for(i in 1:length(PMGradAllChilist)){
                 fill = ExpDesc),
             stat = "identity") +
         facet_grid(Surge ~ .) +
-        theme_bw() +
+        theme_bw(base_size = 12, base_family = "serif") +
         labs(x = "Intertemporal Substitutability Matrix",
              y = "Resilience") +
         theme(legend.position = "top") +

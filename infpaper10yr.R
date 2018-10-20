@@ -1,6 +1,6 @@
 ######################################################################
 ## Building new plots for the paper based on the infPaper.R
-
+setwd("d:/OneDrive/PhD Work/Dissertation/Programming/Metrics/")
 library("tidyverse")
 library("readxl")
 source("hurr_plots_stats.R")
@@ -48,7 +48,7 @@ plot_10yr_res <-
     ggplot(ssr10yr,
            aes(x = TimeHorizon,
                y = Resilience)) +
-    theme_bw() +
+    theme_bw(base_size = 12, base_family = "serif") +
     geom_boxplot(position="dodge",
                  aes(ymin = minY,
                      ymax = maxY,
@@ -80,7 +80,7 @@ plot_10yr_by_inf <-
                      upper = upperY),
                      stat = "identity") +
     facet_wrap(~ Infrastructure, ncol = 4) +
-    theme_bw() +
+    theme_bw(base_size = 12, base_family = "serif") +
     ylim(c(0,1)) +
     xlab("Time Horizon (Months)")
     
@@ -148,7 +148,7 @@ ex_plot <- ggplot(run204, aes(Years, Resilience,
     geom_vline(xintercept = 2, alpha = 0.5) +
     geom_vline(xintercept = 5, alpha = 0.5) +
     geom_vline(xintercept = 10, alpha = 0.5) +
-    theme_bw() +
+    theme_bw(base_size = 12, base_family = "serif") +
     theme(legend.position = "top",
           legend.title = element_blank())
 
